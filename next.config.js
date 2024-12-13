@@ -3,9 +3,11 @@ const nextConfig = {
   output: 'export',
   trailingSlash: true,
   reactStrictMode: true,
-  // Remove exportPathMap as it's not compatible with app directory
-  images: {
-    unoptimized: true
+  // Configure images for static export
+  experimental: {
+    images: {
+      unoptimized: true,
+    }
   }
 }
 
