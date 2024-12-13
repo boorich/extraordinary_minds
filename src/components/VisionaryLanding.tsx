@@ -92,13 +92,13 @@ const VisionaryLanding = () => {
     credibility: [
       {
         icon: <Github className="w-6 h-6" />,
-        stat: "500+",
+        stat: "0",
         label: "Open Source Contributions"
       },
       {
         icon: <Users className="w-6 h-6" />,
-        stat: "1000+",
-        label: "Developer Community"
+        stat: "1",
+        label: "Crewmates"
       }
     ]
   };
@@ -143,12 +143,14 @@ const VisionaryLanding = () => {
             <div className="bg-slate-800/80 p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
               <p className="mb-4">We recognize our own:</p>
               <CardSection title="Our Crew" items={sections.crew} variant="crew" />
-              <button 
-                onClick={() => setIsContactModalOpen(true)}
-                className="mt-6 px-8 py-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow"
-              >
-                Answer the Call
-              </button>
+              <div className="flex justify-center w-full">
+                <button 
+                  onClick={() => setIsContactModalOpen(true)}
+                  className="w-full px-8 py-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow"
+                >
+                  Answer the Call
+                </button>
+              </div>
             </div>
           </div>
         </div>
