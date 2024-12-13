@@ -6,8 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  assetPrefix: '.',
-  basePath: ''
+  basePath: '/extraordinary_minds',
+  assetPrefix: '/extraordinary_minds/'
 }
 
 module.exports = nextConfig
