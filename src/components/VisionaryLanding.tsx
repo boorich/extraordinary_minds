@@ -33,7 +33,7 @@ const VisionaryLanding = () => {
     variant?: "default" | "crew";
   }) => (
     <div className="mb-12">
-      <h3 className="text-3xl pirate-font text-cyan-400 mb-6 glow">{title}</h3>
+      {title && <h3 className="text-3xl pirate-font text-cyan-400 mb-6 glow">{title}</h3>}
       <div className="grid gap-4">
         {variant === "crew" ? (
           <ul className="space-y-4">
@@ -114,7 +114,7 @@ const VisionaryLanding = () => {
             <h3 className="text-3xl pirate-font text-cyan-400 mb-6 glow">Kindred Spirits</h3>
             <div className="bg-slate-800/80 p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
               <p className="mb-4">We recognize our own:</p>
-              <CardSection items={sections.crew} variant="crew" />
+              <CardSection title="Our Crew" items={sections.crew} variant="crew" />
               <button 
                 onClick={() => alert("If you know, you know. Show us what drives you: manifest@autonomousfrontier.com")}
                 className="mt-6 px-8 py-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow"
