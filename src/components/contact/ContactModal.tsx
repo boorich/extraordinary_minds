@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Twitter, Telegram, Github } from 'lucide-react';
+import { X, Twitter, MessageCircle, Github } from 'lucide-react';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     },
     {
       name: 'Telegram',
-      icon: <Telegram className="w-6 h-6" />,
+      icon: <MessageCircle className="w-6 h-6" />,
       url: 'https://t.me/cmdmcsellerie',
       username: '@cmdmcsellerie'
     },
