@@ -1,5 +1,4 @@
 name: Deploy Next.js site to Pages
-
 on:
   push:
     branches: ["main"]
@@ -9,6 +8,10 @@ permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -39,6 +42,9 @@ jobs:
           cache: ${{ steps.detect-package-manager.outputs.manager }}
       - name: Setup Pages
         uses: actions/configure-pages@v4
+        with:
+          enablement: true
+          static_site_generator: next
       - name: Restore cache
         uses: actions/cache@v4
         with:
