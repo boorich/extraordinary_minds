@@ -3,11 +3,14 @@ const nextConfig = {
   output: 'export',
   trailingSlash: true,
   reactStrictMode: true,
-  // Configure images for static export
-  experimental: {
-    images: {
-      unoptimized: true,
-    }
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   }
 }
 
