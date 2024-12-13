@@ -6,9 +6,12 @@ import MatrixRain from './interactive/MatrixRain';
 import HiddenChallenges from './interactive/HiddenChallenges';
 import ShipsWheel from './visual/ShipsWheel';
 import DigitalCursor from './visual/DigitalCursor';
+import ContactModal from './contact/ContactModal';
+import { Github, Users } from 'lucide-react';
 
 const VisionaryLanding = () => {
   const [secretsFound, setSecretsFound] = useState<string[]>([]);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   useEffect(() => {
     const handleSecretFound = (event: CustomEvent) => {
@@ -85,6 +88,18 @@ const VisionaryLanding = () => {
       "The visionary who sees the matrix in their dreams and wakes up with breakthrough algorithms",
       "The perpetual learner who devours knowledge not for acclaim, but for the sheer joy of understanding",
       "The quiet genius whose greatest satisfaction comes from solving the 'impossible' problem"
+    ],
+    credibility: [
+      {
+        icon: <Github className="w-6 h-6" />,
+        stat: "500+",
+        label: "Open Source Contributions"
+      },
+      {
+        icon: <Users className="w-6 h-6" />,
+        stat: "1000+",
+        label: "Developer Community"
+      }
     ]
   };
 
@@ -106,6 +121,19 @@ const VisionaryLanding = () => {
             </div>
           </div>
 
+          {/* Social Proof Section */}
+          <div className="mb-16 grid grid-cols-2 gap-4">
+            {sections.credibility.map((item, index) => (
+              <div key={index} className="bg-slate-800/80 p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm text-center">
+                <div className="text-cyan-400 mb-2 flex justify-center">
+                  {item.icon}
+                </div>
+                <div className="text-2xl font-bold text-white mb-1">{item.stat}</div>
+                <div className="text-slate-300 text-sm">{item.label}</div>
+              </div>
+            ))}
+          </div>
+
           <ShipsWheel />
           <CardSection title="Is This You?" items={sections.traits} />
           <CardSection title="Our Testament" items={sections.manifesto} />
@@ -116,7 +144,7 @@ const VisionaryLanding = () => {
               <p className="mb-4">We recognize our own:</p>
               <CardSection title="Our Crew" items={sections.crew} variant="crew" />
               <button 
-                onClick={() => alert("If you know, you know. Show us what drives you: manifest@autonomousfrontier.com")}
+                onClick={() => setIsContactModalOpen(true)}
                 className="mt-6 px-8 py-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow"
               >
                 Answer the Call
@@ -135,6 +163,11 @@ const VisionaryLanding = () => {
           Discoveries: {secretsFound.length}/3
         </div>
       )}
+
+      <ContactModal 
+        isOpen={isContactModalOpen} 
+        onClose={() => setIsContactModalOpen(false)} 
+      />
     </div>
   );
 };
