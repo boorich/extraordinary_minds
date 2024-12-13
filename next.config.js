@@ -4,14 +4,10 @@ const nextConfig = {
   trailingSlash: true,
   reactStrictMode: true,
   images: {
-    unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
-  }
+    unoptimized: true
+  },
+  assetPrefix: '.',
+  basePath: ''
 }
 
 module.exports = nextConfig
