@@ -9,7 +9,7 @@ const ShipsWheel = () => {
       <div 
         className="absolute inset-0"
         style={{ 
-          backgroundImage: "url('/ship-wheel.png')",
+          backgroundImage: "url(./ship-wheel.png)",
           backgroundSize: 'contain',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

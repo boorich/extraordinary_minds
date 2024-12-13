@@ -17,7 +17,7 @@ const ParallaxHero = () => {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       <div 
-        className="absolute inset-0 bg-[url('/cosmic-ship.jpg')] bg-cover bg-center"
+        className="absolute inset-0 bg-[url(./cosmic-ship.jpg)] bg-cover bg-center"
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
