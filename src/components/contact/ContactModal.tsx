@@ -13,20 +13,40 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
     {
       name: 'X (Twitter)',
       icon: <Twitter className="w-6 h-6" />,
-      url: 'https://x.com/MartinMaur10165',
-      username: '@MartinMaur10165'
+      actions: [
+        {
+          label: 'View Profile',
+          url: 'https://x.com/MartinMaur10165',
+          username: '@MartinMaur10165'
+        },
+        {
+          label: 'Send Message',
+          url: `https://twitter.com/messages/compose?recipient_id=MartinMaur10165&text=Hi%20Martin%2C%20I%20saw%20your%20vision%20page...`,
+          username: 'Direct Message'
+        }
+      ]
     },
     {
       name: 'Telegram',
       icon: <MessageCircle className="w-6 h-6" />,
-      url: 'https://t.me/cmdmcsellerie',
-      username: '@cmdmcsellerie'
+      actions: [
+        {
+          label: 'Message on Telegram',
+          url: 'https://t.me/cmdmcsellerie',
+          username: '@cmdmcsellerie'
+        }
+      ]
     },
     {
       name: 'GitHub',
       icon: <Github className="w-6 h-6" />,
-      url: 'https://github.com/boorich',
-      username: '@boorich'
+      actions: [
+        {
+          label: 'View Profile',
+          url: 'https://github.com/boorich',
+          username: '@boorich'
+        }
+      ]
     }
   ];
 
@@ -36,6 +56,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+          aria-label="Close modal"
         >
           <X className="w-6 h-6" />
         </button>
@@ -48,22 +69,33 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
           </p>
 
           <div className="space-y-4">
-            {socialLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 p-4 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors group"
-              >
-                <div className="text-cyan-400 group-hover:text-cyan-300">
-                  {link.icon}
+            {socialLinks.map((platform) => (
+              <div key={platform.name} className="p-4 bg-slate-700 rounded-lg">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="text-cyan-400">
+                    {platform.icon}
+                  </div>
+                  <div className="font-medium text-white">{platform.name}</div>
                 </div>
-                <div>
-                  <div className="font-medium text-white">{link.name}</div>
-                  <div className="text-slate-300 text-sm">{link.username}</div>
+                <div className="space-y-2 ml-10">
+                  {platform.actions.map((action) => (
+                    <a
+                      key={action.label}
+                      href={action.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-2 bg-slate-600 rounded hover:bg-slate-500 transition-colors group"
+                    >
+                      <span className="text-slate-200 group-hover:text-white">
+                        {action.label}
+                      </span>
+                      <span className="text-slate-300 text-sm">
+                        {action.username}
+                      </span>
+                    </a>
+                  ))}
                 </div>
-              </a>
+              </div>
             ))}
           </div>
 
