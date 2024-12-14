@@ -9,11 +9,14 @@ import ShipsWheel from './visual/ShipsWheel';
 import DigitalCursor from './visual/DigitalCursor';
 import ContactModal from './contact/ContactModal';
 import RiddleSuccess from './RiddleSuccess';
+import ShipDialogue from './dialogue/ShipDialogue';
 import { sections } from '@/config/sections';
+import { DialogueMetrics } from '@/types/dialogue';
 
 const VisionaryLanding = () => {
   const [secretsFound, setSecretsFound] = useState<string[]>([]);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [dialogueMetrics, setDialogueMetrics] = useState<DialogueMetrics | null>(null);
 
   useEffect(() => {
     const handleSecretFound = (event: CustomEvent) => {
@@ -32,15 +35,27 @@ const VisionaryLanding = () => {
     };
   }, []);
 
+  const handleMetricsUpdate = (metrics: DialogueMetrics) => {
+    setDialogueMetrics(metrics);
+    // We can use these metrics later to personalize the experience
+    console.log('Dialogue metrics updated:', metrics);
+  };
+
   return (
     <div className="min-h-screen cosmic-background text-slate-100">
       <DigitalCursor />
       <MatrixRain />
       <HiddenChallenges />
       <ParallaxHero />
-      
+
       <main id="main-content" className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative min-h-screen" role="main">
         <div className="relative z-10">
+          {/* Ship's AI Dialogue System */}
+          <div className="mb-16">
+            <h3 className="text-2xl md:text-3xl pirate-font text-cyan-400 mb-4 md:mb-6 glow text-center">Ship's AI Interface</h3>
+            <ShipDialogue onMetricsUpdate={handleMetricsUpdate} />
+          </div>
+
           <div className="mb-12 md:mb-16">
             <h3 className="text-2xl md:text-3xl pirate-font text-cyan-400 mb-4 md:mb-6 glow">The Call</h3>
             <div className="bg-slate-800/80 p-4 md:p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
