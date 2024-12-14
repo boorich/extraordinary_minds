@@ -50,7 +50,7 @@ const DigitalCursor = () => {
           cursor: none !important;
         }
       `}</style>
-      <div className="fixed inset-0 pointer-events-none z-50">
+      <div className="fixed inset-0 pointer-events-none z-[999]">
         {/* Trail */}
         {trail.map((point, index) => (
           <div
