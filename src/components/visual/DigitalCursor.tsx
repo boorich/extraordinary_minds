@@ -15,8 +15,19 @@ const DigitalCursor = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [trail, setTrail] = useState<Point[]>([]);
   const [isPointer, setIsPointer] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
+    // Check if device is touch-enabled
+    const checkTouchDevice = () => {
+      setIsTouchDevice(('ontouchstart' in window) || 
+        (navigator.maxTouchPoints > 0) || 
+        ((navigator as any).msMaxTouchPoints > 0));
+    };
+
+    checkTouchDevice();
+    window.addEventListener('resize', checkTouchDevice);
+
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
       
@@ -40,17 +51,26 @@ const DigitalCursor = () => {
     };
 
     document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', checkTouchDevice);
+    };
   }, []);
+
+  if (isTouchDevice) {
+    return null;
+  }
 
   return (
     <>
       <style jsx global>{`
-        body * {
-          cursor: none !important;
+        @media (pointer: fine) {
+          body * {
+            cursor: none !important;
+          }
         }
       `}</style>
-      <div className="fixed inset-0 pointer-events-none z-[999]">
+      <div className="fixed inset-0 pointer-events-none z-[999] hidden md:block">
         {/* Trail */}
         {trail.map((point, index) => (
           <div
