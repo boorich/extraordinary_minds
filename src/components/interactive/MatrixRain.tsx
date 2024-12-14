@@ -35,7 +35,6 @@ const MatrixRain = () => {
     let currentLetterIndex = 0;
     let currentLetterLifetime = 0;
     let currentLetterPosition = { col: 0, row: 0 };
-    const letterSize = 28; // Increased font size for hidden letters
     
     // Rain drops
     const fontSize = 14;
@@ -51,10 +50,10 @@ const MatrixRain = () => {
     // Function to reset the current letter's position
     const resetLetterPosition = () => {
       currentLetterPosition = {
-        col: Math.floor(Math.random() * (columns - 2)) + 1, // Keep away from edges
-        row: Math.floor(Math.random() * ((canvas.height / fontSize) - 4)) + 2 // Keep away from top/bottom
+        col: Math.floor(Math.random() * (columns - 2)) + 1,
+        row: Math.floor(Math.random() * ((canvas.height / fontSize) - 4)) + 2
       };
-      currentLetterLifetime = 60; // Increased visibility time
+      currentLetterLifetime = 45; // Slightly longer visibility
     };
 
     // Initial letter position
@@ -63,14 +62,14 @@ const MatrixRain = () => {
     // Animation
     const draw = () => {
       // Semi-transparent black background for trail effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Increased transparency
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw rain
       ctx.font = fontSize + 'px monospace';
       for (let i = 0; i < drops.length; i++) {
-        // Default matrix rain with decreased opacity
-        ctx.fillStyle = 'rgba(0, 255, 170, 0.5)'; // More transparent green
+        // Default matrix rain
+        ctx.fillStyle = '#0fa';
         const char = chars[Math.floor(Math.random() * chars.length)];
         ctx.fillText(char, i * fontSize, drops[i] * fontSize);
 
@@ -84,18 +83,8 @@ const MatrixRain = () => {
 
       // Handle the sequential hidden letter
       if (currentLetterLifetime > 0) {
-        // Draw glowing effect
-        ctx.fillStyle = 'rgba(255, 102, 255, 0.3)'; // Outer glow
-        ctx.font = 'bold ' + (letterSize + 4) + 'px monospace';
-        ctx.fillText(
-          hiddenWord[currentLetterIndex],
-          currentLetterPosition.col * fontSize - 2,
-          currentLetterPosition.row * fontSize
-        );
-
-        // Draw main letter
-        ctx.fillStyle = '#FF66FF'; // Bright pink for hidden letter
-        ctx.font = 'bold ' + letterSize + 'px monospace';
+        ctx.fillStyle = '#FF66FF';
+        ctx.font = 'bold ' + fontSize + 'px monospace';
         ctx.fillText(
           hiddenWord[currentLetterIndex],
           currentLetterPosition.col * fontSize,
@@ -111,8 +100,8 @@ const MatrixRain = () => {
         }
       }
 
-      // Draw message drops with lower frequency
-      if (Math.random() > 0.998) {
+      // Randomly insert secret messages
+      if (Math.random() > 0.997) {
         const message = secretMessages[Math.floor(Math.random() * secretMessages.length)];
         const startCol = Math.floor(Math.random() * (columns - message.length));
         messageDrops.push({
@@ -123,7 +112,7 @@ const MatrixRain = () => {
       }
 
       // Draw and update message drops
-      ctx.fillStyle = 'rgba(102, 240, 255, 0.7)';
+      ctx.fillStyle = '#66F0FF';
       messageDrops.forEach((drop, index) => {
         if (drop.progress < drop.message.length) {
           ctx.fillText(
@@ -151,8 +140,8 @@ const MatrixRain = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 1 }}
+      className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-10"
+      style={{ zIndex: 0 }}
     />
   );
 };
