@@ -92,12 +92,6 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-
-          <div className="mt-6 pt-6 border-t border-slate-600">
-            <p className="text-slate-300 text-sm">
-              For direct inquiries: manifest@autonomousfrontier.com
-            </p>
-          </div>
         </div>
       </div>
     </div>
