@@ -30,6 +30,11 @@ const MatrixRain = () => {
       'RESHAPE REALITY'
     ];
 
+    // Hidden word setup
+    const hiddenWord = 'autonomy';
+    const hiddenLetters = hiddenWord.split('');
+    const hiddenLetterPositions: { col: number, letter: string, lifetime: number }[] = [];
+    
     // Rain drops
     const fontSize = 14;
     const columns = canvas.width / fontSize;
@@ -47,17 +52,41 @@ const MatrixRain = () => {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Green text
-      ctx.fillStyle = '#0fa';
-      ctx.font = fontSize + 'px monospace';
+      // Randomly add hidden letters
+      if (Math.random() > 0.99) {
+        const letter = hiddenLetters[Math.floor(Math.random() * hiddenLetters.length)];
+        const col = Math.floor(Math.random() * columns);
+        hiddenLetterPositions.push({
+          col,
+          letter,
+          lifetime: 50 // How long the letter stays visible
+        });
+      }
 
       // Draw rain
       for (let i = 0; i < drops.length; i++) {
-        // Random character
-        const char = chars[Math.floor(Math.random() * chars.length)];
+        // Check if this position has a hidden letter
+        const hiddenLetterIndex = hiddenLetterPositions.findIndex(pos => pos.col === i);
         
-        // Draw character
-        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        if (hiddenLetterIndex !== -1) {
+          // Draw hidden letter
+          ctx.fillStyle = '#FF66FF'; // Bright pink for hidden letters
+          ctx.font = 'bold ' + fontSize + 'px monospace';
+          const hiddenPos = hiddenLetterPositions[hiddenLetterIndex];
+          ctx.fillText(hiddenPos.letter, i * fontSize, drops[i] * fontSize);
+          
+          // Update lifetime
+          hiddenPos.lifetime--;
+          if (hiddenPos.lifetime <= 0) {
+            hiddenLetterPositions.splice(hiddenLetterIndex, 1);
+          }
+        } else {
+          // Draw normal matrix rain
+          ctx.fillStyle = '#0fa';
+          ctx.font = fontSize + 'px monospace';
+          const char = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        }
 
         // Reset drop if it reaches bottom
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
@@ -92,6 +121,15 @@ const MatrixRain = () => {
           messageDrops.splice(index, 1);
         }
       });
+
+      // Check for word completion
+      const currentLetters = new Set(hiddenLetterPositions.map(pos => pos.letter));
+      if (currentLetters.size === hiddenWord.length) {
+        const event = new CustomEvent('secretFound', {
+          detail: { type: 'first_word' }
+        });
+        document.dispatchEvent(event);
+      }
 
       requestAnimationFrame(draw);
     };
