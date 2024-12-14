@@ -4,13 +4,12 @@ import React, { useEffect } from 'react';
 
 const HiddenChallenges = () => {
   useEffect(() => {
-    let stage = 0; // 0: looking for autonomy, 1: unleashes, 2: greatness, 3: completed
+    let stage = 0;
     let typedWord = '';
     
-    // This is the SHA-256 hash of "greatness"
-    const thirdWordHash = '4fc82b26aecb47d2868c4efbe3581732a3e7cbcc6c2efb32062c08170a05eeb8';
+    // Updated hash for "greatness"
+    const thirdWordHash = '92f9ed99b93513392b026759f2051965b115b3b245ad06e26d72b56ec9e2193f';
 
-    // Hash function
     const hashString = async (str: string) => {
       const encoder = new TextEncoder();
       const data = encoder.encode(str.toLowerCase());
@@ -21,21 +20,17 @@ const HiddenChallenges = () => {
     };
 
     const handleKeyPress = async (e: KeyboardEvent) => {
-      // Add the new character
       typedWord += e.key.toLowerCase();
       
-      // Keep the typed word within reasonable length
       if (typedWord.length > 15) {
         typedWord = typedWord.substring(1);
       }
 
-      // Reset the typed word on space
       if (e.key === ' ') {
         typedWord = '';
         return;
       }
 
-      // Check current stage
       switch(stage) {
         case 0:
           if (typedWord === 'autonomy') {
@@ -66,13 +61,6 @@ const HiddenChallenges = () => {
           break;
 
         case 2:
-          if (typedWord === 'greatness') { // For testing purposes
-            console.log('Testing - Input received:', typedWord);
-            const hashedInput = await hashString(typedWord);
-            console.log('Testing - Hashed input:', hashedInput);
-            console.log('Testing - Expected hash:', thirdWordHash);
-          }
-
           const hashedInput = await hashString(typedWord);
           if (hashedInput === thirdWordHash) {
             stage = 3;
