@@ -15,6 +15,8 @@ export interface CardSectionProps {
   variant?: "default" | "crew";
 }
 
+export type CardSectionItem = CardItem | string;
+
 export interface SectionsData {
   traits: CardItem[];
   manifesto: CardItem[];
