@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 
 interface RiddleSuccessProps {
   secretsFound: string[];
@@ -8,18 +9,19 @@ interface RiddleSuccessProps {
 
 const RiddleSuccess: React.FC<RiddleSuccessProps> = ({ secretsFound }) => {
   const [uniqueId, setUniqueId] = useState('');
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     if (secretsFound.length === 3) {
-      // Generate a unique identifier based on timestamp and random elements
+      setIsVisible(true);
       const timestamp = Date.now().toString(36);
       const randomStr = Math.random().toString(36).substring(2, 7);
       setUniqueId(`${timestamp}${randomStr}`);
     }
   }, [secretsFound]);
 
-  if (secretsFound.length < 3) {
-    return (
+  if (secretsFound.length < 3 || !isVisible) {
+    return secretsFound.length > 0 ? (
       <div 
         className="fixed bottom-4 right-4 text-cyan-400 text-sm animate-fade-in"
         role="status"
@@ -27,7 +29,7 @@ const RiddleSuccess: React.FC<RiddleSuccessProps> = ({ secretsFound }) => {
       >
         Discoveries: {secretsFound.length}/3
       </div>
-    );
+    ) : null;
   }
 
   return (
@@ -36,6 +38,13 @@ const RiddleSuccess: React.FC<RiddleSuccessProps> = ({ secretsFound }) => {
       role="status"
       aria-live="polite"
     >
+      <button
+        onClick={() => setIsVisible(false)}
+        className="absolute top-2 right-2 text-slate-400 hover:text-cyan-400 transition-colors"
+        aria-label="Close success message"
+      >
+        <X size={16} />
+      </button>
       <div className="text-cyan-400 font-bold mb-2">Access Granted</div>
       <div className="text-slate-200 text-sm mb-3">
         Welcome, Reality Hacker. Your unique identifier has been generated.
