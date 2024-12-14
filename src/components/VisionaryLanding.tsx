@@ -8,6 +8,7 @@ import HiddenChallenges from './interactive/HiddenChallenges';
 import ShipsWheel from './visual/ShipsWheel';
 import DigitalCursor from './visual/DigitalCursor';
 import ContactModal from './contact/ContactModal';
+import RiddleSuccess from './RiddleSuccess';
 import { sections } from '@/config/sections';
 
 const VisionaryLanding = () => {
