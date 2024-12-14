@@ -10,7 +10,7 @@ const HiddenChallenges = () => {
     // This is the SHA-256 hash of "greatness"
     const thirdWordHash = '4fc82b26aecb47d2868c4efbe3581732a3e7cbcc6c2efb32062c08170a05eeb8';
 
-    // Simple hash function (for demonstration - you might want a more sophisticated one)
+    // Hash function
     const hashString = async (str: string) => {
       const encoder = new TextEncoder();
       const data = encoder.encode(str.toLowerCase());
@@ -32,6 +32,7 @@ const HiddenChallenges = () => {
       // Reset the typed word on space
       if (e.key === ' ') {
         typedWord = '';
+        return;
       }
 
       // Check current stage
@@ -65,6 +66,13 @@ const HiddenChallenges = () => {
           break;
 
         case 2:
+          if (typedWord === 'greatness') { // For testing purposes
+            console.log('Testing - Input received:', typedWord);
+            const hashedInput = await hashString(typedWord);
+            console.log('Testing - Hashed input:', hashedInput);
+            console.log('Testing - Expected hash:', thirdWordHash);
+          }
+
           const hashedInput = await hashString(typedWord);
           if (hashedInput === thirdWordHash) {
             stage = 3;
@@ -79,6 +87,7 @@ const HiddenChallenges = () => {
               '%cAUTONOMY UNLEASHES GREATNESS', 
               'color: #66F0FF; font-size: 24px; font-weight: bold; text-transform: uppercase;'
             );
+            typedWord = '';
           }
           break;
       }
