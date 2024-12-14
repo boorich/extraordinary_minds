@@ -1,13 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  trailingSlash: true,
-  reactStrictMode: true,
-  images: {
-    unoptimized: true
-  },
+  assetPrefix: '/extraordinary_minds',
   basePath: '/extraordinary_minds',
-  assetPrefix: '/extraordinary_minds/'
+  experimental: {
+    appDir: true
+  }
 }
 
 module.exports = nextConfig
