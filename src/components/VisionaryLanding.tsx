@@ -50,9 +50,12 @@ const VisionaryLanding = () => {
 
       <main id="main-content" className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative min-h-screen" role="main">
         <div className="relative z-10">
-          {/* Ship's AI Dialogue System */}
+          {/* Neural Odyssey */}
           <div className="mb-16">
-            <h3 className="text-2xl md:text-3xl pirate-font text-cyan-400 mb-4 md:mb-6 glow text-center">Ship's AI Interface</h3>
+            <h3 className="text-2xl md:text-3xl pirate-font text-cyan-400 mb-4 md:mb-6 glow text-center">Neural Odyssey</h3>
+            <div className="text-center text-slate-300 text-sm mb-6 italic">
+              "Where minds converge with the vessel's consciousness"
+            </div>
             <ShipDialogue onMetricsUpdate={handleMetricsUpdate} />
           </div>
 
