@@ -7,7 +7,20 @@ const HiddenChallenges = () => {
     let stage = 0; // 0: looking for autonomy, 1: unleashes, 2: greatness, 3: completed
     let typedWord = '';
     
-    const handleKeyPress = (e: KeyboardEvent) => {
+    // This is the SHA-256 hash of "greatness"
+    const thirdWordHash = '4fc82b26aecb47d2868c4efbe3581732a3e7cbcc6c2efb32062c08170a05eeb8';
+
+    // Simple hash function (for demonstration - you might want a more sophisticated one)
+    const hashString = async (str: string) => {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str.toLowerCase());
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    };
+
+    const handleKeyPress = async (e: KeyboardEvent) => {
       // Add the new character
       typedWord += e.key.toLowerCase();
       
@@ -52,7 +65,8 @@ const HiddenChallenges = () => {
           break;
 
         case 2:
-          if (typedWord === 'greatness') {
+          const hashedInput = await hashString(typedWord);
+          if (hashedInput === thirdWordHash) {
             stage = 3;
             document.dispatchEvent(new CustomEvent('secretFound', { 
               detail: { type: 'third_word' }
