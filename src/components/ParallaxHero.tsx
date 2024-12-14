@@ -26,18 +26,18 @@ const ParallaxHero = () => {
       </div>
       
       <div className="relative h-full flex flex-col items-center justify-center text-center px-4 z-10">
-        <span className="text-2xl text-cyan-200 mb-4 title-font">CALLING ALL</span>
-        <h1 className="text-7xl font-bold mb-4 pirate-font text-cyan-400 glow">
+        <span className="text-xl md:text-2xl text-cyan-200 mb-4 title-font">CALLING ALL</span>
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-4 pirate-font text-cyan-400 glow px-2">
           EXTRAORDINARY MINDS
         </h1>
-        <h2 className="text-2xl text-cyan-200 title-font max-w-3xl mt-4">
+        <h2 className="text-lg sm:text-xl md:text-2xl text-cyan-200 title-font max-w-3xl mt-4 px-4">
           "For those who walk the path of greatness not because they should, but because they must."
         </h2>
         <button 
           onClick={() => {
             document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="mt-16 p-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow flex items-center gap-2 cursor-pointer"
+          className="mt-8 md:mt-16 p-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow flex items-center gap-2 cursor-pointer"
         >
           Reveal Your Destiny
           <svg 
