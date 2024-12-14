@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { CardSection } from './CardSection';
 import ParallaxHero from './ParallaxHero';
 import MatrixRain from './interactive/MatrixRain';
 import HiddenChallenges from './interactive/HiddenChallenges';
 import ShipsWheel from './visual/ShipsWheel';
 import DigitalCursor from './visual/DigitalCursor';
 import ContactModal from './contact/ContactModal';
-import { Github, Users } from 'lucide-react';
+import { sections } from '@/config/sections';
 
 const VisionaryLanding = () => {
   const [secretsFound, setSecretsFound] = useState<string[]>([]);
@@ -30,79 +31,6 @@ const VisionaryLanding = () => {
     };
   }, []);
 
-  const CardSection = ({ title, items, variant = "default" }: { 
-    title: string; 
-    items: any[];
-    variant?: "default" | "crew";
-  }) => (
-    <div className="mb-12">
-      {title && <h3 className="text-3xl pirate-font text-cyan-400 mb-6 glow">{title}</h3>}
-      <div className="grid gap-4">
-        {variant === "crew" ? (
-          <ul className="space-y-4">
-            {items.map((item, index) => (
-              <li key={index} className="bg-slate-800/80 p-4 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
-                {item}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          items.map((item, index) => (
-            <div key={index} className="bg-slate-800/80 p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
-              <h4 className="font-bold text-lg mb-2 title-font text-cyan-200">{item.title}</h4>
-              <p className="text-slate-300">{item.description}</p>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-
-  const sections = {
-    traits: [
-      {
-        title: "The Obsessed",
-        description: "You've been called crazy. Mad. Obsessive. Because you see what others can't, and you'll spend countless nights bringing those visions to life. Not for glory, but because those ideas consume you."
-      },
-      {
-        title: "The Relentless",
-        description: "While others seek comfort, you seek challenges. Your greatest achievements aren't your past successes, but the impossible problems you're solving right now."
-      }
-    ],
-    manifesto: [
-      {
-        title: "Our Mission",
-        description: "To unite the extraordinary few who don't just push boundaries - they ignore them entirely. We're building autonomous systems that will reshape reality itself. Not because it's profitable, but because it's the greatest challenge we can imagine."
-      },
-      {
-        title: "The Code",
-        description: "Excellence isn't our goal - it's our baseline. We reject mediocrity in all its forms. Every line of code, every system design, every decision must push the boundaries of what's possible."
-      },
-      {
-        title: "The Promise",
-        description: "Here, you'll find your tribe. Other brilliantly obsessed minds who understand that true greatness comes not from chasing profits, but from the relentless pursuit of excellence."
-      }
-    ],
-    crew: [
-      "The midnight architect who can't sleep because the perfect solution is almost within reach",
-      "The visionary who sees the matrix in their dreams and wakes up with breakthrough algorithms",
-      "The perpetual learner who devours knowledge not for acclaim, but for the sheer joy of understanding",
-      "The quiet genius whose greatest satisfaction comes from solving the 'impossible' problem"
-    ],
-    credibility: [
-      {
-        icon: <Github className="w-6 h-6" />,
-        stat: "0",
-        label: "Open Source Contributions"
-      },
-      {
-        icon: <Users className="w-6 h-6" />,
-        stat: "1",
-        label: "Crewmates"
-      }
-    ]
-  };
-
   return (
     <div className="min-h-screen cosmic-background text-slate-100">
       <DigitalCursor />
@@ -110,7 +38,7 @@ const VisionaryLanding = () => {
       <HiddenChallenges />
       <ParallaxHero />
       
-      <main id="main-content" className="max-w-4xl mx-auto px-6 py-24 relative min-h-screen">
+      <main id="main-content" className="max-w-4xl mx-auto px-6 py-24 relative min-h-screen" role="main">
         <div className="relative z-10">
           <div className="mb-16">
             <h3 className="text-3xl pirate-font text-cyan-400 mb-6 glow">The Call</h3>
@@ -124,8 +52,12 @@ const VisionaryLanding = () => {
           {/* Social Proof Section */}
           <div className="mb-16 grid grid-cols-2 gap-4">
             {sections.credibility.map((item, index) => (
-              <div key={index} className="bg-slate-800/80 p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm text-center">
-                <div className="text-cyan-400 mb-2 flex justify-center">
+              <div 
+                key={index} 
+                className="bg-slate-800/80 p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm text-center"
+                role="presentation"
+              >
+                <div className="text-cyan-400 mb-2 flex justify-center" aria-hidden="true">
                   {item.icon}
                 </div>
                 <div className="text-2xl font-bold text-white mb-1">{item.stat}</div>
@@ -147,6 +79,7 @@ const VisionaryLanding = () => {
                 <button 
                   onClick={() => setIsContactModalOpen(true)}
                   className="w-full px-8 py-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow"
+                  aria-label="Open contact form"
                 >
                   Answer the Call
                 </button>
@@ -156,12 +89,16 @@ const VisionaryLanding = () => {
         </div>
       </main>
 
-      <footer className="text-center py-6 bg-slate-800/50 border-t-2 border-cyan-400 backdrop-blur-sm relative z-10">
+      <footer className="text-center py-6 bg-slate-800/50 border-t-2 border-cyan-400 backdrop-blur-sm relative z-10" role="contentinfo">
         <p className="pirate-font text-xl text-cyan-200">"For those who dare to reshape reality."</p>
       </footer>
       
       {secretsFound.length > 0 && (
-        <div className="fixed bottom-4 right-4 text-cyan-400 text-sm animate-fade-in">
+        <div 
+          className="fixed bottom-4 right-4 text-cyan-400 text-sm animate-fade-in"
+          role="status"
+          aria-live="polite"
+        >
           Discoveries: {secretsFound.length}/3
         </div>
       )}
