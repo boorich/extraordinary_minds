@@ -57,15 +57,13 @@ const RiddleSuccess: React.FC<RiddleSuccessProps> = ({ secretsFound }) => {
       <div className="text-slate-200 text-sm mb-3">
         Welcome, Reality Hacker. Your unique identifier has been generated.
       </div>
-      <div className="bg-slate-900/50 p-2 rounded border border-cyan-400/50 font-mono text-xs text-cyan-300 break-all relative group">
-        autonomy.{uniqueId}@vision
-        <button
-          onClick={handleCopy}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors opacity-0 group-hover:opacity-100"
-          aria-label="Copy identifier"
-        >
+      <div className="relative flex items-center bg-slate-900/50 p-2 rounded border border-cyan-400/50 hover:bg-slate-900/70 transition-colors cursor-pointer group" onClick={handleCopy}>
+        <div className="font-mono text-xs text-cyan-300 break-all pr-6">
+          autonomy.{uniqueId}@vision
+        </div>
+        <div className="absolute right-2 text-slate-400 group-hover:text-cyan-400 transition-colors">
           {copied ? <Check size={14} /> : <Copy size={14} />}
-        </button>
+        </div>
       </div>
       <div className="mt-2 text-xs text-slate-400">
         Share this identifier to verify your achievement.
