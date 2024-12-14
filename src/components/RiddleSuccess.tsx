@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Copy, Check } from 'lucide-react';
 
 interface RiddleSuccessProps {
   secretsFound: string[];
@@ -10,6 +10,7 @@ interface RiddleSuccessProps {
 const RiddleSuccess: React.FC<RiddleSuccessProps> = ({ secretsFound }) => {
   const [uniqueId, setUniqueId] = useState('');
   const [isVisible, setIsVisible] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (secretsFound.length === 3) {
@@ -19,6 +20,13 @@ const RiddleSuccess: React.FC<RiddleSuccessProps> = ({ secretsFound }) => {
       setUniqueId(`${timestamp}${randomStr}`);
     }
   }, [secretsFound]);
+
+  const handleCopy = async () => {
+    const identifier = `autonomy.${uniqueId}@vision`;
+    await navigator.clipboard.writeText(identifier);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (secretsFound.length < 3 || !isVisible) {
     return secretsFound.length > 0 ? (
@@ -49,8 +57,15 @@ const RiddleSuccess: React.FC<RiddleSuccessProps> = ({ secretsFound }) => {
       <div className="text-slate-200 text-sm mb-3">
         Welcome, Reality Hacker. Your unique identifier has been generated.
       </div>
-      <div className="bg-slate-900/50 p-2 rounded border border-cyan-400/50 font-mono text-xs text-cyan-300 break-all">
+      <div className="bg-slate-900/50 p-2 rounded border border-cyan-400/50 font-mono text-xs text-cyan-300 break-all relative group">
         autonomy.{uniqueId}@vision
+        <button
+          onClick={handleCopy}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 transition-colors opacity-0 group-hover:opacity-100"
+          aria-label="Copy identifier"
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+        </button>
       </div>
       <div className="mt-2 text-xs text-slate-400">
         Share this identifier to verify your achievement.
