@@ -8,6 +8,7 @@ import HiddenChallenges from './interactive/HiddenChallenges';
 import ShipsWheel from './visual/ShipsWheel';
 import DigitalCursor from './visual/DigitalCursor';
 import ContactModal from './contact/ContactModal';
+import RiddleSuccess from './RiddleSuccess';
 import { sections } from '@/config/sections';
 
 const VisionaryLanding = () => {
@@ -93,15 +94,7 @@ const VisionaryLanding = () => {
         <p className="pirate-font text-xl text-cyan-200">"For those who dare to reshape reality."</p>
       </footer>
       
-      {secretsFound.length > 0 && (
-        <div 
-          className="fixed bottom-4 right-4 text-cyan-400 text-sm animate-fade-in"
-          role="status"
-          aria-live="polite"
-        >
-          Discoveries: {secretsFound.length}/3
-        </div>
-      )}
+      <RiddleSuccess secretsFound={secretsFound} />
 
       <ContactModal 
         isOpen={isContactModalOpen} 
