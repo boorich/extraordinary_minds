@@ -22,13 +22,6 @@ const MatrixRain = () => {
 
     // Matrix character set
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()';
-    const secretMessages = [
-      'GREATNESS AWAITS',
-      'BREAK THE LIMITS',
-      'BEYOND BOUNDARIES',
-      'DARE TO CREATE',
-      'RESHAPE REALITY'
-    ];
 
     // Sequential hidden letter setup
     const hiddenWord = 'autonomy';
@@ -40,7 +33,6 @@ const MatrixRain = () => {
     const fontSize = 14;
     const columns = canvas.width / fontSize;
     const drops: number[] = [];
-    const messageDrops: { col: number, message: string, progress: number }[] = [];
 
     // Initialize drops
     for (let i = 0; i < columns; i++) {
@@ -53,7 +45,7 @@ const MatrixRain = () => {
         col: Math.floor(Math.random() * (columns - 2)) + 1,
         row: Math.floor(Math.random() * ((canvas.height / fontSize) - 4)) + 2
       };
-      currentLetterLifetime = 45; // Slightly longer visibility
+      currentLetterLifetime = 45;
     };
 
     // Initial letter position
@@ -99,32 +91,6 @@ const MatrixRain = () => {
           resetLetterPosition();
         }
       }
-
-      // Randomly insert secret messages
-      if (Math.random() > 0.997) {
-        const message = secretMessages[Math.floor(Math.random() * secretMessages.length)];
-        const startCol = Math.floor(Math.random() * (columns - message.length));
-        messageDrops.push({
-          col: startCol,
-          message,
-          progress: 0
-        });
-      }
-
-      // Draw and update message drops
-      ctx.fillStyle = '#66F0FF';
-      messageDrops.forEach((drop, index) => {
-        if (drop.progress < drop.message.length) {
-          ctx.fillText(
-            drop.message[drop.progress],
-            (drop.col + drop.progress) * fontSize,
-            drops[drop.col] * fontSize
-          );
-          drop.progress++;
-        } else {
-          messageDrops.splice(index, 1);
-        }
-      });
 
       requestAnimationFrame(draw);
     };
