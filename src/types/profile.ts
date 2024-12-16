@@ -10,4 +10,5 @@ export interface Profile {
   imageUrl: string;
   description: string;
   metrics: ProfileMetrics;
+  profileId: string;  // Added this field
 }
