@@ -3,6 +3,10 @@ import OpenAI from 'openai';
 import { ResponseGenerationParams } from '@/lib/openai';
 import { DialogueOption } from '@/types/dialogue';
 
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('OPENAI_API_KEY is not set in environment variables');
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -29,21 +33,26 @@ Your responses must:
 4. Track conversation round (1-10)`;
 
 export async function POST(req: Request) {
-  const params: ResponseGenerationParams = await req.json();
-  
   try {
-    const { context, previousExchanges, theme } = params;
+    // Validate request body
+    const params: ResponseGenerationParams = await req.json().catch(error => {
+      throw new Error('Invalid request body: ' + error.message);
+    });
+
+    if (!params.context || !params.previousExchanges || !params.theme) {
+      throw new Error('Missing required parameters');
+    }
 
     // Calculate current round
-    const round = previousExchanges.length + 1;
+    const round = params.previousExchanges.length + 1;
 
     const prompt = `
 CONVERSATION STATE:
 Current round: ${round}/10
-Theme: ${theme}
+Theme: ${params.theme}
 
 CONVERSATION HISTORY:
-${previousExchanges.map(ex => `System: ${ex.prompt}\nUser: ${ex.response}`).join('\n')}
+${params.previousExchanges.map(ex => `System: ${ex.prompt}\nUser: ${ex.response}`).join('\n')}
 
 TASK 1 - Generate the system's next response and question that:
 - Naturally follows from the user's last response
@@ -70,78 +79,116 @@ Format as JSON:
   "nextTheme": "string describing next conversation theme"
 }`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-      response_format: { type: "json_object" }
-    });
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+        response_format: { type: "json_object" }
+      });
 
-    const response = JSON.parse(completion.choices[0].message.content || '{}');
+      if (!completion.choices[0]?.message?.content) {
+        throw new Error('Empty response from OpenAI API');
+      }
 
-    // Handle round 10 conclusion
-    if (round === 10) {
+      const response = JSON.parse(completion.choices[0].message.content);
+
+      // Validate response structure
+      if (!response.systemResponse || !Array.isArray(response.options)) {
+        throw new Error('Invalid response format from OpenAI API');
+      }
+
+      // Handle round 10 conclusion
+      if (round === 10) {
+        return NextResponse.json({
+          options: response.options || [],
+          nextTheme: 'conclusion',
+          systemResponse: response.systemResponse + " You sense there's more to discover about the Neural Odyssey... but that's a secret for another time."
+        });
+      }
+
+      // Normal round response
       return NextResponse.json({
         options: response.options || [],
-        nextTheme: 'conclusion',
-        systemResponse: response.systemResponse + " You sense there's more to discover about the Neural Odyssey... but that's a secret for another time."
+        nextTheme: response.nextTheme || params.theme,
+        systemResponse: response.systemResponse
+      });
+
+    } catch (error: any) {
+      console.error('OpenAI API error:', error);
+
+      // Check for specific OpenAI error types
+      if (error.code === 'insufficient_quota') {
+        return NextResponse.json(
+          { error: 'OpenAI API quota exceeded. Please try again later.' },
+          { status: 429 }
+        );
+      }
+
+      if (error.code === 'invalid_api_key') {
+        return NextResponse.json(
+          { error: 'Invalid API key configuration.' },
+          { status: 401 }
+        );
+      }
+
+      // Return fallback response
+      const fallbackResponse = round === 10 
+        ? "Your journey has been fascinating. There's more to discover about the Neural Odyssey... but that's a secret for another time."
+        : "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?";
+
+      const fallbackOptions: DialogueOption[] = [
+        {
+          text: "I'm driven by the challenge of solving complex problems and creating efficient solutions.",
+          type: 'technical',
+          score: 1
+        },
+        {
+          text: "The endless possibilities of human potential and consciousness fascinate me.",
+          type: 'philosophical',
+          score: 1
+        },
+        {
+          text: "I see opportunities where others see obstacles, always finding new ways forward.",
+          type: 'creative',
+          score: 1
+        },
+        {
+          text: "I'm motivated by understanding patterns and uncovering hidden connections.",
+          type: 'analytical',
+          score: 1
+        }
+      ];
+
+      return NextResponse.json({
+        options: fallbackOptions,
+        nextTheme: 'general_exploration',
+        systemResponse: fallbackResponse
       });
     }
-
-    // Normal round response
-    return NextResponse.json({
-      options: response.options || [],
-      nextTheme: response.nextTheme || theme,
-      systemResponse: response.systemResponse
-    });
-
-  } catch (error) {
-    console.error('Error in dialogue API:', error);
-    
-    // Fallback response that maintains conversation flow
-    const round = params.previousExchanges?.length + 1 || 1;
-    const fallbackResponse = round === 10 
-      ? "Your journey has been fascinating. There's more to discover about the Neural Odyssey... but that's a secret for another time."
-      : "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?";
-
-    const fallbackOptions: DialogueOption[] = [
-      {
-        text: "I'm driven by the challenge of solving complex problems and creating efficient solutions.",
-        type: 'technical',
-        score: 1
-      },
-      {
-        text: "The endless possibilities of human potential and consciousness fascinate me.",
-        type: 'philosophical',
-        score: 1
-      },
-      {
-        text: "I see opportunities where others see obstacles, always finding new ways forward.",
-        type: 'creative',
-        score: 1
-      },
-      {
-        text: "I'm motivated by understanding patterns and uncovering hidden connections.",
-        type: 'analytical',
-        score: 1
-      }
-    ];
-
-    return NextResponse.json({
-      options: fallbackOptions,
-      nextTheme: 'general_exploration',
-      systemResponse: fallbackResponse
-    });
+  } catch (error: any) {
+    console.error('Route error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: error.status || 500 }
+    );
   }
 }
 
 export async function PUT(req: Request) {
   try {
-    const { response, context } = await req.json();
+    const body = await req.json().catch(error => {
+      throw new Error('Invalid request body: ' + error.message);
+    });
+
+    const { response, context } = body;
+    if (!response || !context) {
+      throw new Error('Missing required parameters');
+    }
 
     const prompt = `
 Analyze the following response and determine:
@@ -159,30 +206,65 @@ Format as JSON:
   "nextTheme": "string"
 }`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are an expert in analyzing conversation patterns and excellence indicators.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 150,
-      response_format: { type: "json_object" }
-    });
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: 'You are an expert in analyzing conversation patterns and excellence indicators.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 150,
+        response_format: { type: "json_object" }
+      });
 
-    const analysis = JSON.parse(completion.choices[0].message.content || '{}');
-    
-    return NextResponse.json({
-      type: analysis.type || 'analytical',
-      score: typeof analysis.score === 'number' ? analysis.score : 1,
-      nextTheme: analysis.nextTheme || 'general_exploration'
-    });
-  } catch (error) {
-    console.error('Error in analysis API:', error);
-    return NextResponse.json({
-      type: 'analytical',
-      score: 1,
-      nextTheme: 'general_exploration'
-    });
+      if (!completion.choices[0]?.message?.content) {
+        throw new Error('Empty response from OpenAI API');
+      }
+
+      const analysis = JSON.parse(completion.choices[0].message.content);
+      
+      // Validate analysis structure
+      if (!analysis.type || typeof analysis.score !== 'number' || !analysis.nextTheme) {
+        throw new Error('Invalid analysis format from OpenAI API');
+      }
+
+      return NextResponse.json({
+        type: analysis.type,
+        score: analysis.score,
+        nextTheme: analysis.nextTheme
+      });
+
+    } catch (error: any) {
+      console.error('OpenAI API error in analysis:', error);
+      
+      // Check for specific OpenAI error types
+      if (error.code === 'insufficient_quota') {
+        return NextResponse.json(
+          { error: 'OpenAI API quota exceeded. Please try again later.' },
+          { status: 429 }
+        );
+      }
+
+      if (error.code === 'invalid_api_key') {
+        return NextResponse.json(
+          { error: 'Invalid API key configuration.' },
+          { status: 401 }
+        );
+      }
+
+      // Return fallback analysis
+      return NextResponse.json({
+        type: 'analytical',
+        score: 1,
+        nextTheme: 'general_exploration'
+      });
+    }
+  } catch (error: any) {
+    console.error('Analysis route error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: error.status || 500 }
+    );
   }
 }
