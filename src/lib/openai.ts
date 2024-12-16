@@ -1,3 +1,5 @@
+import { DialogueOption } from '@/types/dialogue';
+
 export interface ResponseGenerationParams {
   context: string;
   previousExchanges: Array<{
