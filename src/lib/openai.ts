@@ -19,6 +19,7 @@ export interface ResponseAnalysis {
 export interface GeneratedOptions {
   options: DialogueOption[];
   nextTheme: string;
+  systemResponse: string; // Added this field to match API response
 }
 
 export async function generateResponseOptions(params: ResponseGenerationParams): Promise<GeneratedOptions> {
