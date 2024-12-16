@@ -23,31 +23,43 @@ Rules for your responses:
 4. Keep responses brief (1-2 sentences)
 5. Make each option distinct in perspective`;
 
+type ResponseType = 'technical' | 'philosophical' | 'creative' | 'analytical';
+
+interface DialogueOptionRaw {
+  text: string;
+  type: ResponseType;
+  score: number;
+}
+
 interface JsonResponse {
   systemResponse: string;
-  options: {
-    text: string;
-    type: 'technical' | 'philosophical' | 'creative' | 'analytical';
-    score: number;
-  }[];
+  options: DialogueOptionRaw[];
   nextTheme: string;
 }
 
-function isValidResponse(json: any): json is JsonResponse {
+function isValidResponse(json: unknown): json is JsonResponse {
   if (typeof json !== 'object' || json === null) return false;
-  if (typeof json.systemResponse !== 'string') return false;
-  if (typeof json.nextTheme !== 'string') return false;
-  if (!Array.isArray(json.options)) return false;
-  if (json.options.length !== 4) return false;
+  
+  const response = json as Record<string, unknown>;
+  
+  if (typeof response.systemResponse !== 'string') return false;
+  if (typeof response.nextTheme !== 'string') return false;
+  if (!Array.isArray(response.options)) return false;
+  if (response.options.length !== 4) return false;
 
-  return json.options.every(option => 
-    typeof option === 'object' &&
-    typeof option.text === 'string' &&
-    ['technical', 'philosophical', 'creative', 'analytical'].includes(option.type) &&
-    typeof option.score === 'number' &&
-    option.score >= 0 &&
-    option.score <= 1
-  );
+  return response.options.every((option: unknown) => {
+    if (typeof option !== 'object' || option === null) return false;
+    const opt = option as Record<string, unknown>;
+    
+    return (
+      typeof opt.text === 'string' &&
+      typeof opt.type === 'string' &&
+      ['technical', 'philosophical', 'creative', 'analytical'].includes(opt.type) &&
+      typeof opt.score === 'number' &&
+      opt.score >= 0 &&
+      opt.score <= 1
+    );
+  });
 }
 
 function cleanJsonString(input: string): string {
