@@ -67,7 +67,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
         throw new Error('Failed to generate profile');
       }
 
-      const profileData = await profileResponse.json();
+      const profileData = await profileResponse.json() as Profile;
       console.log('Profile generated:', profileData);  // Debug log
       setProfile(profileData);
 
@@ -113,8 +113,12 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
                 setImageGenProgress('Creating your unique portrait...');
                 break;
               case 'completed':
-                if (data.imageUrl) {
-                  setProfile(prev => prev ? { ...prev, imageUrl: data.imageUrl } : null);
+                if (data.imageUrl && profile) {
+                  const updatedProfile: Profile = {
+                    ...profile,
+                    imageUrl: data.imageUrl
+                  };
+                  setProfile(updatedProfile);
                   setImageGenProgress('Portrait completed!');
                 }
                 break;
