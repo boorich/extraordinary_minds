@@ -11,7 +11,7 @@ export interface DialoguePrompt {
   theme: string;
   context: string;
   constraints: string[];
-  options?: DialogueOption[];  // Make options optional
+  options?: DialogueOption[];
   fallbackOptions: DialogueOption[];
   isSystemMessage?: boolean;
 }
@@ -23,22 +23,15 @@ export interface DialogueState {
   analytical: number;
 }
 
-export interface DialogueHistoryEntry {
-  prompt: string;
-  response: string;
-  responseType?: 'technical' | 'philosophical' | 'creative' | 'analytical';
-  timestamp: number;
-  responseTime: number;
-}
-
 export interface DialogueMetrics {
-  state: DialogueState;
-  history: DialogueHistoryEntry[];
+  choices: DialogueOption[];
+  scores: DialogueState;
   startTime: number;
-  averageResponseTime: number;
+  endTime?: number;
 }
 
 export interface GeneratedDialogueResponse {
   options: DialogueOption[];
   nextTheme: string;
+  systemResponse: string;
 }
