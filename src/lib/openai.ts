@@ -19,7 +19,13 @@ export interface ResponseAnalysis {
 export interface GeneratedOptions {
   options: DialogueOption[];
   nextTheme: string;
-  systemResponse: string; // Added this field to match API response
+  systemResponse: string;
+}
+
+export interface APIError {
+  message: string;
+  code?: string;
+  details?: any;
 }
 
 export async function generateResponseOptions(params: ResponseGenerationParams): Promise<GeneratedOptions> {
@@ -33,10 +39,17 @@ export async function generateResponseOptions(params: ResponseGenerationParams):
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate responses');
+      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
+    
+    // Validate response structure
+    if (!data.options || !Array.isArray(data.options) || !data.systemResponse) {
+      throw new Error('Invalid response format from API');
+    }
+
     return data;
   } catch (error) {
     console.error('Error generating response options:', error);
@@ -55,10 +68,18 @@ export async function analyzeResponse(response: string, context: string): Promis
     });
 
     if (!apiResponse.ok) {
-      throw new Error('Failed to analyze response');
+      const errorData = await apiResponse.json().catch(() => ({ message: 'Unknown error' }));
+      throw new Error(errorData.message || `HTTP error! status: ${apiResponse.status}`);
     }
 
-    return apiResponse.json();
+    const data = await apiResponse.json();
+    
+    // Validate response structure
+    if (!data.type || !data.score || !data.nextTheme) {
+      throw new Error('Invalid analysis response format');
+    }
+
+    return data;
   } catch (error) {
     console.error('Error analyzing response:', error);
     throw error;
