@@ -1,21 +1,21 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 const ShipsWheel = () => {
   return (
     <div className="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] md:w-[500px] md:h-[500px] mx-auto my-12 md:my-24">
       {/* The main wheel image */}
-      <div 
-        className="absolute inset-0"
-        style={{ 
-          backgroundImage: "url('/extraordinary_minds/ship-wheel.png')",
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          transform: 'translate(-15px, -10px)'
-        }}
-      />
+      <div className="absolute inset-0 transform -translate-x-4 -translate-y-2.5">
+        <Image
+          src="/ship-wheel.png"
+          alt="Ships Wheel"
+          fill
+          quality={100}
+          className="object-contain"
+        />
+      </div>
 
       {/* Center content */}
       <div className="absolute inset-0 flex items-center justify-center">

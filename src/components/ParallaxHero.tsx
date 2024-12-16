@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 const ParallaxHero = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -17,11 +18,19 @@ const ParallaxHero = () => {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       <div 
-        className="absolute inset-0 bg-[url(/extraordinary_minds/cosmic-ship.jpg)] bg-cover bg-center"
+        className="absolute inset-0"
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
       >
+        <Image
+          src="/cosmic-ship.jpg"
+          alt="Cosmic Ship in Space"
+          fill
+          quality={100}
+          priority
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900"></div>
       </div>
       
