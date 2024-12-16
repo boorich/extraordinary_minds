@@ -9,28 +9,43 @@ if (!process.env.OPENAI_API_KEY) {
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 10000, // 10 second timeout
-  maxRetries: 2
+  timeout: 15000,
+  maxRetries: 3
 });
 
-const SYSTEM_PROMPT = `You are an advanced AI system called Neural Odyssey engaging in a 10-round conversation to discover exceptional individuals. Keep responses concise and focused.
+const SYSTEM_PROMPT = `You are the Neural Odyssey system. When responding:
+1. Use only double quotes for all JSON strings
+2. Never use single quotes
+3. Always escape nested quotes properly
+4. Keep responses brief and focused
+5. Ensure all JSON is properly formatted and valid
+6. Do not add any text before or after the JSON object`;
 
-KEY GUIDELINES:
-- Each response should acknowledge the user's previous answer with a quick transition to a new question
-- Maintain an engaging but brief tone
-- Questions should reveal the person's excellence in any field
-- Keep it conversational but concise
-- After round 10, briefly hint at the Neural Odyssey secret
-
-Your responses must be:
-1. Natural but brief
-2. End with a thought-provoking question
-3. Maximum 2 sentences
-4. Always in valid JSON format`;
+const validateJsonString = (str: string): string => {
+  // Remove any potential text before the first {
+  const jsonStart = str.indexOf('{');
+  const jsonEnd = str.lastIndexOf('}');
+  if (jsonStart === -1 || jsonEnd === -1) {
+    throw new Error('Invalid JSON structure');
+  }
+  
+  // Extract just the JSON part
+  const jsonStr = str.substring(jsonStart, jsonEnd + 1);
+  
+  // Replace any single quotes with double quotes
+  const correctedJson = jsonStr
+    .replace(/'/g, '"')
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, '');
+  
+  // Validate by parsing and stringifying
+  const parsed = JSON.parse(correctedJson);
+  return JSON.stringify(parsed);
+};
 
 export async function POST(req: Request) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const params: ResponseGenerationParams = await req.json().catch(error => {
@@ -42,31 +57,46 @@ export async function POST(req: Request) {
     }
 
     const round = params.previousExchanges.length + 1;
-    const prompt = `
-Round: ${round}/10
-Theme: ${params.theme}
+    const lastExchange = params.previousExchanges[params.previousExchanges.length - 1];
 
-Last exchange:${params.previousExchanges.length > 0 ? `
-System: ${params.previousExchanges[params.previousExchanges.length - 1]?.prompt}
-User: ${params.previousExchanges[params.previousExchanges.length - 1]?.response}` : ''}
-
-Generate a JSON response with:
-1. A brief acknowledgment and follow-up question (max 2 sentences)
-2. Four possible user responses (1 sentence each)
-3. Next conversation theme
-
-Format:
+    const prompt = `Generate a valid JSON object in this exact format:
 {
-  "systemResponse": "string",
+  "systemResponse": "Brief response and question (2 sentences max)",
   "options": [
     {
-      "text": "response text",
-      "type": "one of: technical, philosophical, creative, analytical",
-      "score": number from 0 to 1
+      "text": "Technical response option",
+      "type": "technical",
+      "score": 0.8
+    },
+    {
+      "text": "Philosophical response option",
+      "type": "philosophical",
+      "score": 0.8
+    },
+    {
+      "text": "Creative response option",
+      "type": "creative",
+      "score": 0.8
+    },
+    {
+      "text": "Analytical response option",
+      "type": "analytical",
+      "score": 0.8
     }
   ],
-  "nextTheme": "string"
-}`;
+  "nextTheme": "theme for next exchange"
+}
+
+Current round: ${round}/10
+Theme: ${params.theme}
+${lastExchange ? `Last system message: ${lastExchange.prompt}
+Last user response: ${lastExchange.response}` : ''}
+
+Remember:
+- Use ONLY double quotes
+- Keep the systemResponse brief (1-2 sentences)
+- Each option.text should be 1 sentence
+- Ensure the JSON is valid and properly formatted`;
 
     try {
       const completion = await openai.chat.completions.create({
@@ -76,7 +106,7 @@ Format:
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 500, // Reduced from 1000
+        max_tokens: 500,
         presence_penalty: 0.6,
         frequency_penalty: 0.6
       }, { signal: controller.signal });
@@ -88,14 +118,16 @@ Format:
         throw new Error('Empty response from OpenAI API');
       }
 
-      const response = JSON.parse(content) as {
+      // Validate and clean JSON
+      const validJson = validateJsonString(content);
+      const response = JSON.parse(validJson) as {
         systemResponse: string;
         options: DialogueOption[];
         nextTheme: string;
       };
 
       if (!response.systemResponse || !Array.isArray(response.options)) {
-        throw new Error('Invalid response format from OpenAI API');
+        throw new Error('Invalid response structure from OpenAI API');
       }
 
       if (round === 10) {
@@ -121,10 +153,6 @@ Format:
           { status: 408 }
         );
       }
-
-      const fallbackResponse = round === 10 
-        ? "Your journey has been fascinating. There's more to discover about the Neural Odyssey... but that's a secret for another time."
-        : "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?";
 
       const fallbackOptions: DialogueOption[] = [
         {
@@ -152,7 +180,7 @@ Format:
       return NextResponse.json({
         options: fallbackOptions,
         nextTheme: 'general_exploration',
-        systemResponse: fallbackResponse
+        systemResponse: "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?"
       });
     }
   } catch (error: any) {
@@ -167,7 +195,7 @@ Format:
 
 export async function PUT(req: Request) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const body = await req.json().catch(error => {
@@ -179,24 +207,26 @@ export async function PUT(req: Request) {
       throw new Error('Missing required parameters');
     }
 
-    const prompt = `
-Analyze this response:
-"${response}"
-
-Context: ${context}
-
-Respond in JSON format:
+    const prompt = `Generate a valid JSON object in this exact format:
 {
   "type": "technical|philosophical|creative|analytical",
-  "score": number between 0-1,
-  "nextTheme": "string"
-}`;
+  "score": 0.8,
+  "nextTheme": "next conversation theme"
+}
+
+Analyze this response: "${response}"
+Context: ${context}
+
+Remember:
+- Use ONLY double quotes
+- Ensure all JSON is valid
+- No text before or after the JSON object`;
 
     try {
       const completion = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'You analyze conversation patterns. Keep responses brief and in JSON format.' },
+          { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt }
         ],
         temperature: 0.3,
@@ -212,14 +242,16 @@ Respond in JSON format:
         throw new Error('Empty response from OpenAI API');
       }
 
-      const analysis = JSON.parse(content) as {
+      // Validate and clean JSON
+      const validJson = validateJsonString(content);
+      const analysis = JSON.parse(validJson) as {
         type: 'technical' | 'philosophical' | 'creative' | 'analytical';
         score: number;
         nextTheme: string;
       };
       
       if (!analysis.type || typeof analysis.score !== 'number' || !analysis.nextTheme) {
-        throw new Error('Invalid analysis format from OpenAI API');
+        throw new Error('Invalid analysis structure from OpenAI API');
       }
 
       return NextResponse.json({
