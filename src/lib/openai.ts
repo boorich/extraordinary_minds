@@ -1,4 +1,4 @@
-import { DialogueOption, DialogueHistoryEntry } from '@/types/dialogue';
+import { DialogueOption } from '@/types/dialogue';
 
 export interface ResponseGenerationParams {
   context: string;
@@ -73,6 +73,11 @@ export async function analyzeResponse(response: string, context: string): Promis
     }
 
     const data = await apiResponse.json();
+    
+    // Validate response structure
+    if (!data.type || !data.score || !data.nextTheme) {
+      throw new Error('Invalid analysis response format');
+    }
 
     return data;
   } catch (error) {
