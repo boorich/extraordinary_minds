@@ -29,8 +29,9 @@ Your responses must:
 4. Track conversation round (1-10)`;
 
 export async function POST(req: Request) {
+  const params: ResponseGenerationParams = await req.json();
+  
   try {
-    const params: ResponseGenerationParams = await req.json();
     const { context, previousExchanges, theme } = params;
 
     // Calculate current round
@@ -102,7 +103,7 @@ Format as JSON:
     console.error('Error in dialogue API:', error);
     
     // Fallback response that maintains conversation flow
-    const round = params.previousExchanges.length + 1;
+    const round = params.previousExchanges?.length + 1 || 1;
     const fallbackResponse = round === 10 
       ? "Your journey has been fascinating. There's more to discover about the Neural Odyssey... but that's a secret for another time."
       : "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?";
