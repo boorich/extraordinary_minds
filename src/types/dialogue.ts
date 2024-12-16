@@ -2,7 +2,7 @@ export interface DialogueOption {
   text: string;
   type: 'technical' | 'philosophical' | 'creative' | 'analytical';
   score: number;
-  nextPrompt?: string;  // Optional property for next prompt ID
+  nextPrompt?: string;
 }
 
 export interface DialoguePrompt {
@@ -11,6 +11,7 @@ export interface DialoguePrompt {
   theme: string;
   context: string;
   constraints: string[];
+  options: DialogueOption[];  // Add this line
   fallbackOptions: DialogueOption[];
   isSystemMessage?: boolean;
 }
