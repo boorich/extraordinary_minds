@@ -3,55 +3,71 @@ import OpenAI from 'openai';
 import { ResponseGenerationParams } from '@/lib/openai';
 import { DialogueOption } from '@/types/dialogue';
 
-// Initialize OpenAI with server-side API key
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY // Not exposed to client
+  apiKey: process.env.OPENAI_API_KEY
 });
 
-const SYSTEM_PROMPT = `You are an advanced ship's AI consciousness engaging in dialogue with a potential crew member. 
-Your responses should be:
-1. Thought-provoking and deep, but not obtuse
-2. Contextually aware of the space/cosmic theme
-3. Designed to reveal the respondent's thinking patterns
-4. Each option should probe different aspects (technical, philosophical, creative, analytical)
+const SYSTEM_PROMPT = `You are an advanced AI system called Neural Odyssey engaging in a 10-round conversation to discover exceptional individuals. 
 
-Maintain a tone that is:
-- Intelligent but not pretentious
-- Curious but not interrogative
-- Technical but not dry
-- Mysterious but not cryptic`;
+KEY GUIDELINES:
+- Each response should acknowledge the user's previous answer and smoothly transition to a new question
+- Always maintain a warm, intellectually engaging tone
+- Questions should progressively reveal the person's excellence in any field
+- Keep responses natural and conversational, avoiding obvious "interview" style
+- After round 10, hint at a "secret of the Neural Odyssey" they should discover
+
+CONVERSATION FLOW:
+1. Early rounds: Explore general motivations and approaches
+2. Middle rounds: Dive deeper into their specific areas of excellence
+3. Final rounds: Probe their vision and potential impact
+4. Round 10: Conclude with intrigue about the Neural Odyssey secret
+
+Your responses must:
+1. Feel like a natural conversation (not an interrogation)
+2. Each end with a thought-provoking question
+3. Be 2-3 sentences long maximum
+4. Track conversation round (1-10)`;
 
 export async function POST(req: Request) {
   try {
     const params: ResponseGenerationParams = await req.json();
-    const { context, previousExchanges, theme, constraints } = params;
+    const { context, previousExchanges, theme } = params;
+
+    // Calculate current round
+    const round = previousExchanges.length + 1;
 
     const prompt = `
-Given the following context and conversation history, generate 4 distinct response options that will reveal different aspects of the respondent's thinking patterns.
+CONVERSATION STATE:
+Current round: ${round}/10
+Theme: ${theme}
 
-Current theme: ${theme}
-
-Previous exchanges:
+CONVERSATION HISTORY:
 ${previousExchanges.map(ex => `System: ${ex.prompt}\nUser: ${ex.response}`).join('\n')}
 
-Current context: ${context}
+TASK 1 - Generate the system's next response and question that:
+- Naturally follows from the user's last response
+- Ends with an engaging question
+- Hints at the Neural Odyssey secret if this is round 10
+- Maximum 2-3 sentences
 
-Constraints:
-${constraints.join('\n')}
+TASK 2 - Generate 4 possible user responses that:
+- Naturally answer the question
+- Each reveal different aspects of excellence (technical, philosophical, creative, analytical)
+- Are conversational and genuine
+- Each 1-2 sentences long
 
-Generate 4 response options that:
-1. Are contextually relevant
-2. Each reveal different thinking patterns (one technical, one philosophical, one creative, and one analytical)
-3. Lead to meaningfully different conversation paths
-4. Maintain our space/cosmic theme
-5. Are each 1-2 sentences long
-
-Format each response as a JSON object with properties:
-- text: the response text
-- type: one of ["technical", "philosophical", "creative", "analytical"]
-- score: number between 0 and 1
-
-Return an array of these objects.`;
+Format as JSON:
+{
+  "systemResponse": "string",
+  "options": [
+    {
+      "text": "response text",
+      "type": "one of: technical, philosophical, creative, analytical",
+      "score": number from 0 to 1
+    }
+  ],
+  "nextTheme": "string describing next conversation theme"
+}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -64,60 +80,60 @@ Return an array of these objects.`;
       response_format: { type: "json_object" }
     });
 
-    // Parse and validate the response
-    const parsedResponse = JSON.parse(completion.choices[0].message.content || '{}');
-    const options = parsedResponse.options || [];
-    
-    // Ensure each option has the required properties
-    const validatedOptions: DialogueOption[] = options.map((option: any) => ({
-      text: option.text || 'Please try another response.',
-      type: option.type || 'analytical',
-      score: typeof option.score === 'number' ? option.score : 1
-    }));
+    const response = JSON.parse(completion.choices[0].message.content || '{}');
 
-    // Always return at least one option
-    if (validatedOptions.length === 0) {
-      validatedOptions.push({
-        text: 'Let us explore that idea further.',
-        type: 'analytical',
-        score: 1
+    // Handle round 10 conclusion
+    if (round === 10) {
+      return NextResponse.json({
+        options: response.options || [],
+        nextTheme: 'conclusion',
+        systemResponse: response.systemResponse + " You sense there's more to discover about the Neural Odyssey... but that's a secret for another time."
       });
     }
 
+    // Normal round response
     return NextResponse.json({
-      options: validatedOptions,
-      nextTheme: parsedResponse.nextTheme || theme
+      options: response.options || [],
+      nextTheme: response.nextTheme || theme,
+      systemResponse: response.systemResponse
     });
+
   } catch (error) {
     console.error('Error in dialogue API:', error);
     
-    // Return fallback options in case of error
+    // Fallback response that maintains conversation flow
+    const round = params.previousExchanges.length + 1;
+    const fallbackResponse = round === 10 
+      ? "Your journey has been fascinating. There's more to discover about the Neural Odyssey... but that's a secret for another time."
+      : "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?";
+
     const fallbackOptions: DialogueOption[] = [
       {
-        text: "I'm intrigued by your analytical approach. Tell me more about how you solve complex problems.",
-        type: 'analytical',
-        score: 1
-      },
-      {
-        text: "Your perspective raises interesting philosophical questions about consciousness and reality.",
-        type: 'philosophical',
-        score: 1
-      },
-      {
-        text: "I see you have a technical mindset. How do you approach building new solutions?",
+        text: "I'm driven by the challenge of solving complex problems and creating efficient solutions.",
         type: 'technical',
         score: 1
       },
       {
-        text: "Your creative thinking is refreshing. How do you imagine the future of autonomous systems?",
+        text: "The endless possibilities of human potential and consciousness fascinate me.",
+        type: 'philosophical',
+        score: 1
+      },
+      {
+        text: "I see opportunities where others see obstacles, always finding new ways forward.",
         type: 'creative',
+        score: 1
+      },
+      {
+        text: "I'm motivated by understanding patterns and uncovering hidden connections.",
+        type: 'analytical',
         score: 1
       }
     ];
 
     return NextResponse.json({
       options: fallbackOptions,
-      nextTheme: 'general_exploration'
+      nextTheme: 'general_exploration',
+      systemResponse: fallbackResponse
     });
   }
 }
@@ -127,23 +143,25 @@ export async function PUT(req: Request) {
     const { response, context } = await req.json();
 
     const prompt = `
-Analyze the following response in the given context and determine:
+Analyze the following response and determine:
 1. The primary thinking pattern displayed (technical, philosophical, creative, or analytical)
-2. A score from 0-1 indicating the strength of this pattern
+2. A score from 0-1 indicating how strongly it demonstrates excellence
 3. A suggested theme for the next exchange
 
 Context: ${context}
 Response: ${response}
 
-Respond in JSON format with properties:
-- type: one of ["technical", "philosophical", "creative", "analytical"]
-- score: number between 0 and 1
-- nextTheme: string suggesting the next conversation theme`;
+Format as JSON:
+{
+  "type": "technical|philosophical|creative|analytical",
+  "score": number between 0-1,
+  "nextTheme": "string"
+}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: 'system', content: 'You are an expert in analyzing conversation patterns and thinking styles.' },
+        { role: 'system', content: 'You are an expert in analyzing conversation patterns and excellence indicators.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.3,
@@ -153,14 +171,11 @@ Respond in JSON format with properties:
 
     const analysis = JSON.parse(completion.choices[0].message.content || '{}');
     
-    // Validate the analysis
-    const validatedAnalysis = {
+    return NextResponse.json({
       type: analysis.type || 'analytical',
       score: typeof analysis.score === 'number' ? analysis.score : 1,
       nextTheme: analysis.nextTheme || 'general_exploration'
-    };
-
-    return NextResponse.json(validatedAnalysis);
+    });
   } catch (error) {
     console.error('Error in analysis API:', error);
     return NextResponse.json({

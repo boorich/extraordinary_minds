@@ -27,6 +27,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const lastInteractionTime = useRef<number>(Date.now());
   const [options, setOptions] = useState<DialogueOption[]>([]);
+  const [conversationComplete, setConversationComplete] = useState(false);
 
   useEffect(() => {
     // Initialize with first prompt's options
@@ -34,11 +35,41 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   }, []);
 
   const handleOptionSelect = async (option: DialogueOption) => {
+    if (conversationComplete) return;
+
     try {
       setIsTyping(true);
       const responseTime = Date.now() - lastInteractionTime.current;
       
-      // Update metrics with the selected option's impact
+      // Add to history
+      const newHistory = [...history, {
+        prompt: currentPrompt.text,
+        response: option.text,
+        timestamp: Date.now(),
+        responseTime
+      }];
+      setHistory(newHistory);
+
+      // Generate next response using OpenAI
+      const response = await generateResponseOptions({
+        context: currentPrompt.context,
+        previousExchanges: newHistory,
+        theme: currentPrompt.theme,
+        constraints: currentPrompt.constraints
+      });
+
+      // Create new prompt
+      const nextPrompt: DialoguePrompt = {
+        id: Date.now().toString(),
+        text: response.systemResponse,
+        theme: response.nextTheme,
+        context: currentPrompt.context,
+        constraints: currentPrompt.constraints,
+        fallbackOptions: currentPrompt.fallbackOptions
+      };
+
+      // Update metrics
+      const analysis = await analyzeResponse(option.text, currentPrompt.context);
       const newMetrics = {
         ...metrics,
         state: {
@@ -57,67 +88,19 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       setMetrics(newMetrics);
       onMetricsUpdate?.(newMetrics);
 
-      // Add to history
-      const newHistory = [...history, {
-        prompt: currentPrompt.text,
-        response: option.text,
-        timestamp: Date.now(),
-        responseTime
-      }];
-      setHistory(newHistory);
-
-      // Generate next prompt using OpenAI
-      const generatedOptions = await generateResponseOptions({
-        context: currentPrompt.context,
-        previousExchanges: newHistory,
-        theme: currentPrompt.theme,
-        constraints: currentPrompt.constraints
-      });
-
-      // Analyze the response
-      const analysis = await analyzeResponse(option.text, currentPrompt.context);
-
-      // Create new prompt with both generated options and fallback options
-      const nextPrompt: DialoguePrompt = {
-        id: Date.now().toString(),
-        text: generatedOptions.options[0].text,
-        theme: analysis.nextTheme,
-        context: `Following up on ${currentPrompt.theme} theme, exploring ${analysis.nextTheme}`,
-        constraints: currentPrompt.constraints,
-        options: generatedOptions.options,
-        fallbackOptions: [
-          {
-            text: "I analyze situations systematically.",
-            type: 'analytical',
-            score: 1
-          },
-          {
-            text: "Innovation comes from questioning assumptions.",
-            type: 'philosophical',
-            score: 1
-          },
-          {
-            text: "I build solutions with available tools.",
-            type: 'technical',
-            score: 1
-          },
-          {
-            text: "Every problem has hidden opportunities.",
-            type: 'creative',
-            score: 1
-          }
-        ]
-      };
-
       await simulateTyping();
+      
+      // Check if this was the final round
+      if (newHistory.length >= 10) {
+        setConversationComplete(true);
+      }
+
       setCurrentPrompt(nextPrompt);
-      setOptions(nextPrompt.options || nextPrompt.fallbackOptions);
+      setOptions(response.options);
       setError(null);
     } catch (err) {
       console.error('Error in dialogue:', err);
       setError('Something went wrong with the conversation. Please try again.');
-      // Fall back to static options if available
-      setOptions(currentPrompt.fallbackOptions);
     } finally {
       setIsTyping(false);
       lastInteractionTime.current = Date.now();
@@ -146,7 +129,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         {history.map((entry, index) => (
           <div key={index} className="space-y-2">
             <div className="bg-slate-700/50 p-3 rounded-lg border border-cyan-400/30">
-              <span className="text-cyan-400 text-sm">System:</span>
+              <span className="text-cyan-400 text-sm">Neural Odyssey:</span>
               <p className="text-slate-200 mt-1">{entry.prompt}</p>
             </div>
             <div className="bg-slate-700/50 p-3 rounded-lg border border-cyan-400/30 ml-4">
@@ -156,19 +139,21 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
           </div>
         ))}
         
-        <div className="bg-slate-700/50 p-3 rounded-lg border border-cyan-400/30">
-          <span className="text-cyan-400 text-sm">System:</span>
-          <p className="text-slate-200 mt-1">
-            {isTyping ? (
-              <span className="animate-pulse">...</span>
-            ) : (
-              currentPrompt.text
-            )}
-          </p>
-        </div>
+        {!conversationComplete && (
+          <div className="bg-slate-700/50 p-3 rounded-lg border border-cyan-400/30">
+            <span className="text-cyan-400 text-sm">Neural Odyssey:</span>
+            <p className="text-slate-200 mt-1">
+              {isTyping ? (
+                <span className="animate-pulse">...</span>
+              ) : (
+                currentPrompt.text
+              )}
+            </p>
+          </div>
+        )}
       </div>
 
-      {!isTyping && options && (
+      {!isTyping && options && !conversationComplete && (
         <div className="grid grid-cols-1 gap-2">
           {options.map((option, index) => (
             <button
