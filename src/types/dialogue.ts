@@ -2,6 +2,7 @@ export interface DialogueOption {
   text: string;
   type: 'technical' | 'philosophical' | 'creative' | 'analytical';
   score: number;
+  nextPrompt?: string;  // Optional property for next prompt ID
 }
 
 export interface DialoguePrompt {
