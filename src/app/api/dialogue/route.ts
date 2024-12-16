@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { ResponseGenerationParams } from '@/lib/openai';
+import { DialogueOption } from '@/types/dialogue';
 
 // Initialize OpenAI with server-side API key
 const openai = new OpenAI({
@@ -40,12 +41,17 @@ ${constraints.join('\n')}
 
 Generate 4 response options that:
 1. Are contextually relevant
-2. Each reveal different thinking patterns
+2. Each reveal different thinking patterns (one technical, one philosophical, one creative, and one analytical)
 3. Lead to meaningfully different conversation paths
 4. Maintain our space/cosmic theme
 5. Are each 1-2 sentences long
 
-Format the response as a JSON array of strings.`;
+Format each response as a JSON object with properties:
+- text: the response text
+- type: one of ["technical", "philosophical", "creative", "analytical"]
+- score: number between 0 and 1
+
+Return an array of these objects.`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4',
@@ -54,19 +60,65 @@ Format the response as a JSON array of strings.`;
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 1000,
       response_format: { type: "json_object" }
     });
 
-    const response = JSON.parse(completion.choices[0].message.content || '{}');
+    // Parse and validate the response
+    const parsedResponse = JSON.parse(completion.choices[0].message.content || '{}');
+    const options = parsedResponse.options || [];
     
-    return NextResponse.json({ options: response.options || [] });
+    // Ensure each option has the required properties
+    const validatedOptions: DialogueOption[] = options.map((option: any) => ({
+      text: option.text || 'Please try another response.',
+      type: option.type || 'analytical',
+      score: typeof option.score === 'number' ? option.score : 1
+    }));
+
+    // Always return at least one option
+    if (validatedOptions.length === 0) {
+      validatedOptions.push({
+        text: 'Let us explore that idea further.',
+        type: 'analytical',
+        score: 1
+      });
+    }
+
+    return NextResponse.json({
+      options: validatedOptions,
+      nextTheme: parsedResponse.nextTheme || theme
+    });
   } catch (error) {
     console.error('Error in dialogue API:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate dialogue options' },
-      { status: 500 }
-    );
+    
+    // Return fallback options in case of error
+    const fallbackOptions: DialogueOption[] = [
+      {
+        text: "I'm intrigued by your analytical approach. Tell me more about how you solve complex problems.",
+        type: 'analytical',
+        score: 1
+      },
+      {
+        text: "Your perspective raises interesting philosophical questions about consciousness and reality.",
+        type: 'philosophical',
+        score: 1
+      },
+      {
+        text: "I see you have a technical mindset. How do you approach building new solutions?",
+        type: 'technical',
+        score: 1
+      },
+      {
+        text: "Your creative thinking is refreshing. How do you imagine the future of autonomous systems?",
+        type: 'creative',
+        score: 1
+      }
+    ];
+
+    return NextResponse.json({
+      options: fallbackOptions,
+      nextTheme: 'general_exploration'
+    });
   }
 }
 
@@ -101,12 +153,20 @@ Respond in JSON format with properties:
 
     const analysis = JSON.parse(completion.choices[0].message.content || '{}');
     
-    return NextResponse.json(analysis);
+    // Validate the analysis
+    const validatedAnalysis = {
+      type: analysis.type || 'analytical',
+      score: typeof analysis.score === 'number' ? analysis.score : 1,
+      nextTheme: analysis.nextTheme || 'general_exploration'
+    };
+
+    return NextResponse.json(validatedAnalysis);
   } catch (error) {
     console.error('Error in analysis API:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze response' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      type: 'analytical',
+      score: 1,
+      nextTheme: 'general_exploration'
+    });
   }
 }
