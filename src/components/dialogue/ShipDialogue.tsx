@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DialoguePrompt, DialogueOption, DialogueMetrics } from '@/types/dialogue';
-import { generateResponseOptions, analyzeResponse } from '@/lib/openai';
+import { generateResponseOptions } from '@/lib/openai';
 import { initialDialogues } from '@/config/dialogues';
 
 interface ShipDialogueProps {
@@ -32,15 +32,13 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         context: currentPrompt.context,
         previousExchanges: [{
           prompt: currentPrompt.text,
-          response: option.text,
-          timestamp: Date.now(),
-          responseTime: 0
+          response: option.text
         }],
         theme: currentPrompt.theme,
         constraints: currentPrompt.constraints
       });
 
-      // Create new prompt with the response
+      // Create new prompt
       const nextPrompt: DialoguePrompt = {
         id: Date.now().toString(),
         text: response.systemResponse,
