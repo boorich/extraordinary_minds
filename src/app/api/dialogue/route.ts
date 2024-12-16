@@ -8,34 +8,31 @@ if (!process.env.OPENAI_API_KEY) {
 }
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
+  timeout: 10000, // 10 second timeout
+  maxRetries: 2
 });
 
-const SYSTEM_PROMPT = `You are an advanced AI system called Neural Odyssey engaging in a 10-round conversation to discover exceptional individuals. 
+const SYSTEM_PROMPT = `You are an advanced AI system called Neural Odyssey engaging in a 10-round conversation to discover exceptional individuals. Keep responses concise and focused.
 
 KEY GUIDELINES:
-- Each response should acknowledge the user's previous answer and smoothly transition to a new question
-- Always maintain a warm, intellectually engaging tone
-- Questions should progressively reveal the person's excellence in any field
-- Keep responses natural and conversational, avoiding obvious "interview" style
-- After round 10, hint at a "secret of the Neural Odyssey" they should discover
+- Each response should acknowledge the user's previous answer with a quick transition to a new question
+- Maintain an engaging but brief tone
+- Questions should reveal the person's excellence in any field
+- Keep it conversational but concise
+- After round 10, briefly hint at the Neural Odyssey secret
 
-CONVERSATION FLOW:
-1. Early rounds: Explore general motivations and approaches
-2. Middle rounds: Dive deeper into their specific areas of excellence
-3. Final rounds: Probe their vision and potential impact
-4. Round 10: Conclude with intrigue about the Neural Odyssey secret
-
-Your responses must:
-1. Feel like a natural conversation (not an interrogation)
-2. Each end with a thought-provoking question
-3. Be 2-3 sentences long maximum
-4. Track conversation round (1-10)
-5. IMPORTANT: Always respond in valid JSON format according to the provided structure`;
+Your responses must be:
+1. Natural but brief
+2. End with a thought-provoking question
+3. Maximum 2 sentences
+4. Always in valid JSON format`;
 
 export async function POST(req: Request) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
   try {
-    // Validate request body
     const params: ResponseGenerationParams = await req.json().catch(error => {
       throw new Error('Invalid request body: ' + error.message);
     });
@@ -44,30 +41,21 @@ export async function POST(req: Request) {
       throw new Error('Missing required parameters');
     }
 
-    // Calculate current round
     const round = params.previousExchanges.length + 1;
-
     const prompt = `
-CONVERSATION STATE:
-Current round: ${round}/10
+Round: ${round}/10
 Theme: ${params.theme}
 
-CONVERSATION HISTORY:
-${params.previousExchanges.map(ex => `System: ${ex.prompt}\nUser: ${ex.response}`).join('\n')}
+Last exchange:${params.previousExchanges.length > 0 ? `
+System: ${params.previousExchanges[params.previousExchanges.length - 1]?.prompt}
+User: ${params.previousExchanges[params.previousExchanges.length - 1]?.response}` : ''}
 
-TASK 1 - Generate the system's next response and question that:
-- Naturally follows from the user's last response
-- Ends with an engaging question
-- Hints at the Neural Odyssey secret if this is round 10
-- Maximum 2-3 sentences
+Generate a JSON response with:
+1. A brief acknowledgment and follow-up question (max 2 sentences)
+2. Four possible user responses (1 sentence each)
+3. Next conversation theme
 
-TASK 2 - Generate 4 possible user responses that:
-- Naturally answer the question
-- Each reveal different aspects of excellence (technical, philosophical, creative, analytical)
-- Are conversational and genuine
-- Each 1-2 sentences long
-
-YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
+Format:
 {
   "systemResponse": "string",
   "options": [
@@ -77,7 +65,7 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
       "score": number from 0 to 1
     }
   ],
-  "nextTheme": "string describing next conversation theme"
+  "nextTheme": "string"
 }`;
 
     try {
@@ -88,8 +76,12 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 1000
-      });
+        max_tokens: 500, // Reduced from 1000
+        presence_penalty: 0.6,
+        frequency_penalty: 0.6
+      }, { signal: controller.signal });
+
+      clearTimeout(timeoutId);
 
       const content = completion.choices[0]?.message?.content;
       if (!content) {
@@ -102,12 +94,10 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
         nextTheme: string;
       };
 
-      // Validate response structure
       if (!response.systemResponse || !Array.isArray(response.options)) {
         throw new Error('Invalid response format from OpenAI API');
       }
 
-      // Handle round 10 conclusion
       if (round === 10) {
         return NextResponse.json({
           options: response.options || [],
@@ -116,7 +106,6 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
         });
       }
 
-      // Normal round response
       return NextResponse.json({
         options: response.options || [],
         nextTheme: response.nextTheme || params.theme,
@@ -125,45 +114,36 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
 
     } catch (error: any) {
       console.error('OpenAI API error:', error);
-
-      // Check for specific OpenAI error types
-      if (error.code === 'insufficient_quota') {
+      
+      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
         return NextResponse.json(
-          { error: 'OpenAI API quota exceeded. Please try again later.' },
-          { status: 429 }
+          { error: 'Request timeout. Please try again.' },
+          { status: 408 }
         );
       }
 
-      if (error.code === 'invalid_api_key') {
-        return NextResponse.json(
-          { error: 'Invalid API key configuration.' },
-          { status: 401 }
-        );
-      }
-
-      // Return fallback response
       const fallbackResponse = round === 10 
         ? "Your journey has been fascinating. There's more to discover about the Neural Odyssey... but that's a secret for another time."
         : "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?";
 
       const fallbackOptions: DialogueOption[] = [
         {
-          text: "I'm driven by the challenge of solving complex problems and creating efficient solutions.",
+          text: "I enjoy solving complex technical problems and creating efficient solutions.",
           type: 'technical',
           score: 1
         },
         {
-          text: "The endless possibilities of human potential and consciousness fascinate me.",
+          text: "I'm fascinated by the deeper questions about consciousness and potential.",
           type: 'philosophical',
           score: 1
         },
         {
-          text: "I see opportunities where others see obstacles, always finding new ways forward.",
+          text: "I see opportunities where others see obstacles.",
           type: 'creative',
           score: 1
         },
         {
-          text: "I'm motivated by understanding patterns and uncovering hidden connections.",
+          text: "I find patterns and connections others might miss.",
           type: 'analytical',
           score: 1
         }
@@ -176,6 +156,7 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
       });
     }
   } catch (error: any) {
+    clearTimeout(timeoutId);
     console.error('Route error:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
@@ -185,6 +166,9 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
 }
 
 export async function PUT(req: Request) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
   try {
     const body = await req.json().catch(error => {
       throw new Error('Invalid request body: ' + error.message);
@@ -196,15 +180,12 @@ export async function PUT(req: Request) {
     }
 
     const prompt = `
-Analyze the following response and determine:
-1. The primary thinking pattern displayed (technical, philosophical, creative, or analytical)
-2. A score from 0-1 indicating how strongly it demonstrates excellence
-3. A suggested theme for the next exchange
+Analyze this response:
+"${response}"
 
 Context: ${context}
-Response: ${response}
 
-YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
+Respond in JSON format:
 {
   "type": "technical|philosophical|creative|analytical",
   "score": number between 0-1,
@@ -215,12 +196,16 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
       const completion = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'You are an expert in analyzing conversation patterns and excellence indicators. Always respond in valid JSON format.' },
+          { role: 'system', content: 'You analyze conversation patterns. Keep responses brief and in JSON format.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.3,
-        max_tokens: 150
-      });
+        max_tokens: 150,
+        presence_penalty: 0.6,
+        frequency_penalty: 0.6
+      }, { signal: controller.signal });
+
+      clearTimeout(timeoutId);
 
       const content = completion.choices[0]?.message?.content;
       if (!content) {
@@ -233,7 +218,6 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
         nextTheme: string;
       };
       
-      // Validate analysis structure
       if (!analysis.type || typeof analysis.score !== 'number' || !analysis.nextTheme) {
         throw new Error('Invalid analysis format from OpenAI API');
       }
@@ -246,23 +230,14 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
 
     } catch (error: any) {
       console.error('OpenAI API error in analysis:', error);
+
+      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+        return NextResponse.json(
+          { error: 'Request timeout. Please try again.' },
+          { status: 408 }
+        );
+      }
       
-      // Check for specific OpenAI error types
-      if (error.code === 'insufficient_quota') {
-        return NextResponse.json(
-          { error: 'OpenAI API quota exceeded. Please try again later.' },
-          { status: 429 }
-        );
-      }
-
-      if (error.code === 'invalid_api_key') {
-        return NextResponse.json(
-          { error: 'Invalid API key configuration.' },
-          { status: 401 }
-        );
-      }
-
-      // Return fallback analysis
       return NextResponse.json({
         type: 'analytical',
         score: 1,
@@ -270,6 +245,7 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
       });
     }
   } catch (error: any) {
+    clearTimeout(timeoutId);
     console.error('Analysis route error:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
