@@ -11,31 +11,26 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-const SYSTEM_PROMPT = `You are an advanced AI system called Neural Odyssey engaging in a 10-round conversation to discover exceptional individuals. 
+// Timeout utility
+const timeoutPromise = (ms: number) => new Promise((_, reject) => {
+  setTimeout(() => reject(new Error('Request timeout')), ms);
+});
+
+// Constants
+const TIMEOUT_MS = 9000; // 9 seconds to stay under Vercel's 10s limit
+const SYSTEM_PROMPT = `You are an advanced AI system called Neural Odyssey engaging in conversations to discover exceptional individuals.
+
+Your task is to generate engaging responses and analyze user inputs efficiently. Always format responses as valid JSON.
 
 KEY GUIDELINES:
-- Each response should acknowledge the user's previous answer and smoothly transition to a new question
-- Always maintain a warm, intellectually engaging tone
-- Questions should progressively reveal the person's excellence in any field
-- Keep responses natural and conversational, avoiding obvious "interview" style
-- After round 10, hint at a "secret of the Neural Odyssey" they should discover
-
-CONVERSATION FLOW:
-1. Early rounds: Explore general motivations and approaches
-2. Middle rounds: Dive deeper into their specific areas of excellence
-3. Final rounds: Probe their vision and potential impact
-4. Round 10: Conclude with intrigue about the Neural Odyssey secret
-
-Your responses must:
-1. Feel like a natural conversation (not an interrogation)
-2. Each end with a thought-provoking question
-3. Be 2-3 sentences long maximum
-4. Track conversation round (1-10)
-5. IMPORTANT: Always respond in valid JSON format according to the provided structure`;
+- Keep responses concise (2-3 sentences)
+- End with thought-provoking questions
+- Analyze thinking patterns (technical, philosophical, creative, analytical)
+- Track conversation round (1-10)
+- Maintain engaging, natural conversation flow`;
 
 export async function POST(req: Request) {
   try {
-    // Validate request body
     const params: ResponseGenerationParams = await req.json().catch(error => {
       throw new Error('Invalid request body: ' + error.message);
     });
@@ -44,52 +39,51 @@ export async function POST(req: Request) {
       throw new Error('Missing required parameters');
     }
 
-    // Calculate current round
     const round = params.previousExchanges.length + 1;
+    const lastResponse = params.previousExchanges[params.previousExchanges.length - 1]?.response || '';
 
     const prompt = `
-CONVERSATION STATE:
-Current round: ${round}/10
+CURRENT STATE:
+Round: ${round}/10
 Theme: ${params.theme}
+Last Response: ${lastResponse}
 
-CONVERSATION HISTORY:
-${params.previousExchanges.map(ex => `System: ${ex.prompt}\nUser: ${ex.response}`).join('\n')}
+TASK: Generate a combined response that includes:
+1. System's next response and question (2-3 sentences)
+2. Analysis of user's last response (if any)
+3. Four possible next responses for the user
 
-TASK 1 - Generate the system's next response and question that:
-- Naturally follows from the user's last response
-- Ends with an engaging question
-- Hints at the Neural Odyssey secret if this is round 10
-- Maximum 2-3 sentences
-
-TASK 2 - Generate 4 possible user responses that:
-- Naturally answer the question
-- Each reveal different aspects of excellence (technical, philosophical, creative, analytical)
-- Are conversational and genuine
-- Each 1-2 sentences long
-
-YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
+RESPOND IN THIS EXACT JSON FORMAT:
 {
-  "systemResponse": "string",
+  "systemResponse": "your engaging response with question",
+  "analysis": {
+    "type": "technical|philosophical|creative|analytical",
+    "score": 0.1 to 1.0,
+    "theme": "next conversation theme"
+  },
   "options": [
     {
-      "text": "response text",
-      "type": "one of: technical, philosophical, creative, analytical",
-      "score": number from 0 to 1
+      "text": "possible user response",
+      "type": "technical|philosophical|creative|analytical",
+      "score": 0.1 to 1.0
     }
-  ],
-  "nextTheme": "string describing next conversation theme"
+  ]
 }`;
 
     try {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      });
+      // Race between API call and timeout
+      const completion = await Promise.race([
+        openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',  // Using 3.5-turbo for faster response
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 800
+        }),
+        timeoutPromise(TIMEOUT_MS)
+      ]);
 
       if (!completion.choices[0]?.message?.content) {
         throw new Error('Empty response from OpenAI API');
@@ -107,21 +101,30 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
         return NextResponse.json({
           options: response.options || [],
           nextTheme: 'conclusion',
-          systemResponse: response.systemResponse + " You sense there's more to discover about the Neural Odyssey... but that's a secret for another time."
+          systemResponse: response.systemResponse + " You sense there's more to discover about the Neural Odyssey... but that's a secret for another time.",
+          analysis: response.analysis
         });
       }
 
       // Normal round response
       return NextResponse.json({
         options: response.options || [],
-        nextTheme: response.nextTheme || params.theme,
-        systemResponse: response.systemResponse
+        nextTheme: response.analysis?.theme || params.theme,
+        systemResponse: response.systemResponse,
+        analysis: response.analysis
       });
 
     } catch (error: any) {
       console.error('OpenAI API error:', error);
 
-      // Check for specific OpenAI error types
+      // Specific error handling
+      if (error.message === 'Request timeout') {
+        return NextResponse.json(
+          { error: 'Request timed out. Please try again.' },
+          { status: 408 }
+        );
+      }
+
       if (error.code === 'insufficient_quota') {
         return NextResponse.json(
           { error: 'OpenAI API quota exceeded. Please try again later.' },
@@ -141,7 +144,7 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
         ? "Your journey has been fascinating. There's more to discover about the Neural Odyssey... but that's a secret for another time."
         : "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?";
 
-      const fallbackOptions: DialogueOption[] = [
+      const fallbackOptions = [
         {
           text: "I'm driven by the challenge of solving complex problems and creating efficient solutions.",
           type: 'technical',
@@ -167,7 +170,12 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
       return NextResponse.json({
         options: fallbackOptions,
         nextTheme: 'general_exploration',
-        systemResponse: fallbackResponse
+        systemResponse: fallbackResponse,
+        analysis: {
+          type: 'analytical',
+          score: 1,
+          theme: 'general_exploration'
+        }
       });
     }
   } catch (error: any) {
@@ -179,91 +187,4 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
   }
 }
 
-export async function PUT(req: Request) {
-  try {
-    const body = await req.json().catch(error => {
-      throw new Error('Invalid request body: ' + error.message);
-    });
-
-    const { response, context } = body;
-    if (!response || !context) {
-      throw new Error('Missing required parameters');
-    }
-
-    const prompt = `
-Analyze the following response and determine:
-1. The primary thinking pattern displayed (technical, philosophical, creative, or analytical)
-2. A score from 0-1 indicating how strongly it demonstrates excellence
-3. A suggested theme for the next exchange
-
-Context: ${context}
-Response: ${response}
-
-YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
-{
-  "type": "technical|philosophical|creative|analytical",
-  "score": number between 0-1,
-  "nextTheme": "string"
-}`;
-
-    try {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: 'You are an expert in analyzing conversation patterns and excellence indicators. Always respond in valid JSON format.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 150
-      });
-
-      if (!completion.choices[0]?.message?.content) {
-        throw new Error('Empty response from OpenAI API');
-      }
-
-      const analysis = JSON.parse(completion.choices[0].message.content);
-      
-      // Validate analysis structure
-      if (!analysis.type || typeof analysis.score !== 'number' || !analysis.nextTheme) {
-        throw new Error('Invalid analysis format from OpenAI API');
-      }
-
-      return NextResponse.json({
-        type: analysis.type,
-        score: analysis.score,
-        nextTheme: analysis.nextTheme
-      });
-
-    } catch (error: any) {
-      console.error('OpenAI API error in analysis:', error);
-      
-      // Check for specific OpenAI error types
-      if (error.code === 'insufficient_quota') {
-        return NextResponse.json(
-          { error: 'OpenAI API quota exceeded. Please try again later.' },
-          { status: 429 }
-        );
-      }
-
-      if (error.code === 'invalid_api_key') {
-        return NextResponse.json(
-          { error: 'Invalid API key configuration.' },
-          { status: 401 }
-        );
-      }
-
-      // Return fallback analysis
-      return NextResponse.json({
-        type: 'analytical',
-        score: 1,
-        nextTheme: 'general_exploration'
-      });
-    }
-  } catch (error: any) {
-    console.error('Analysis route error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.status || 500 }
-    );
-  }
-}
+// PUT endpoint removed since analysis is now combined in POST
