@@ -30,6 +30,8 @@ const getIcon = (type: string) => {
   }
 };
 
+const COMPLETION_MESSAGE = "Ahoy! Ye've successfully navigated the Neural Odyssey, brave explorer!";
+
 const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [currentPrompt, setCurrentPrompt] = useState<DialoguePrompt>(initialDialogues[0]);
   const [round, setRound] = useState(1);
@@ -43,12 +45,27 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   }, []);
 
   const handleOptionSelect = async (option: DialogueOption) => {
-    if (conversationComplete || round >= 10) return;
+    if (conversationComplete) return;
 
     try {
       setIsTyping(true);
       
-      // Generate next response using OpenAI
+      // Calculate next round number
+      const nextRound = round + 1;
+      
+      // If this was the last response, show completion
+      if (nextRound >= 10) {
+        setRound(10);
+        setCurrentPrompt({
+          ...currentPrompt,
+          text: COMPLETION_MESSAGE
+        });
+        setConversationComplete(true);
+        setIsTyping(false);
+        return;
+      }
+      
+      // Otherwise, get next response
       const response = await generateResponseOptions({
         context: currentPrompt.context,
         previousExchanges: [{
@@ -69,15 +86,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         fallbackOptions: currentPrompt.fallbackOptions
       };
 
-      // Update round counter
-      const nextRound = Math.min(round + 1, 10);
       setRound(nextRound);
-      
-      // Check if this was the final round
-      if (nextRound >= 10) {
-        setConversationComplete(true);
-      }
-
       setCurrentPrompt(nextPrompt);
       setOptions(response.options);
       setError(null);
@@ -139,14 +148,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
               <span>{option.text}</span>
             </button>
           ))}
-        </div>
-      )}
-
-      {conversationComplete && (
-        <div className="text-center p-4 bg-cyan-400/20 rounded-lg border border-cyan-400">
-          <p className="text-cyan-100 pirate-font text-lg">
-            Ahoy! Ye&apos;ve successfully navigated the Neural Odyssey, brave explorer!
-          </p>
         </div>
       )}
     </div>
