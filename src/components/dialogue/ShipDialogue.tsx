@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { DialoguePrompt, DialogueOption, DialogueMetrics, DialogueHistoryEntry } from '@/types/dialogue';
+import { DialoguePrompt, DialogueOption, DialogueMetrics } from '@/types/dialogue';
 import { generateResponseOptions, analyzeResponse } from '@/lib/openai';
 import { initialDialogues } from '@/config/dialogues';
 
@@ -11,26 +11,13 @@ interface ShipDialogueProps {
 
 const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [currentPrompt, setCurrentPrompt] = useState<DialoguePrompt>(initialDialogues[0]);
-  const [history, setHistory] = useState<DialogueHistoryEntry[]>([]);
-  const [metrics, setMetrics] = useState<DialogueMetrics>({
-    state: {
-      technical: 0,
-      philosophical: 0,
-      creative: 0,
-      analytical: 0
-    },
-    history: [],
-    startTime: Date.now(),
-    averageResponseTime: 0
-  });
+  const [round, setRound] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const lastInteractionTime = useRef<number>(Date.now());
   const [options, setOptions] = useState<DialogueOption[]>([]);
   const [conversationComplete, setConversationComplete] = useState(false);
 
   useEffect(() => {
-    // Initialize with first prompt's options
     setOptions(currentPrompt.options || currentPrompt.fallbackOptions);
   }, []);
 
@@ -39,26 +26,21 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
 
     try {
       setIsTyping(true);
-      const responseTime = Date.now() - lastInteractionTime.current;
       
-      // Add to history
-      const newHistory = [...history, {
-        prompt: currentPrompt.text,
-        response: option.text,
-        timestamp: Date.now(),
-        responseTime
-      }];
-      setHistory(newHistory);
-
       // Generate next response using OpenAI
       const response = await generateResponseOptions({
         context: currentPrompt.context,
-        previousExchanges: newHistory,
+        previousExchanges: [{
+          prompt: currentPrompt.text,
+          response: option.text,
+          timestamp: Date.now(),
+          responseTime: 0
+        }],
         theme: currentPrompt.theme,
         constraints: currentPrompt.constraints
       });
 
-      // Create new prompt
+      // Create new prompt with the response
       const nextPrompt: DialoguePrompt = {
         id: Date.now().toString(),
         text: response.systemResponse,
@@ -68,98 +50,58 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         fallbackOptions: currentPrompt.fallbackOptions
       };
 
-      // Update metrics
-      const analysis = await analyzeResponse(option.text, currentPrompt.context);
-      const newMetrics = {
-        ...metrics,
-        state: {
-          ...metrics.state,
-          [option.type]: metrics.state[option.type] + option.score
-        },
-        history: [...metrics.history, {
-          prompt: currentPrompt.text,
-          response: option.text,
-          timestamp: Date.now(),
-          responseTime
-        }],
-        averageResponseTime: calculateAverageResponseTime([...metrics.history, { responseTime }])
-      };
-      
-      setMetrics(newMetrics);
-      onMetricsUpdate?.(newMetrics);
-
-      await simulateTyping();
+      // Update round counter
+      const nextRound = round + 1;
+      setRound(nextRound);
       
       // Check if this was the final round
-      if (newHistory.length >= 10) {
+      if (nextRound > 10) {
         setConversationComplete(true);
       }
 
       setCurrentPrompt(nextPrompt);
       setOptions(response.options);
       setError(null);
+
     } catch (err) {
       console.error('Error in dialogue:', err);
       setError('Something went wrong with the conversation. Please try again.');
     } finally {
       setIsTyping(false);
-      lastInteractionTime.current = Date.now();
     }
   };
 
-  const simulateTyping = async () => {
-    return new Promise(resolve => setTimeout(resolve, 1000));
-  };
-
-  const calculateAverageResponseTime = (history: Array<{ responseTime: number }>) => {
-    if (history.length === 0) return 0;
-    const sum = history.reduce((acc, entry) => acc + entry.responseTime, 0);
-    return sum / history.length;
-  };
-
   return (
-    <div className="relative bg-slate-800/90 rounded-lg border border-cyan-400 p-6 max-w-4xl mx-auto my-12">
+    <div className="relative bg-slate-800/90 rounded-lg border border-cyan-400 p-6 max-w-4xl mx-auto">
       {error && (
         <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300">
           {error}
         </div>
       )}
       
-      <div className="mb-6 space-y-4">
-        {history.map((entry, index) => (
-          <div key={index} className="space-y-2">
-            <div className="bg-slate-700/50 p-3 rounded-lg border border-cyan-400/30">
-              <span className="text-cyan-400 text-sm">Neural Odyssey:</span>
-              <p className="text-slate-200 mt-1">{entry.prompt}</p>
-            </div>
-            <div className="bg-slate-700/50 p-3 rounded-lg border border-cyan-400/30 ml-4">
-              <span className="text-cyan-400 text-sm">You:</span>
-              <p className="text-slate-200 mt-1">{entry.response}</p>
-            </div>
+      <div className="mb-4 text-center text-sm text-cyan-400">
+        Question {round} of 10
+      </div>
+
+      <div className="mb-6 bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30">
+        {isTyping ? (
+          <div className="animate-pulse flex space-x-2 justify-center">
+            <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+            <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
           </div>
-        ))}
-        
-        {!conversationComplete && (
-          <div className="bg-slate-700/50 p-3 rounded-lg border border-cyan-400/30">
-            <span className="text-cyan-400 text-sm">Neural Odyssey:</span>
-            <p className="text-slate-200 mt-1">
-              {isTyping ? (
-                <span className="animate-pulse">...</span>
-              ) : (
-                currentPrompt.text
-              )}
-            </p>
-          </div>
+        ) : (
+          <p className="text-slate-200">{currentPrompt.text}</p>
         )}
       </div>
 
       {!isTyping && options && !conversationComplete && (
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 gap-3">
           {options.map((option, index) => (
             <button
               key={index}
               onClick={() => handleOptionSelect(option)}
-              className="text-left p-3 bg-slate-700/50 rounded border border-cyan-400/30 
+              className="text-left p-4 bg-slate-700/50 rounded border border-cyan-400/30 
                        hover:bg-slate-600/50 hover:border-cyan-400 transition-all duration-200
                        text-slate-200 hover:text-white"
               disabled={isTyping}
@@ -167,6 +109,12 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
               {option.text}
             </button>
           ))}
+        </div>
+      )}
+
+      {conversationComplete && (
+        <div className="text-center p-4 bg-cyan-400/20 rounded-lg border border-cyan-400">
+          <p className="text-cyan-100">Congratulations! You've completed the Neural Odyssey dialogue.</p>
         </div>
       )}
     </div>
