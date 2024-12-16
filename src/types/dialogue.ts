@@ -11,7 +11,7 @@ export interface DialoguePrompt {
   theme: string;
   context: string;
   constraints: string[];
-  options: DialogueOption[];  // Add this line
+  options?: DialogueOption[];  // Make options optional
   fallbackOptions: DialogueOption[];
   isSystemMessage?: boolean;
 }
