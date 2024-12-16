@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import type { ChatCompletion } from 'openai/resources';
 import { ResponseGenerationParams } from '@/lib/openai';
 import { DialogueOption } from '@/types/dialogue';
 
@@ -97,7 +96,11 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
         throw new Error('Empty response from OpenAI API');
       }
 
-      const response = JSON.parse(content);
+      const response = JSON.parse(content) as {
+        systemResponse: string;
+        options: DialogueOption[];
+        nextTheme: string;
+      };
 
       // Validate response structure
       if (!response.systemResponse || !Array.isArray(response.options)) {
@@ -224,7 +227,11 @@ YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
         throw new Error('Empty response from OpenAI API');
       }
 
-      const analysis = JSON.parse(content);
+      const analysis = JSON.parse(content) as {
+        type: 'technical' | 'philosophical' | 'creative' | 'analytical';
+        score: number;
+        nextTheme: string;
+      };
       
       // Validate analysis structure
       if (!analysis.type || typeof analysis.score !== 'number' || !analysis.nextTheme) {
