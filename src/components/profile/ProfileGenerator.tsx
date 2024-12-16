@@ -20,6 +20,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
   const [isImageGenerating, setIsImageGenerating] = useState(false);
   const [imageGenProgress, setImageGenProgress] = useState<string>('');
   const [retryCount, setRetryCount] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const calculateProfile = () => {
     const profileMetrics = dialogueChoices.reduce((acc, choice) => {
@@ -71,6 +72,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       setError(null);
       setImageGenProgress('');
       setRetryCount(0);
+      setIsTransitioning(true);
 
       // Step 1: Generate initial profile
       const profileResponse = await fetch('/api/profile', {
@@ -131,8 +133,11 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       setIsGenerating(false);
       setIsImageGenerating(false);
       setImageGenProgress('');
+      setTimeout(() => setIsTransitioning(false), 500); // Allow time for fade transition
     }
   };
+
+  const metrics = calculateProfile();
 
   return (
     <div className="bg-slate-800/90 rounded-lg border border-cyan-400 p-6 mt-8">
@@ -144,8 +149,9 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
         </div>
       )}
 
-      {!profile ? (
-        <>
+      <div className="relative min-h-[400px]">
+        {/* Input Form Layer */}
+        <div className={`absolute inset-0 transition-all duration-500 ${isTransitioning ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
           <div className="mb-6">
             <label className="block text-cyan-200 mb-2" htmlFor="name">
               Your Name, Explorer
@@ -156,15 +162,16 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-2 text-white 
-                       focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                     focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
               placeholder="Enter your name"
+              disabled={isGenerating}
             />
           </div>
 
           <div className="mb-6">
             <h4 className="text-cyan-200 mb-2">Your Neural Signature</h4>
             <div className="grid grid-cols-2 gap-4">
-              {Object.entries(calculateProfile()).map(([type, percentage]) => (
+              {Object.entries(metrics).map(([type, percentage]) => (
                 <div 
                   key={type} 
                   className="bg-slate-700/50 p-3 rounded border border-cyan-400/30"
@@ -191,79 +198,105 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
                        : 'water-effect hover:brightness-110 transition-all transform hover:scale-105'
                      }`}
           >
-            {isGenerating ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Generating Profile...
-              </div>
-            ) : (
-              'Generate Neural Explorer Profile'
-            )}
-          </button>
-        </>
-      ) : (
-        <div className="space-y-6">
-          <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-cyan-400">
-            {profile.imageUrl ? (
-              <Image
-                src={profile.imageUrl}
-                alt={`${profile.name}'s Neural Explorer Profile`}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            ) : isImageGenerating ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
-                <div className="flex flex-col items-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-                  <p className="text-cyan-400 mt-4">
-                    {imageGenProgress || 'Generating your portrait...'}
-                    {retryCount > 0 && <span className="block text-sm mt-1">Attempt {retryCount}/{MAX_RETRIES}</span>}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
-                <p className="text-red-400">Failed to generate image</p>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4 text-center">
-            <h4 className="text-xl text-cyan-400 pirate-font">{profile.name}</h4>
-            <p className="text-slate-200">{profile.description}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {Object.entries(profile.metrics).map(([type, value]) => (
-              <div 
-                key={type} 
-                className="bg-slate-700/50 p-3 rounded border border-cyan-400/30"
-              >
-                <div className="text-cyan-400 capitalize">{type}</div>
-                <div className="text-white">{value}%</div>
-                <div className="mt-2 h-2 bg-slate-600 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-cyan-400 transition-all duration-500"
-                    style={{ width: `${value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() => {
-              setProfile(null);
-              setName('');
-              setError(null);
-            }}
-            className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 transition-all transform hover:scale-105"
-          >
-            Generate Another Profile
+            Generate Neural Explorer Profile
           </button>
         </div>
-      )}
+
+        {/* Generated Profile Layer */}
+        {(isGenerating || profile) && (
+          <div className={`absolute inset-0 transition-all duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+            <div className="space-y-6">
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-cyan-400">
+                {profile?.imageUrl ? (
+                  <Image
+                    src={profile.imageUrl}
+                    alt={`${profile.name}'s Neural Explorer Profile`}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : isImageGenerating ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
+                    <div className="flex flex-col items-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+                      <p className="text-cyan-400 mt-4">
+                        {imageGenProgress || 'Generating your portrait...'}
+                        {retryCount > 0 && <span className="block text-sm mt-1">Attempt {retryCount}/{MAX_RETRIES}</span>}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
+                    <div className="animate-pulse flex space-x-4">
+                      <div className="bg-slate-600/50 h-full w-full"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {profile ? (
+                <>
+                  <div className="space-y-4 text-center">
+                    <h4 className="text-xl text-cyan-400 pirate-font">{profile.name}</h4>
+                    <p className="text-slate-200">{profile.description}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(profile.metrics).map(([type, value]) => (
+                      <div 
+                        key={type} 
+                        className="bg-slate-700/50 p-3 rounded border border-cyan-400/30"
+                      >
+                        <div className="text-cyan-400 capitalize">{type}</div>
+                        <div className="text-white">{value}%</div>
+                        <div className="mt-2 h-2 bg-slate-600 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-cyan-400 transition-all duration-500"
+                            style={{ width: `${value}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-6 animate-pulse">
+                  <div className="space-y-4 text-center">
+                    <div className="h-6 bg-slate-600/50 rounded w-1/3 mx-auto"></div>
+                    <div className="h-20 bg-slate-600/50 rounded"></div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(metrics).map(([type]) => (
+                      <div 
+                        key={type} 
+                        className="bg-slate-700/50 p-3 rounded border border-cyan-400/30"
+                      >
+                        <div className="h-4 bg-slate-600/50 rounded w-1/2 mb-2"></div>
+                        <div className="h-4 bg-slate-600/50 rounded w-1/4"></div>
+                        <div className="mt-2 h-2 bg-slate-600 rounded-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {profile && (
+                <button
+                  onClick={() => {
+                    setProfile(null);
+                    setName('');
+                    setError(null);
+                  }}
+                  className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 transition-all transform hover:scale-105"
+                >
+                  Generate Another Profile
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
