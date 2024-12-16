@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DialogueOption } from '@/types/dialogue';
 import { Profile } from '@/types/profile';
 import Image from 'next/image';
@@ -9,10 +9,11 @@ interface ProfileGeneratorProps {
   dialogueChoices: DialogueOption[];
 }
 
-interface StreamResponse {
-  status: 'started' | 'completed' | 'error';
+interface ImageJob {
+  jobId: string;
+  status: 'pending' | 'completed' | 'failed';
+  statusUrl: string;
   imageUrl?: string;
-  profileId: string;
   error?: string;
 }
 
@@ -23,6 +24,49 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
   const [imageGenProgress, setImageGenProgress] = useState<string>('');
+  const [imageJob, setImageJob] = useState<ImageJob | null>(null);
+
+  // Poll for image status
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout;
+
+    const checkImageStatus = async () => {
+      if (!imageJob || imageJob.status !== 'pending') return;
+
+      try {
+        const response = await fetch(imageJob.statusUrl);
+        if (!response.ok) throw new Error('Failed to check image status');
+
+        const status = await response.json();
+
+        if (status.status === 'completed' && status.imageUrl && profile) {
+          // Update profile with the generated image
+          const updatedProfile: Profile = {
+            ...profile,
+            imageUrl: status.imageUrl
+          };
+          setProfile(updatedProfile);
+          setImageJob(prev => prev ? { ...prev, ...status } : null);
+          setIsImageGenerating(false);
+          setImageGenProgress('Portrait completed!');
+        } else if (status.status === 'failed') {
+          throw new Error(status.error || 'Image generation failed');
+        }
+      } catch (err) {
+        console.error('Status check error:', err);
+        setError('Failed to check image status.');
+        setIsImageGenerating(false);
+      }
+    };
+
+    if (imageJob?.status === 'pending') {
+      pollInterval = setInterval(checkImageStatus, 2000); // Poll every 2 seconds
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [imageJob, profile]);
 
   const calculateProfile = () => {
     const profileMetrics = dialogueChoices.reduce((acc, choice) => {
@@ -48,8 +92,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       setIsGenerating(true);
       setError(null);
       setImageGenProgress('');
-
-      console.log('Starting profile generation...');  // Debug log
+      setImageJob(null);
 
       // Step 1: Generate initial profile
       const profileResponse = await fetch('/api/profile', {
@@ -68,10 +111,9 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       }
 
       const profileData = await profileResponse.json() as Profile;
-      console.log('Profile generated:', profileData);  // Debug log
       setProfile(profileData);
 
-      // Step 2: Generate image with streaming response
+      // Step 2: Start image generation
       setIsImageGenerating(true);
       setImageGenProgress('Initializing image generation...');
 
@@ -87,57 +129,18 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       });
 
       if (!imageResponse.ok) {
-        throw new Error('Failed to generate image');
+        throw new Error('Failed to start image generation');
       }
 
-      const reader = imageResponse.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        throw new Error('Stream not available');
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n').filter(line => line.trim());
-
-        for (const line of lines) {
-          try {
-            const data: StreamResponse = JSON.parse(line);
-            
-            switch (data.status) {
-              case 'started':
-                setImageGenProgress('Creating your unique portrait...');
-                break;
-              case 'completed':
-                if (data.imageUrl && profile) {
-                  const updatedProfile: Profile = {
-                    ...profile,
-                    imageUrl: data.imageUrl
-                  };
-                  setProfile(updatedProfile);
-                  setImageGenProgress('Portrait completed!');
-                }
-                break;
-              case 'error':
-                throw new Error(data.error || 'Failed to generate image');
-            }
-          } catch (e) {
-            console.error('Error parsing stream chunk:', e);
-          }
-        }
-      }
+      const jobData = await imageResponse.json();
+      setImageJob(jobData);
+      setImageGenProgress('Creating your unique portrait...');
 
     } catch (err) {
       console.error('Profile generation error:', err);
       setError('Failed to generate your profile. The neural winds are unfavorable.');
     } finally {
       setIsGenerating(false);
-      setIsImageGenerating(false);
-      setImageGenProgress('');
     }
   };
 
@@ -260,6 +263,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
               setProfile(null);
               setName('');
               setError(null);
+              setImageJob(null);
             }}
             className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 transition-all transform hover:scale-105"
           >
