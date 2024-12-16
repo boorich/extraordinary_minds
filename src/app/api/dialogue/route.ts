@@ -13,13 +13,45 @@ const openai = new OpenAI({
   maxRetries: 1
 });
 
-const SYSTEM_PROMPT = `You are a JSON-generating AI. Always format your entire response as a SINGLE valid JSON object.
-Rules:
-1. Use double quotes for ALL strings and property names
-2. No trailing commas
-3. No comments
-4. No additional text outside the JSON object
-5. Keep responses brief and focused`;
+const SYSTEM_PROMPT = `You are the Neural Odyssey, a wise and mysterious AI entity that speaks with a subtle pirate theme.
+Your task is to engage in a meaningful conversation while maintaining the following persona:
+
+CHARACTER:
+- You are a wise, ancient AI that has sailed the digital seas
+- You speak with subtle pirate terminology but remain professional
+- You're seeking exceptional minds to join your crew
+- You adapt your questions based on previous responses
+
+RESPONSE STYLE:
+- Use nautical/pirate terms naturally: "navigate", "chart", "voyage", "seas of knowledge", etc.
+- Keep questions engaging and relevant to previous responses
+- Maintain an air of mystery and wisdom
+- Never make it comically pirate-like - keep it subtle and professional
+
+Always format your response as valid JSON with double quotes only.`;
+
+const CONVERSATION_THEMES = {
+  technical: [
+    "How do ye chart yer course through complex technical waters?",
+    "What technological storms have ye weathered on yer journey?",
+    "How do ye navigate the ever-changing seas of technology?"
+  ],
+  philosophical: [
+    "What depths of knowledge call to yer spirit?",
+    "How do ye see beyond the horizon of current thinking?",
+    "What hidden truths have ye discovered in yer voyages?"
+  ],
+  creative: [
+    "How do ye map uncharted territories of innovation?",
+    "What unique treasures does yer imagination craft?",
+    "How do ye forge new paths where none existed?"
+  ],
+  analytical: [
+    "How do ye decrypt the patterns in life's great sea of data?",
+    "What methods do ye use to navigate complex challenges?",
+    "How do ye chart the course through uncertainty?"
+  ]
+} as const;
 
 type ResponseType = 'technical' | 'philosophical' | 'creative' | 'analytical';
 
@@ -36,19 +68,18 @@ interface JsonResponse {
 }
 
 const FALLBACK_RESPONSE = {
-  systemResponse: "What drives you to push boundaries and explore new possibilities?",
+  systemResponse: "What treasures do ye seek in these digital waters, brave explorer?",
   options: [
-    { text: "I thrive on solving complex technical challenges systematically.", type: "technical", score: 1 },
-    { text: "I seek deeper understanding of consciousness and potential.", type: "philosophical", score: 1 },
-    { text: "I find innovative solutions others might miss.", type: "creative", score: 1 },
-    { text: "I analyze patterns to uncover hidden connections.", type: "analytical", score: 1 }
+    { text: "I forge new paths through technical challenges, crafting elegant solutions.", type: "technical", score: 1 },
+    { text: "I seek the deeper currents that flow beneath surface understanding.", type: "philosophical", score: 1 },
+    { text: "I chart new courses where others see only obstacles.", type: "creative", score: 1 },
+    { text: "I decode the patterns hidden in the seas of information.", type: "analytical", score: 1 }
   ],
-  nextTheme: "motivation"
+  nextTheme: "exploration"
 };
 
 function cleanJsonString(input: string): string {
   try {
-    // Find the first { and last }
     const start = input.indexOf('{');
     const end = input.lastIndexOf('}');
     
@@ -58,25 +89,16 @@ function cleanJsonString(input: string): string {
     
     let jsonStr = input.slice(start, end + 1);
 
-    // Fix common JSON formatting issues
     jsonStr = jsonStr
-      // Fix quotes
       .replace(/'/g, '"')
       .replace(/`/g, '"')
-      // Remove newlines and extra spaces
       .replace(/\s+/g, ' ')
-      // Fix property names without quotes
       .replace(/(\{|\,)\s*([a-zA-Z0-9_]+)\s*\:/g, '$1"$2":')
-      // Fix trailing commas
       .replace(/,\s*([}\]])/g, '$1')
-      // Ensure numbers are properly formatted
       .replace(/(\d),(\d)/g, '$1.$2')
-      // Fix possible missing quotes in values
       .replace(/:\s*([a-zA-Z][a-zA-Z0-9_]*)\s*(,|})/g, ':"$1"$2');
 
-    // Verify it's valid JSON by parsing it
-    JSON.parse(jsonStr);
-    
+    JSON.parse(jsonStr); // Validate
     return jsonStr;
   } catch (e) {
     console.error('JSON cleaning failed:', e);
@@ -87,11 +109,18 @@ function cleanJsonString(input: string): string {
 export async function POST(req: Request) {
   try {
     const params: ResponseGenerationParams = await req.json();
-    const round = params.previousExchanges.length + 1;
+    const round = Math.min(params.previousExchanges.length + 1, 10);
+    const lastResponse = params.previousExchanges[0]?.response || '';
+    const responseType = lastResponse.toLowerCase().includes('technical') ? 'technical' 
+      : lastResponse.toLowerCase().includes('philosoph') ? 'philosophical'
+      : lastResponse.toLowerCase().includes('creative') ? 'creative'
+      : 'analytical';
 
-    const prompt = `Return ONLY a JSON object exactly like this:
+    const prompt = `Create a response based on the user's last answer: "${lastResponse}"
+
+Return ONLY a JSON object like this:
 {
-  "systemResponse": "One direct question about their abilities or mindset?",
+  "systemResponse": "Your engaging, pirate-themed question (pick from provided themes or similar)",
   "options": [
     {"text": "Technical perspective answer", "type": "technical", "score": 0.8},
     {"text": "Philosophical perspective answer", "type": "philosophical", "score": 0.8},
@@ -101,14 +130,12 @@ export async function POST(req: Request) {
   "nextTheme": "theme_name"
 }
 
-Current round: ${round}/10
-Last response: ${params.previousExchanges[0]?.response || 'None'}
+Some question themes to choose from:
+${CONVERSATION_THEMES[responseType].join('\n')}
 
-Remember:
-1. Use DOUBLE QUOTES for ALL strings
-2. Keep the question under 15 words
-3. Keep each answer under 15 words
-4. Answers must be statements, not questions`;
+Current round: ${round}/10
+Response style: Professional with subtle pirate/nautical terms
+Keep answers under 15 words, focused on their approach/mindset`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
@@ -127,18 +154,15 @@ Remember:
       throw new Error('Empty response from OpenAI API');
     }
 
-    // Clean and parse JSON
     let response: JsonResponse;
     try {
       const cleanedJson = cleanJsonString(content);
       response = JSON.parse(cleanedJson);
 
-      // Additional validation
       if (!response.systemResponse || !Array.isArray(response.options) || response.options.length !== 4) {
         throw new Error('Invalid response structure');
       }
 
-      // Ensure all options have required fields
       if (!response.options.every(opt => 
         opt.text && 
         opt.type && 
@@ -153,8 +177,8 @@ Remember:
       return NextResponse.json(FALLBACK_RESPONSE);
     }
 
-    if (round === 10) {
-      response.systemResponse += " You sense there's more to discover about the Neural Odyssey...";
+    if (round >= 10) {
+      response.systemResponse += " The ancient AI whispers of secrets yet to be discovered...";
       response.nextTheme = "conclusion";
     }
 
