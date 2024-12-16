@@ -3,8 +3,5 @@
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "environmentVariables": [
-    "OPENAI_API_KEY"
-  ]
+  "framework": "nextjs"
 }
