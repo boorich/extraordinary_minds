@@ -9,12 +9,20 @@ interface ProfileGeneratorProps {
   dialogueChoices: DialogueOption[];
 }
 
+interface StreamResponse {
+  status: 'started' | 'completed' | 'error';
+  imageUrl?: string;
+  profileId: string;
+  error?: string;
+}
+
 const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) => {
   const [name, setName] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
+  const [imageGenProgress, setImageGenProgress] = useState<string>('');
 
   const calculateProfile = () => {
     const profileMetrics = dialogueChoices.reduce((acc, choice) => {
@@ -39,6 +47,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
     try {
       setIsGenerating(true);
       setError(null);
+      setImageGenProgress('');
 
       console.log('Starting profile generation...');  // Debug log
 
@@ -62,8 +71,10 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       console.log('Profile generated:', profileData);  // Debug log
       setProfile(profileData);
 
-      // Step 2: Generate image
+      // Step 2: Generate image with streaming response
       setIsImageGenerating(true);
+      setImageGenProgress('Initializing image generation...');
+
       const imageResponse = await fetch('/api/profile/image', {
         method: 'POST',
         headers: {
@@ -79,10 +90,40 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
         throw new Error('Failed to generate image');
       }
 
-      const imageData = await imageResponse.json();
-      console.log('Image generated:', imageData);  // Debug log
+      const reader = imageResponse.body?.getReader();
+      const decoder = new TextDecoder();
 
-      setProfile(prev => prev ? { ...prev, imageUrl: imageData.imageUrl } : null);
+      if (!reader) {
+        throw new Error('Stream not available');
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter(line => line.trim());
+
+        for (const line of lines) {
+          try {
+            const data: StreamResponse = JSON.parse(line);
+            
+            switch (data.status) {
+              case 'started':
+                setImageGenProgress('Creating your unique portrait...');
+                break;
+              case 'completed':
+                setProfile(prev => prev ? { ...prev, imageUrl: data.imageUrl } : null);
+                setImageGenProgress('Portrait completed!');
+                break;
+              case 'error':
+                throw new Error(data.error || 'Failed to generate image');
+            }
+          } catch (e) {
+            console.error('Error parsing stream chunk:', e);
+          }
+        }
+      }
 
     } catch (err) {
       console.error('Profile generation error:', err);
@@ -90,6 +131,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
     } finally {
       setIsGenerating(false);
       setIsImageGenerating(false);
+      setImageGenProgress('');
     }
   };
 
@@ -174,7 +216,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
               <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
                 <div className="flex flex-col items-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-                  <p className="text-cyan-400 mt-4">Generating your portrait...</p>
+                  <p className="text-cyan-400 mt-4">{imageGenProgress || 'Generating your portrait...'}</p>
                 </div>
               </div>
             ) : (
