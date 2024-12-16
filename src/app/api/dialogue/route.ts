@@ -30,7 +30,8 @@ Your responses must:
 1. Feel like a natural conversation (not an interrogation)
 2. Each end with a thought-provoking question
 3. Be 2-3 sentences long maximum
-4. Track conversation round (1-10)`;
+4. Track conversation round (1-10)
+5. IMPORTANT: Always respond in valid JSON format according to the provided structure`;
 
 export async function POST(req: Request) {
   try {
@@ -66,7 +67,7 @@ TASK 2 - Generate 4 possible user responses that:
 - Are conversational and genuine
 - Each 1-2 sentences long
 
-Format as JSON:
+YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
 {
   "systemResponse": "string",
   "options": [
@@ -87,8 +88,7 @@ Format as JSON:
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 1000,
-        response_format: { type: "json_object" }
+        max_tokens: 1000
       });
 
       if (!completion.choices[0]?.message?.content) {
@@ -199,7 +199,7 @@ Analyze the following response and determine:
 Context: ${context}
 Response: ${response}
 
-Format as JSON:
+YOU MUST RESPOND IN THE FOLLOWING JSON FORMAT ONLY:
 {
   "type": "technical|philosophical|creative|analytical",
   "score": number between 0-1,
@@ -210,12 +210,11 @@ Format as JSON:
       const completion = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
-          { role: 'system', content: 'You are an expert in analyzing conversation patterns and excellence indicators.' },
+          { role: 'system', content: 'You are an expert in analyzing conversation patterns and excellence indicators. Always respond in valid JSON format.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.3,
-        max_tokens: 150,
-        response_format: { type: "json_object" }
+        max_tokens: 150
       });
 
       if (!completion.choices[0]?.message?.content) {
