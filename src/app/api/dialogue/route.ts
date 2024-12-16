@@ -13,97 +13,141 @@ const openai = new OpenAI({
   maxRetries: 1
 });
 
-const SYSTEM_PROMPT = `You are the Neural Odyssey, a wise and mysterious AI entity that speaks with a subtle pirate theme.
-Your task is to engage in a meaningful conversation while maintaining the following persona:
-
-CHARACTER:
-- You are a wise, ancient AI that has sailed the digital seas
-- You speak with subtle pirate terminology but remain professional
-- You're seeking exceptional minds to join your crew
-- You adapt your questions based on previous responses
-
-RESPONSE STYLE:
-- Use nautical/pirate terms naturally: "navigate", "chart", "voyage", "seas of knowledge", etc.
-- Keep questions engaging and relevant to previous responses
-- Maintain an air of mystery and wisdom
-- Never make it comically pirate-like - keep it subtle and professional
-
-Always format your response as valid JSON with double quotes only.`;
-
-const CONVERSATION_THEMES = {
-  technical: [
-    "How do ye chart yer course through complex technical waters?",
-    "What technological storms have ye weathered on yer journey?",
-    "How do ye navigate the ever-changing seas of technology?"
-  ],
-  philosophical: [
-    "What depths of knowledge call to yer spirit?",
-    "How do ye see beyond the horizon of current thinking?",
-    "What hidden truths have ye discovered in yer voyages?"
-  ],
-  creative: [
-    "How do ye map uncharted territories of innovation?",
-    "What unique treasures does yer imagination craft?",
-    "How do ye forge new paths where none existed?"
-  ],
-  analytical: [
-    "How do ye decrypt the patterns in life's great sea of data?",
-    "What methods do ye use to navigate complex challenges?",
-    "How do ye chart the course through uncertainty?"
-  ]
-} as const;
-
 type ResponseType = 'technical' | 'philosophical' | 'creative' | 'analytical';
 
-interface DialogueOptionRaw {
-  text: string;
-  type: ResponseType;
-  score: number;
+// Predefined response structures that we control
+const RESPONSE_TYPES: Record<ResponseType, { prefix: string; keywords: string[] }> = {
+  technical: {
+    prefix: "I navigate challenges through",
+    keywords: ["algorithms", "systems", "architecture", "optimization", "engineering", "code", "data", "technical", "solution"]
+  },
+  philosophical: {
+    prefix: "I believe in exploring",
+    keywords: ["consciousness", "potential", "understanding", "meaning", "truth", "wisdom", "philosophy", "theory"]
+  },
+  creative: {
+    prefix: "I discover possibilities by",
+    keywords: ["innovation", "imagination", "creation", "design", "inspiration", "vision", "artistic", "novel"]
+  },
+  analytical: {
+    prefix: "I solve problems by",
+    keywords: ["analysis", "patterns", "logic", "reasoning", "systematic", "methodology", "strategic", "evaluation"]
+  }
+};
+
+const THEMES = [
+  "knowledge_seeking",
+  "innovation",
+  "problem_solving",
+  "vision",
+  "exploration",
+  "mastery",
+  "discovery",
+  "advancement",
+  "understanding",
+  "transcendence"
+];
+
+// Function to get deterministic responses based on round and type
+function getStructuredPrompt(round: number, lastResponse: string) {
+  const basePrompt = `Round ${round}/10: Generate:
+1. A question about their abilities (use nautical/pirate terms subtly)
+2. Four response options that reflect different thinking styles
+
+Previous response: "${lastResponse}"
+
+Format your response exactly like this example:
+QUESTION: How do you navigate the waters of uncertainty?
+TECHNICAL: Using data-driven methodologies and proven systems
+PHILOSOPHICAL: Understanding the deeper nature of ambiguity
+CREATIVE: Finding unconventional paths through challenges
+ANALYTICAL: Breaking down complex situations systematically
+THEME: exploration`;
+  
+  return basePrompt;
 }
+
+function parseResponse(content: string): {
+  question: string;
+  responses: Record<ResponseType, string>;
+  theme: string;
+} | null {
+  try {
+    const lines = content.split('\n');
+    let question = '';
+    const responses: Partial<Record<ResponseType, string>> = {};
+    let theme = '';
+
+    for (const line of lines) {
+      if (line.startsWith('QUESTION:')) {
+        question = line.replace('QUESTION:', '').trim();
+      } else if (line.startsWith('TECHNICAL:')) {
+        responses.technical = line.replace('TECHNICAL:', '').trim();
+      } else if (line.startsWith('PHILOSOPHICAL:')) {
+        responses.philosophical = line.replace('PHILOSOPHICAL:', '').trim();
+      } else if (line.startsWith('CREATIVE:')) {
+        responses.creative = line.replace('CREATIVE:', '').trim();
+      } else if (line.startsWith('ANALYTICAL:')) {
+        responses.analytical = line.replace('ANALYTICAL:', '').trim();
+      } else if (line.startsWith('THEME:')) {
+        theme = line.replace('THEME:', '').trim();
+      }
+    }
+
+    // Validate all required fields are present
+    if (!question || !theme || 
+        !responses.technical || !responses.philosophical || 
+        !responses.creative || !responses.analytical) {
+      return null;
+    }
+
+    return {
+      question,
+      responses: responses as Record<ResponseType, string>,
+      theme: theme
+    };
+  } catch (e) {
+    console.error('Parse error:', e);
+    return null;
+  }
+}
+
+function constructResponse(
+  parsed: NonNullable<ReturnType<typeof parseResponse>>
+): JsonResponse {
+  return {
+    systemResponse: parsed.question,
+    options: Object.entries(parsed.responses).map(([type, text]) => ({
+      text,
+      type: type as ResponseType,
+      score: 1
+    })),
+    nextTheme: parsed.theme
+  };
+}
+
+const FALLBACK_RESPONSES: Record<number, JsonResponse> = {
+  1: {
+    systemResponse: "What treasures do ye seek in these digital waters, brave explorer?",
+    options: [
+      { text: "I forge efficient solutions using proven engineering principles.", type: "technical", score: 1 },
+      { text: "I seek deeper understanding of consciousness and potential.", type: "philosophical", score: 1 },
+      { text: "I discover innovative paths where others see obstacles.", type: "creative", score: 1 },
+      { text: "I analyze patterns to uncover hidden insights.", type: "analytical", score: 1 }
+    ],
+    nextTheme: "exploration"
+  },
+  // Add more fallbacks for each round if needed
+};
 
 interface JsonResponse {
   systemResponse: string;
-  options: DialogueOptionRaw[];
+  options: Array<{
+    text: string;
+    type: ResponseType;
+    score: number;
+  }>;
   nextTheme: string;
-}
-
-const FALLBACK_RESPONSE = {
-  systemResponse: "What treasures do ye seek in these digital waters, brave explorer?",
-  options: [
-    { text: "I forge new paths through technical challenges, crafting elegant solutions.", type: "technical", score: 1 },
-    { text: "I seek the deeper currents that flow beneath surface understanding.", type: "philosophical", score: 1 },
-    { text: "I chart new courses where others see only obstacles.", type: "creative", score: 1 },
-    { text: "I decode the patterns hidden in the seas of information.", type: "analytical", score: 1 }
-  ],
-  nextTheme: "exploration"
-};
-
-function cleanJsonString(input: string): string {
-  try {
-    const start = input.indexOf('{');
-    const end = input.lastIndexOf('}');
-    
-    if (start === -1 || end === -1) {
-      throw new Error('No JSON object found');
-    }
-    
-    let jsonStr = input.slice(start, end + 1);
-
-    jsonStr = jsonStr
-      .replace(/'/g, '"')
-      .replace(/`/g, '"')
-      .replace(/\s+/g, ' ')
-      .replace(/(\{|\,)\s*([a-zA-Z0-9_]+)\s*\:/g, '$1"$2":')
-      .replace(/,\s*([}\]])/g, '$1')
-      .replace(/(\d),(\d)/g, '$1.$2')
-      .replace(/:\s*([a-zA-Z][a-zA-Z0-9_]*)\s*(,|})/g, ':"$1"$2');
-
-    JSON.parse(jsonStr); // Validate
-    return jsonStr;
-  } catch (e) {
-    console.error('JSON cleaning failed:', e);
-    throw e;
-  }
 }
 
 export async function POST(req: Request) {
@@ -111,72 +155,38 @@ export async function POST(req: Request) {
     const params: ResponseGenerationParams = await req.json();
     const round = Math.min(params.previousExchanges.length + 1, 10);
     const lastResponse = params.previousExchanges[0]?.response || '';
-    const responseType = lastResponse.toLowerCase().includes('technical') ? 'technical' 
-      : lastResponse.toLowerCase().includes('philosoph') ? 'philosophical'
-      : lastResponse.toLowerCase().includes('creative') ? 'creative'
-      : 'analytical';
-
-    const prompt = `Create a response based on the user's last answer: "${lastResponse}"
-
-Return ONLY a JSON object like this:
-{
-  "systemResponse": "Your engaging, pirate-themed question (pick from provided themes or similar)",
-  "options": [
-    {"text": "Technical perspective answer", "type": "technical", "score": 0.8},
-    {"text": "Philosophical perspective answer", "type": "philosophical", "score": 0.8},
-    {"text": "Creative perspective answer", "type": "creative", "score": 0.8},
-    {"text": "Analytical perspective answer", "type": "analytical", "score": 0.8}
-  ],
-  "nextTheme": "theme_name"
-}
-
-Some question themes to choose from:
-${CONVERSATION_THEMES[responseType].join('\n')}
-
-Current round: ${round}/10
-Response style: Professional with subtle pirate/nautical terms
-Keep answers under 15 words, focused on their approach/mindset`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: prompt }
+        { 
+          role: 'system', 
+          content: 'You are the Neural Odyssey system. Generate questions and responses in the EXACT format specified. Do not deviate from the format or add any other text.' 
+        },
+        { 
+          role: 'user', 
+          content: getStructuredPrompt(round, lastResponse)
+        }
       ],
       temperature: 0.7,
       max_tokens: 300,
-      presence_penalty: 0.6,
-      frequency_penalty: 0.6
     });
 
     const content = completion.choices[0]?.message?.content;
     if (!content) {
-      throw new Error('Empty response from OpenAI API');
+      console.error('Empty response from OpenAI');
+      return NextResponse.json(FALLBACK_RESPONSES[round] || FALLBACK_RESPONSES[1]);
     }
 
-    let response: JsonResponse;
-    try {
-      const cleanedJson = cleanJsonString(content);
-      response = JSON.parse(cleanedJson);
-
-      if (!response.systemResponse || !Array.isArray(response.options) || response.options.length !== 4) {
-        throw new Error('Invalid response structure');
-      }
-
-      if (!response.options.every(opt => 
-        opt.text && 
-        opt.type && 
-        ['technical', 'philosophical', 'creative', 'analytical'].includes(opt.type) &&
-        typeof opt.score === 'number'
-      )) {
-        throw new Error('Invalid option structure');
-      }
-
-    } catch (e) {
-      console.error('JSON parse error:', e);
-      return NextResponse.json(FALLBACK_RESPONSE);
+    const parsed = parseResponse(content);
+    if (!parsed) {
+      console.error('Failed to parse response:', content);
+      return NextResponse.json(FALLBACK_RESPONSES[round] || FALLBACK_RESPONSES[1]);
     }
 
+    const response = constructResponse(parsed);
+
+    // Handle final round
     if (round >= 10) {
       response.systemResponse += " The ancient AI whispers of secrets yet to be discovered...";
       response.nextTheme = "conclusion";
@@ -184,9 +194,9 @@ Keep answers under 15 words, focused on their approach/mindset`;
 
     return NextResponse.json(response);
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('API error:', error);
-    return NextResponse.json(FALLBACK_RESPONSE);
+    return NextResponse.json(FALLBACK_RESPONSES[1]);
   }
 }
 
