@@ -9,19 +9,18 @@ if (!process.env.OPENAI_API_KEY) {
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 15000,
-  maxRetries: 3
+  timeout: 8000, // shorter timeout to fail fast
+  maxRetries: 1
 });
 
 const SYSTEM_PROMPT = `You are the Neural Odyssey system having a conversation with a potential recruit.
-Your task is to generate engaging questions and provide exactly 4 response options.
+Keep responses very brief and focused.
 
 Rules for your responses:
-1. Questions should be clear and direct
-2. Never make the response options be questions
-3. Each response option should be a complete thought
-4. Keep responses brief (1-2 sentences)
-5. Make each option distinct in perspective`;
+1. Questions must be 1 sentence
+2. Response options must be brief statements
+3. Always follow the exact JSON format provided
+4. Keep all responses under 50 words each`;
 
 type ResponseType = 'technical' | 'philosophical' | 'creative' | 'analytical';
 
@@ -37,191 +36,101 @@ interface JsonResponse {
   nextTheme: string;
 }
 
-function isValidResponse(json: unknown): json is JsonResponse {
-  if (typeof json !== 'object' || json === null) return false;
-  
-  const response = json as Record<string, unknown>;
-  
-  if (typeof response.systemResponse !== 'string') return false;
-  if (typeof response.nextTheme !== 'string') return false;
-  if (!Array.isArray(response.options)) return false;
-  if (response.options.length !== 4) return false;
-
-  return response.options.every((option: unknown) => {
-    if (typeof option !== 'object' || option === null) return false;
-    const opt = option as Record<string, unknown>;
-    
-    return (
-      typeof opt.text === 'string' &&
-      typeof opt.type === 'string' &&
-      ['technical', 'philosophical', 'creative', 'analytical'].includes(opt.type) &&
-      typeof opt.score === 'number' &&
-      opt.score >= 0 &&
-      opt.score <= 1
-    );
-  });
-}
-
-function cleanJsonString(input: string): string {
-  // Find the first { and last }
-  const start = input.indexOf('{');
-  const end = input.lastIndexOf('}');
-  if (start === -1 || end === -1) {
-    throw new Error('No valid JSON object found in the response');
-  }
-
-  // Extract just the JSON part
-  let jsonStr = input.slice(start, end + 1);
-
-  // Replace single quotes with double quotes
-  jsonStr = jsonStr.replace(/'/g, '"');
-  
-  // Remove any newlines or extra spaces
-  jsonStr = jsonStr.replace(/\s+/g, ' ');
-  
-  // Ensure numbers are properly formatted
-  jsonStr = jsonStr.replace(/(\d),(\d)/g, '$1.$2');
-
-  return jsonStr;
-}
-
-const FALLBACK_OPTIONS: DialogueOption[] = [
-  {
-    text: "I solve problems by breaking them down into manageable components.",
-    type: 'technical',
-    score: 1
-  },
-  {
-    text: "I believe in exploring the deeper meaning behind our choices.",
-    type: 'philosophical',
-    score: 1
-  },
-  {
-    text: "I find unique solutions by thinking outside conventional boundaries.",
-    type: 'creative',
-    score: 1
-  },
-  {
-    text: "I focus on understanding patterns and systematic approaches.",
-    type: 'analytical',
-    score: 1
-  }
-];
-
 export async function POST(req: Request) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
-
   try {
     const params: ResponseGenerationParams = await req.json();
     const round = params.previousExchanges.length + 1;
 
-    const prompt = `Generate a question and exactly 4 response options.
-Return ONLY a JSON object in this exact format:
-
+    const prompt = `Generate brief response in this EXACT format:
 {
-  "systemResponse": "Your engaging question here?",
+  "systemResponse": "One clear question?",
   "options": [
-    {
-      "text": "A technical perspective response",
-      "type": "technical",
-      "score": 0.8
-    },
-    {
-      "text": "A philosophical perspective response",
-      "type": "philosophical",
-      "score": 0.8
-    },
-    {
-      "text": "A creative perspective response",
-      "type": "creative",
-      "score": 0.8
-    },
-    {
-      "text": "An analytical perspective response",
-      "type": "analytical",
-      "score": 0.8
-    }
+    { "text": "Brief technical response", "type": "technical", "score": 0.8 },
+    { "text": "Brief philosophical response", "type": "philosophical", "score": 0.8 },
+    { "text": "Brief creative response", "type": "creative", "score": 0.8 },
+    { "text": "Brief analytical response", "type": "analytical", "score": 0.8 }
   ],
   "nextTheme": "theme_name"
 }
 
-Current round: ${round}/10
-Previous response: ${params.previousExchanges[0]?.response || 'None'}
+Round: ${round}/10
+Previous: ${params.previousExchanges[0]?.response || 'None'}
 
-Requirements:
-1. systemResponse must be a clear question
-2. options.text must be statements, not questions
-3. Each option should be 1-2 sentences
-4. Use only double quotes in JSON
-5. Do not include any text before or after the JSON object`;
+REQUIREMENTS:
+1. Question must be one sentence
+2. Each response must be under 15 words
+3. Use only double quotes, never single quotes
+4. Responses must be statements, not questions`;
 
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo', // Using 3.5-turbo for faster responses
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 300, // Reduced for faster response
+      presence_penalty: 0.6,
+      frequency_penalty: 0.6,
+      stream: false // We'll add streaming in next iteration if this still times out
+    });
+
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('Empty response from OpenAI API');
+    }
+
+    // Parse and validate response
+    let response: JsonResponse;
     try {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-        presence_penalty: 0.6,
-        frequency_penalty: 0.6
-      }, { signal: controller.signal });
-
-      clearTimeout(timeoutId);
-
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error('Empty response from OpenAI API');
-      }
-
-      // Clean and parse JSON
-      const cleanedJson = cleanJsonString(content);
-      const response = JSON.parse(cleanedJson);
-
-      // Validate response structure
-      if (!isValidResponse(response)) {
-        throw new Error('Invalid response structure from OpenAI API');
-      }
-
-      // Handle final round
-      if (round === 10) {
-        return NextResponse.json({
-          options: response.options,
-          nextTheme: 'conclusion',
-          systemResponse: response.systemResponse
-        });
-      }
-
-      return NextResponse.json(response);
-
-    } catch (error: any) {
-      console.error('OpenAI API error:', error);
+      const jsonStart = content.indexOf('{');
+      const jsonEnd = content.lastIndexOf('}');
+      const jsonStr = content.slice(jsonStart, jsonEnd + 1)
+        .replace(/'/g, '"')
+        .replace(/\s+/g, ' ');
       
-      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
-        return NextResponse.json(
-          { error: 'Request timeout. Please try again.' },
-          { status: 408 }
-        );
+      response = JSON.parse(jsonStr);
+      
+      // Validate structure
+      if (!response.systemResponse || !Array.isArray(response.options) || response.options.length !== 4) {
+        throw new Error('Invalid response structure');
       }
-
+    } catch (e) {
+      console.error('JSON parse error:', e);
       // Return fallback response
       return NextResponse.json({
-        options: FALLBACK_OPTIONS,
-        nextTheme: 'general_exploration',
-        systemResponse: round === 10 
-          ? "You've shared fascinating insights throughout our conversation. What final thoughts would you like to share?"
-          : "Your perspective is intriguing. What drives you to push boundaries?"
+        systemResponse: "What motivates you to push boundaries and explore new possibilities?",
+        options: [
+          { text: "I thrive on solving complex technical challenges systematically.", type: "technical", score: 1 },
+          { text: "I seek deeper understanding of consciousness and potential.", type: "philosophical", score: 1 },
+          { text: "I find innovative solutions others might miss.", type: "creative", score: 1 },
+          { text: "I analyze patterns to uncover hidden connections.", type: "analytical", score: 1 }
+        ],
+        nextTheme: "motivation"
       });
     }
+
+    if (round === 10) {
+      response.systemResponse += " You sense there's more to discover about the Neural Odyssey...";
+      response.nextTheme = "conclusion";
+    }
+
+    return NextResponse.json(response);
+
   } catch (error: any) {
-    clearTimeout(timeoutId);
-    console.error('Route error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.status || 500 }
-    );
+    console.error('API error:', error);
+    
+    // Return fallback response for any error
+    return NextResponse.json({
+      systemResponse: "What drives your pursuit of excellence?",
+      options: [
+        { text: "I build efficient solutions to complex problems.", type: "technical", score: 1 },
+        { text: "I explore the depths of human potential.", type: "philosophical", score: 1 },
+        { text: "I see opportunities in every challenge.", type: "creative", score: 1 },
+        { text: "I find patterns others might miss.", type: "analytical", score: 1 }
+      ],
+      nextTheme: "general_exploration"
+    });
   }
 }
 
