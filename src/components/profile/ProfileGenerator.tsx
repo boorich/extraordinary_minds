@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DialogueOption } from '@/types/dialogue';
 import { Profile } from '@/types/profile';
 import Image from 'next/image';
@@ -9,13 +9,8 @@ interface ProfileGeneratorProps {
   dialogueChoices: DialogueOption[];
 }
 
-interface ImageJob {
-  jobId: string;
-  status: 'pending' | 'completed' | 'failed';
-  statusUrl: string;
-  imageUrl?: string;
-  error?: string;
-}
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
 
 const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) => {
   const [name, setName] = useState('');
@@ -24,49 +19,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isImageGenerating, setIsImageGenerating] = useState(false);
   const [imageGenProgress, setImageGenProgress] = useState<string>('');
-  const [imageJob, setImageJob] = useState<ImageJob | null>(null);
-
-  // Poll for image status
-  useEffect(() => {
-    let pollInterval: NodeJS.Timeout;
-
-    const checkImageStatus = async () => {
-      if (!imageJob || imageJob.status !== 'pending') return;
-
-      try {
-        const response = await fetch(imageJob.statusUrl);
-        if (!response.ok) throw new Error('Failed to check image status');
-
-        const status = await response.json();
-
-        if (status.status === 'completed' && status.imageUrl && profile) {
-          // Update profile with the generated image
-          const updatedProfile: Profile = {
-            ...profile,
-            imageUrl: status.imageUrl
-          };
-          setProfile(updatedProfile);
-          setImageJob(prev => prev ? { ...prev, ...status } : null);
-          setIsImageGenerating(false);
-          setImageGenProgress('Portrait completed!');
-        } else if (status.status === 'failed') {
-          throw new Error(status.error || 'Image generation failed');
-        }
-      } catch (err) {
-        console.error('Status check error:', err);
-        setError('Failed to check image status.');
-        setIsImageGenerating(false);
-      }
-    };
-
-    if (imageJob?.status === 'pending') {
-      pollInterval = setInterval(checkImageStatus, 2000); // Poll every 2 seconds
-    }
-
-    return () => {
-      if (pollInterval) clearInterval(pollInterval);
-    };
-  }, [imageJob, profile]);
+  const [retryCount, setRetryCount] = useState(0);
 
   const calculateProfile = () => {
     const profileMetrics = dialogueChoices.reduce((acc, choice) => {
@@ -82,6 +35,31 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
     return profileMetrics;
   };
 
+  const generateImage = async (description: string, profileId: string): Promise<string> => {
+    const response = await fetch('/api/profile/image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        description,
+        profileId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate image');
+    }
+
+    const data = await response.json();
+    
+    if (data.status === 'error') {
+      throw new Error(data.error || 'Image generation failed');
+    }
+
+    return data.imageUrl;
+  };
+
   const handleGenerateClick = async () => {
     if (!name) {
       setError('Please enter your name, brave explorer!');
@@ -92,7 +70,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       setIsGenerating(true);
       setError(null);
       setImageGenProgress('');
-      setImageJob(null);
+      setRetryCount(0);
 
       // Step 1: Generate initial profile
       const profileResponse = await fetch('/api/profile', {
@@ -113,34 +91,46 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       const profileData = await profileResponse.json() as Profile;
       setProfile(profileData);
 
-      // Step 2: Start image generation
+      // Step 2: Generate image with retries
       setIsImageGenerating(true);
-      setImageGenProgress('Initializing image generation...');
+      setImageGenProgress('Creating your unique portrait...');
 
-      const imageResponse = await fetch('/api/profile/image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          description: profileData.description,
-          profileId: profileData.profileId,
-        }),
-      });
-
-      if (!imageResponse.ok) {
-        throw new Error('Failed to start image generation');
+      let lastError: Error | null = null;
+      
+      for (let i = 0; i < MAX_RETRIES; i++) {
+        try {
+          const imageUrl = await generateImage(profileData.description, profileData.profileId);
+          
+          // Update profile with the generated image
+          const updatedProfile: Profile = {
+            ...profileData,
+            imageUrl
+          };
+          setProfile(updatedProfile);
+          setImageGenProgress('Portrait completed!');
+          return; // Success, exit the function
+          
+        } catch (err) {
+          lastError = err as Error;
+          setRetryCount(i + 1);
+          
+          if (i < MAX_RETRIES - 1) {
+            setImageGenProgress(`Retrying image generation (${i + 1}/${MAX_RETRIES})...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+          }
+        }
       }
 
-      const jobData = await imageResponse.json();
-      setImageJob(jobData);
-      setImageGenProgress('Creating your unique portrait...');
+      // If we get here, all retries failed
+      throw lastError || new Error('Failed to generate image after all retries');
 
     } catch (err) {
       console.error('Profile generation error:', err);
       setError('Failed to generate your profile. The neural winds are unfavorable.');
     } finally {
       setIsGenerating(false);
+      setIsImageGenerating(false);
+      setImageGenProgress('');
     }
   };
 
@@ -225,7 +215,10 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
               <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
                 <div className="flex flex-col items-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-                  <p className="text-cyan-400 mt-4">{imageGenProgress || 'Generating your portrait...'}</p>
+                  <p className="text-cyan-400 mt-4">
+                    {imageGenProgress || 'Generating your portrait...'}
+                    {retryCount > 0 && <span className="block text-sm mt-1">Attempt {retryCount}/{MAX_RETRIES}</span>}
+                  </p>
                 </div>
               </div>
             ) : (
@@ -263,7 +256,6 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
               setProfile(null);
               setName('');
               setError(null);
-              setImageJob(null);
             }}
             className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 transition-all transform hover:scale-105"
           >
