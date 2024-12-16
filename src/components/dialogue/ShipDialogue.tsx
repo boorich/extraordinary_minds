@@ -77,14 +77,36 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       // Analyze the response
       const analysis = await analyzeResponse(option.text, currentPrompt.context);
 
-      // Create new prompt
+      // Create new prompt with both generated options and fallback options
       const nextPrompt: DialoguePrompt = {
         id: Date.now().toString(),
         text: generatedOptions.options[0].text,
         theme: analysis.nextTheme,
         context: `Following up on ${currentPrompt.theme} theme, exploring ${analysis.nextTheme}`,
         constraints: currentPrompt.constraints,
-        options: generatedOptions.options
+        options: generatedOptions.options,
+        fallbackOptions: [
+          {
+            text: "I analyze situations systematically.",
+            type: 'analytical',
+            score: 1
+          },
+          {
+            text: "Innovation comes from questioning assumptions.",
+            type: 'philosophical',
+            score: 1
+          },
+          {
+            text: "I build solutions with available tools.",
+            type: 'technical',
+            score: 1
+          },
+          {
+            text: "Every problem has hidden opportunities.",
+            type: 'creative',
+            score: 1
+          }
+        ]
       };
 
       await simulateTyping();
