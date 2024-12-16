@@ -1,22 +1,13 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { DialogueOption } from '@/types/dialogue';
 import { Profile, ProfileMetrics } from '@/types/profile';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 10000,
-  maxRetries: 1
-});
-
 function generateProfileDescription(choices: DialogueOption[], name: string) {
-  // Calculate profile metrics with proper typing
   const metrics = choices.reduce((acc, choice) => {
     acc[choice.type] = (acc[choice.type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  // Get dominant traits
   const sortedTraits = Object.entries(metrics)
     .sort(([,a], [,b]) => b - a)
     .map(([type]) => type);
@@ -24,7 +15,6 @@ function generateProfileDescription(choices: DialogueOption[], name: string) {
   const primaryTrait = sortedTraits[0];
   const secondaryTrait = sortedTraits[1];
 
-  // Generate profile text based on traits
   const traitDescriptions: Record<string, string> = {
     technical: "digital architect weaving complex systems",
     philosophical: "seeker of deeper truths and wisdom",
@@ -36,16 +26,13 @@ function generateProfileDescription(choices: DialogueOption[], name: string) {
 }
 
 function calculateMetrics(choices: DialogueOption[]): ProfileMetrics {
-  // Initialize metrics object with proper typing
   const counts = choices.reduce((acc, choice) => {
     acc[choice.type] = (acc[choice.type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  // Calculate total responses
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
 
-  // Convert to percentages with proper typing
   return {
     technical: Math.round(((counts.technical || 0) / total) * 100),
     philosophical: Math.round(((counts.philosophical || 0) / total) * 100),
@@ -65,39 +52,20 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate profile description
+    // Generate profile description and metrics
     const description = generateProfileDescription(choices, name);
+    const metrics = calculateMetrics(choices);
 
-    // Request image generation
-    try {
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: description,
-        n: 1,
-        size: "1024x1024",
-        quality: "standard",
-        style: "vivid"
-      });
+    // Return initial profile without image
+    const profile: Profile = {
+      name,
+      imageUrl: '', // Will be updated later
+      description,
+      metrics,
+      profileId: Date.now().toString() // For tracking the profile
+    };
 
-      // Calculate profile metrics
-      const metrics = calculateMetrics(choices);
-
-      const profile: Profile = {
-        name,
-        imageUrl: response.data[0].url || '',
-        description,
-        metrics
-      };
-
-      return NextResponse.json(profile);
-
-    } catch (error: any) {
-      console.error('OpenAI API error:', error);
-      return NextResponse.json(
-        { error: 'Failed to generate profile image' },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json(profile);
 
   } catch (error) {
     console.error('Profile generation error:', error);
