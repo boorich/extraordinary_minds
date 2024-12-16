@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { DialogueOption } from '@/types/dialogue';
-import Image from 'next/image';
 import { Profile } from '@/types/profile';
+import Image from 'next/image';
 
 interface ProfileGeneratorProps {
   dialogueChoices: DialogueOption[];
@@ -14,15 +14,14 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isImageGenerating, setIsImageGenerating] = useState(false);
 
-  // Calculate profile metrics based on dialogue choices
   const calculateProfile = () => {
     const profileMetrics = dialogueChoices.reduce((acc, choice) => {
       acc[choice.type] = (acc[choice.type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    // Convert to percentages
     const total = Object.values(profileMetrics).reduce((a, b) => a + b, 0);
     Object.keys(profileMetrics).forEach(key => {
       profileMetrics[key] = Math.round((profileMetrics[key] / total) * 100);
@@ -31,17 +30,20 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
     return profileMetrics;
   };
 
-  const handleGenerateProfile = async () => {
+  const handleGenerateClick = async () => {
     if (!name) {
       setError('Please enter your name, brave explorer!');
       return;
     }
-    
-    setIsGenerating(true);
-    setError(null);
 
     try {
-      const response = await fetch('/api/profile', {
+      setIsGenerating(true);
+      setError(null);
+
+      console.log('Starting profile generation...');  // Debug log
+
+      // Step 1: Generate initial profile
+      const profileResponse = await fetch('/api/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,17 +54,42 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
         }),
       });
 
-      if (!response.ok) {
+      if (!profileResponse.ok) {
         throw new Error('Failed to generate profile');
       }
 
-      const data = await response.json();
-      setProfile(data);
+      const profileData = await profileResponse.json();
+      console.log('Profile generated:', profileData);  // Debug log
+      setProfile(profileData);
+
+      // Step 2: Generate image
+      setIsImageGenerating(true);
+      const imageResponse = await fetch('/api/profile/image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: profileData.description,
+          profileId: profileData.profileId,
+        }),
+      });
+
+      if (!imageResponse.ok) {
+        throw new Error('Failed to generate image');
+      }
+
+      const imageData = await imageResponse.json();
+      console.log('Image generated:', imageData);  // Debug log
+
+      setProfile(prev => prev ? { ...prev, imageUrl: imageData.imageUrl } : null);
+
     } catch (err) {
       console.error('Profile generation error:', err);
       setError('Failed to generate your profile. The neural winds are unfavorable.');
     } finally {
       setIsGenerating(false);
+      setIsImageGenerating(false);
     }
   };
 
@@ -115,7 +142,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
           </div>
 
           <button
-            onClick={handleGenerateProfile}
+            onClick={handleGenerateClick}
             disabled={!name || isGenerating}
             className={`w-full p-3 rounded text-white font-bold
                      ${!name || isGenerating 
@@ -136,12 +163,25 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       ) : (
         <div className="space-y-6">
           <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-cyan-400">
-            <Image
-              src={profile.imageUrl}
-              alt={`${profile.name}'s Neural Explorer Profile`}
-              fill
-              className="object-cover"
-            />
+            {profile.imageUrl ? (
+              <Image
+                src={profile.imageUrl}
+                alt={`${profile.name}'s Neural Explorer Profile`}
+                fill
+                className="object-cover"
+              />
+            ) : isImageGenerating ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+                  <p className="text-cyan-400 mt-4">Generating your portrait...</p>
+                </div>
+              </div>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
+                <p className="text-red-400">Failed to generate image</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 text-center">
@@ -168,7 +208,11 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
           </div>
 
           <button
-            onClick={() => setProfile(null)}
+            onClick={() => {
+              setProfile(null);
+              setName('');
+              setError(null);
+            }}
             className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 transition-all transform hover:scale-105"
           >
             Generate Another Profile
