@@ -9,6 +9,9 @@ interface ProfileGeneratorProps {
   dialogueChoices: DialogueOption[];
 }
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
+
 const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) => {
   const [name, setName] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -71,7 +74,6 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       setRetryCount(0);
       setIsTransitioning(true);
 
-      // Step 1: Generate initial profile
       const profileResponse = await fetch('/api/profile', {
         method: 'POST',
         headers: {
@@ -90,7 +92,6 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       const profileData = await profileResponse.json() as Profile;
       setProfile(profileData);
 
-      // Step 2: Generate image with retries
       setIsImageGenerating(true);
       setImageGenProgress('Creating your unique portrait...');
 
@@ -100,14 +101,13 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
         try {
           const imageUrl = await generateImage(profileData.description, profileData.profileId);
           
-          // Update profile with the generated image
           const updatedProfile: Profile = {
             ...profileData,
             imageUrl
           };
           setProfile(updatedProfile);
           setImageGenProgress('Portrait completed!');
-          return; // Success, exit the function
+          return;
           
         } catch (err) {
           lastError = err as Error;
@@ -120,7 +120,6 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
         }
       }
 
-      // If we get here, all retries failed
       throw lastError || new Error('Failed to generate image after all retries');
 
     } catch (err) {
@@ -130,7 +129,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       setIsGenerating(false);
       setIsImageGenerating(false);
       setImageGenProgress('');
-      setTimeout(() => setIsTransitioning(false), 500); // Allow time for fade transition
+      setTimeout(() => setIsTransitioning(false), 500);
     }
   };
 
@@ -147,7 +146,6 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
       )}
 
       <div className="relative min-h-[400px]">
-        {/* Input Form Layer */}
         <div className={`absolute inset-0 transition-all duration-500 ${isTransitioning ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
           <div className="mb-6">
             <label className="block text-cyan-200 mb-2" htmlFor="name">
@@ -158,8 +156,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-2 text-white 
-                       focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+              className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-2 text-white focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
               placeholder="Enter your name"
               disabled={isGenerating}
             />
@@ -199,11 +196,9 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
           </button>
         </div>
 
-        {/* Generated Profile Layer */}
         {(isGenerating || profile) && (
           <div className={`absolute inset-0 transition-all duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             <div className="space-y-6">
-              {/* Image Container - Responsive sizing */}
               <div className="max-w-md mx-auto w-full">
                 <div className="relative w-full pb-[100%] rounded-lg overflow-hidden border-2 border-cyan-400">
                   {profile?.imageUrl ? (
