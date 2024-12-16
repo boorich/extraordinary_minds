@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { DialogueOption } from '@/types/dialogue';
+import { Profile, ProfileMetrics } from '@/types/profile';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,7 +10,7 @@ const openai = new OpenAI({
 });
 
 function generateProfileDescription(choices: DialogueOption[], name: string) {
-  // Calculate profile metrics
+  // Calculate profile metrics with proper typing
   const metrics = choices.reduce((acc, choice) => {
     acc[choice.type] = (acc[choice.type] || 0) + 1;
     return acc;
@@ -24,14 +25,33 @@ function generateProfileDescription(choices: DialogueOption[], name: string) {
   const secondaryTrait = sortedTraits[1];
 
   // Generate profile text based on traits
-  const traitDescriptions = {
+  const traitDescriptions: Record<string, string> = {
     technical: "digital architect weaving complex systems",
     philosophical: "seeker of deeper truths and wisdom",
     creative: "visionary pioneering new frontiers",
     analytical: "master navigator of information streams"
   };
 
-  return `A character portrait of ${name}, a ${traitDescriptions[primaryTrait as keyof typeof traitDescriptions]} with strong ${secondaryTrait} tendencies. They stand confidently on the deck of a futuristic neural ship. The scene is illuminated by bioluminescent neural networks and cosmic energy, with a digital horizon stretching into infinity. Artistic style combines cyberpunk and classic nautical themes, with hints of neural network visualizations. Dramatic lighting, rich colors, detailed portrait.`;
+  return `A character portrait of ${name}, a ${traitDescriptions[primaryTrait]} with strong ${secondaryTrait} tendencies. They stand confidently on the deck of a futuristic neural ship. The scene is illuminated by bioluminescent neural networks and cosmic energy, with a digital horizon stretching into infinity. Artistic style combines cyberpunk and classic nautical themes, with hints of neural network visualizations. Dramatic lighting, rich colors, detailed portrait.`;
+}
+
+function calculateMetrics(choices: DialogueOption[]): ProfileMetrics {
+  // Initialize metrics object with proper typing
+  const counts = choices.reduce((acc, choice) => {
+    acc[choice.type] = (acc[choice.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Calculate total responses
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
+  // Convert to percentages with proper typing
+  return {
+    technical: Math.round(((counts.technical || 0) / total) * 100),
+    philosophical: Math.round(((counts.philosophical || 0) / total) * 100),
+    creative: Math.round(((counts.creative || 0) / total) * 100),
+    analytical: Math.round(((counts.analytical || 0) / total) * 100),
+  };
 }
 
 export async function POST(req: Request) {
@@ -59,25 +79,17 @@ export async function POST(req: Request) {
         style: "vivid"
       });
 
-      // Calculate metrics
-      const metrics = choices.reduce((acc, choice) => {
-        acc[choice.type] = (acc[choice.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      // Calculate profile metrics
+      const metrics = calculateMetrics(choices);
 
-      // Convert to percentages
-      const total = Object.values(metrics).reduce((a, b) => a + b, 0);
-      const percentages = Object.entries(metrics).reduce((acc, [key, value]) => {
-        acc[key] = Math.round((value / total) * 100);
-        return acc;
-      }, {} as Record<string, number>);
-
-      return NextResponse.json({
-        imageUrl: response.data[0].url,
-        description,
+      const profile: Profile = {
         name,
-        metrics: percentages
-      });
+        imageUrl: response.data[0].url || '',
+        description,
+        metrics
+      };
+
+      return NextResponse.json(profile);
 
     } catch (error: any) {
       console.error('OpenAI API error:', error);
