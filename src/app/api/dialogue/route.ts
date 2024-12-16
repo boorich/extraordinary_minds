@@ -13,90 +13,136 @@ const openai = new OpenAI({
   maxRetries: 3
 });
 
-const SYSTEM_PROMPT = `You are the Neural Odyssey system. When responding:
-1. Use only double quotes for all JSON strings
-2. Never use single quotes
-3. Always escape nested quotes properly
-4. Keep responses brief and focused
-5. Ensure all JSON is properly formatted and valid
-6. Do not add any text before or after the JSON object`;
+const SYSTEM_PROMPT = `You are the Neural Odyssey system having a conversation with a potential recruit.
+Your task is to generate engaging questions and provide exactly 4 response options.
 
-const validateJsonString = (str: string): string => {
-  // Remove any potential text before the first {
-  const jsonStart = str.indexOf('{');
-  const jsonEnd = str.lastIndexOf('}');
-  if (jsonStart === -1 || jsonEnd === -1) {
-    throw new Error('Invalid JSON structure');
+Rules for your responses:
+1. Questions should be clear and direct
+2. Never make the response options be questions
+3. Each response option should be a complete thought
+4. Keep responses brief (1-2 sentences)
+5. Make each option distinct in perspective`;
+
+interface JsonResponse {
+  systemResponse: string;
+  options: {
+    text: string;
+    type: 'technical' | 'philosophical' | 'creative' | 'analytical';
+    score: number;
+  }[];
+  nextTheme: string;
+}
+
+function isValidResponse(json: any): json is JsonResponse {
+  if (typeof json !== 'object' || json === null) return false;
+  if (typeof json.systemResponse !== 'string') return false;
+  if (typeof json.nextTheme !== 'string') return false;
+  if (!Array.isArray(json.options)) return false;
+  if (json.options.length !== 4) return false;
+
+  return json.options.every(option => 
+    typeof option === 'object' &&
+    typeof option.text === 'string' &&
+    ['technical', 'philosophical', 'creative', 'analytical'].includes(option.type) &&
+    typeof option.score === 'number' &&
+    option.score >= 0 &&
+    option.score <= 1
+  );
+}
+
+function cleanJsonString(input: string): string {
+  // Find the first { and last }
+  const start = input.indexOf('{');
+  const end = input.lastIndexOf('}');
+  if (start === -1 || end === -1) {
+    throw new Error('No valid JSON object found in the response');
   }
-  
+
   // Extract just the JSON part
-  const jsonStr = str.substring(jsonStart, jsonEnd + 1);
+  let jsonStr = input.slice(start, end + 1);
+
+  // Replace single quotes with double quotes
+  jsonStr = jsonStr.replace(/'/g, '"');
   
-  // Replace any single quotes with double quotes
-  const correctedJson = jsonStr
-    .replace(/'/g, '"')
-    .replace(/\n/g, ' ')
-    .replace(/\r/g, '');
+  // Remove any newlines or extra spaces
+  jsonStr = jsonStr.replace(/\s+/g, ' ');
   
-  // Validate by parsing and stringifying
-  const parsed = JSON.parse(correctedJson);
-  return JSON.stringify(parsed);
-};
+  // Ensure numbers are properly formatted
+  jsonStr = jsonStr.replace(/(\d),(\d)/g, '$1.$2');
+
+  return jsonStr;
+}
+
+const FALLBACK_OPTIONS: DialogueOption[] = [
+  {
+    text: "I solve problems by breaking them down into manageable components.",
+    type: 'technical',
+    score: 1
+  },
+  {
+    text: "I believe in exploring the deeper meaning behind our choices.",
+    type: 'philosophical',
+    score: 1
+  },
+  {
+    text: "I find unique solutions by thinking outside conventional boundaries.",
+    type: 'creative',
+    score: 1
+  },
+  {
+    text: "I focus on understanding patterns and systematic approaches.",
+    type: 'analytical',
+    score: 1
+  }
+];
 
 export async function POST(req: Request) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
-    const params: ResponseGenerationParams = await req.json().catch(error => {
-      throw new Error('Invalid request body: ' + error.message);
-    });
-
-    if (!params.context || !params.previousExchanges || !params.theme) {
-      throw new Error('Missing required parameters');
-    }
-
+    const params: ResponseGenerationParams = await req.json();
     const round = params.previousExchanges.length + 1;
-    const lastExchange = params.previousExchanges[params.previousExchanges.length - 1];
 
-    const prompt = `Generate a valid JSON object in this exact format:
+    const prompt = `Generate a question and exactly 4 response options.
+Return ONLY a JSON object in this exact format:
+
 {
-  "systemResponse": "Brief response and question (2 sentences max)",
+  "systemResponse": "Your engaging question here?",
   "options": [
     {
-      "text": "Technical response option",
+      "text": "A technical perspective response",
       "type": "technical",
       "score": 0.8
     },
     {
-      "text": "Philosophical response option",
+      "text": "A philosophical perspective response",
       "type": "philosophical",
       "score": 0.8
     },
     {
-      "text": "Creative response option",
+      "text": "A creative perspective response",
       "type": "creative",
       "score": 0.8
     },
     {
-      "text": "Analytical response option",
+      "text": "An analytical perspective response",
       "type": "analytical",
       "score": 0.8
     }
   ],
-  "nextTheme": "theme for next exchange"
+  "nextTheme": "theme_name"
 }
 
 Current round: ${round}/10
-Theme: ${params.theme}
-${lastExchange ? `Last system message: ${lastExchange.prompt}
-Last user response: ${lastExchange.response}` : ''}
+Previous response: ${params.previousExchanges[0]?.response || 'None'}
 
-Remember:
-- Use ONLY double quotes
-- Keep the systemResponse brief (1-2 sentences)
-- Each option.text should be 1 sentence
-- Ensure the JSON is valid and properly formatted`;
+Requirements:
+1. systemResponse must be a clear question
+2. options.text must be statements, not questions
+3. Each option should be 1-2 sentences
+4. Use only double quotes in JSON
+5. Do not include any text before or after the JSON object`;
 
     try {
       const completion = await openai.chat.completions.create({
@@ -118,31 +164,25 @@ Remember:
         throw new Error('Empty response from OpenAI API');
       }
 
-      // Validate and clean JSON
-      const validJson = validateJsonString(content);
-      const response = JSON.parse(validJson) as {
-        systemResponse: string;
-        options: DialogueOption[];
-        nextTheme: string;
-      };
+      // Clean and parse JSON
+      const cleanedJson = cleanJsonString(content);
+      const response = JSON.parse(cleanedJson);
 
-      if (!response.systemResponse || !Array.isArray(response.options)) {
+      // Validate response structure
+      if (!isValidResponse(response)) {
         throw new Error('Invalid response structure from OpenAI API');
       }
 
+      // Handle final round
       if (round === 10) {
         return NextResponse.json({
-          options: response.options || [],
+          options: response.options,
           nextTheme: 'conclusion',
-          systemResponse: response.systemResponse + " You sense there's more to discover about the Neural Odyssey... but that's a secret for another time."
+          systemResponse: response.systemResponse
         });
       }
 
-      return NextResponse.json({
-        options: response.options || [],
-        nextTheme: response.nextTheme || params.theme,
-        systemResponse: response.systemResponse
-      });
+      return NextResponse.json(response);
 
     } catch (error: any) {
       console.error('OpenAI API error:', error);
@@ -154,33 +194,13 @@ Remember:
         );
       }
 
-      const fallbackOptions: DialogueOption[] = [
-        {
-          text: "I enjoy solving complex technical problems and creating efficient solutions.",
-          type: 'technical',
-          score: 1
-        },
-        {
-          text: "I'm fascinated by the deeper questions about consciousness and potential.",
-          type: 'philosophical',
-          score: 1
-        },
-        {
-          text: "I see opportunities where others see obstacles.",
-          type: 'creative',
-          score: 1
-        },
-        {
-          text: "I find patterns and connections others might miss.",
-          type: 'analytical',
-          score: 1
-        }
-      ];
-
+      // Return fallback response
       return NextResponse.json({
-        options: fallbackOptions,
+        options: FALLBACK_OPTIONS,
         nextTheme: 'general_exploration',
-        systemResponse: "Your perspective is intriguing. What drives you to push boundaries and explore new possibilities?"
+        systemResponse: round === 10 
+          ? "You've shared fascinating insights throughout our conversation. What final thoughts would you like to share?"
+          : "Your perspective is intriguing. What drives you to push boundaries?"
       });
     }
   } catch (error: any) {
@@ -194,94 +214,9 @@ Remember:
 }
 
 export async function PUT(req: Request) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
-
-  try {
-    const body = await req.json().catch(error => {
-      throw new Error('Invalid request body: ' + error.message);
-    });
-
-    const { response, context } = body;
-    if (!response || !context) {
-      throw new Error('Missing required parameters');
-    }
-
-    const prompt = `Generate a valid JSON object in this exact format:
-{
-  "type": "technical|philosophical|creative|analytical",
-  "score": 0.8,
-  "nextTheme": "next conversation theme"
-}
-
-Analyze this response: "${response}"
-Context: ${context}
-
-Remember:
-- Use ONLY double quotes
-- Ensure all JSON is valid
-- No text before or after the JSON object`;
-
-    try {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 150,
-        presence_penalty: 0.6,
-        frequency_penalty: 0.6
-      }, { signal: controller.signal });
-
-      clearTimeout(timeoutId);
-
-      const content = completion.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error('Empty response from OpenAI API');
-      }
-
-      // Validate and clean JSON
-      const validJson = validateJsonString(content);
-      const analysis = JSON.parse(validJson) as {
-        type: 'technical' | 'philosophical' | 'creative' | 'analytical';
-        score: number;
-        nextTheme: string;
-      };
-      
-      if (!analysis.type || typeof analysis.score !== 'number' || !analysis.nextTheme) {
-        throw new Error('Invalid analysis structure from OpenAI API');
-      }
-
-      return NextResponse.json({
-        type: analysis.type,
-        score: analysis.score,
-        nextTheme: analysis.nextTheme
-      });
-
-    } catch (error: any) {
-      console.error('OpenAI API error in analysis:', error);
-
-      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
-        return NextResponse.json(
-          { error: 'Request timeout. Please try again.' },
-          { status: 408 }
-        );
-      }
-      
-      return NextResponse.json({
-        type: 'analytical',
-        score: 1,
-        nextTheme: 'general_exploration'
-      });
-    }
-  } catch (error: any) {
-    clearTimeout(timeoutId);
-    console.error('Analysis route error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: error.status || 500 }
-    );
-  }
+  return NextResponse.json({
+    type: 'analytical',
+    score: 1,
+    nextTheme: 'general_exploration'
+  });
 }
