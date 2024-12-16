@@ -1,11 +1,26 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { writeFile } from 'fs/promises';
+import { join } from 'path';
+import crypto from 'crypto';
 
 export const runtime = 'edge';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+async function downloadImage(url: string): Promise<Buffer> {
+  const response = await fetch(url);
+  return Buffer.from(await response.arrayBuffer());
+}
+
+async function storeImage(imageData: Buffer, profileId: string): Promise<string> {
+  const filename = `${profileId}-${crypto.randomBytes(8).toString('hex')}.png`;
+  const publicPath = join(process.cwd(), 'public', 'profiles', filename);
+  await writeFile(publicPath, imageData);
+  return `/profiles/${filename}`;
+}
 
 export async function POST(req: Request) {
   try {
@@ -19,8 +34,8 @@ export async function POST(req: Request) {
     }
 
     try {
-      // Generate image directly
-      const response = await openai.images.generate({
+      // Generate image with DALL-E
+      const dallEResponse = await openai.images.generate({
         model: "dall-e-3",
         prompt: description,
         n: 1,
@@ -29,10 +44,21 @@ export async function POST(req: Request) {
         style: "vivid"
       });
 
-      // Return the image URL directly
+      const dallEUrl = dallEResponse.data[0].url;
+      if (!dallEUrl) {
+        throw new Error('No image URL received from DALL-E');
+      }
+
+      // Download the image
+      const imageData = await downloadImage(dallEUrl);
+      
+      // Store the image and get permanent URL
+      const permanentUrl = await storeImage(imageData, profileId);
+
+      // Return the permanent URL
       return NextResponse.json({
         status: 'completed',
-        imageUrl: response.data[0].url,
+        imageUrl: permanentUrl,
         profileId
       });
 
