@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
-import crypto from 'crypto';
+import { put } from '@vercel/blob';
 
 export const runtime = 'edge';
 
@@ -10,16 +8,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function downloadImage(url: string): Promise<Buffer> {
+async function downloadAndStoreImage(url: string, profileId: string): Promise<string> {
+  // Download image from DALL-E
   const response = await fetch(url);
-  return Buffer.from(await response.arrayBuffer());
-}
+  const blob = await response.blob();
 
-async function storeImage(imageData: Buffer, profileId: string): Promise<string> {
-  const filename = `${profileId}-${crypto.randomBytes(8).toString('hex')}.png`;
-  const publicPath = join(process.cwd(), 'public', 'profiles', filename);
-  await writeFile(publicPath, imageData);
-  return `/profiles/${filename}`;
+  // Upload to Vercel Blob Storage
+  const { url: permanentUrl } = await put(`profiles/${profileId}-${Date.now()}.png`, blob, {
+    access: 'public',
+  });
+
+  return permanentUrl;
 }
 
 export async function POST(req: Request) {
@@ -49,11 +48,8 @@ export async function POST(req: Request) {
         throw new Error('No image URL received from DALL-E');
       }
 
-      // Download the image
-      const imageData = await downloadImage(dallEUrl);
-      
       // Store the image and get permanent URL
-      const permanentUrl = await storeImage(imageData, profileId);
+      const permanentUrl = await downloadAndStoreImage(dallEUrl, profileId);
 
       // Return the permanent URL
       return NextResponse.json({
