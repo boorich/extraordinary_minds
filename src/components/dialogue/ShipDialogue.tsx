@@ -79,6 +79,9 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
     return sum / history.length;
   };
 
+  // Get the current options to display
+  const currentOptions = currentPrompt.options || currentPrompt.fallbackOptions;
+
   return (
     <div className="relative bg-slate-800/90 rounded-lg border border-cyan-400 p-6 max-w-4xl mx-auto my-12">
       <div className="mb-6 space-y-4">
@@ -109,7 +112,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
 
       {!isTyping && (
         <div className="grid grid-cols-1 gap-2">
-          {currentPrompt.options.map((option, index) => (
+          {currentOptions.map((option, index) => (
             <button
               key={index}
               onClick={() => handleOptionSelect(option)}
