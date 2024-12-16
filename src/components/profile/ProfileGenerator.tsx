@@ -113,8 +113,10 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices }) 
                 setImageGenProgress('Creating your unique portrait...');
                 break;
               case 'completed':
-                setProfile(prev => prev ? { ...prev, imageUrl: data.imageUrl } : null);
-                setImageGenProgress('Portrait completed!');
+                if (data.imageUrl) {
+                  setProfile(prev => prev ? { ...prev, imageUrl: data.imageUrl } : null);
+                  setImageGenProgress('Portrait completed!');
+                }
                 break;
               case 'error':
                 throw new Error(data.error || 'Failed to generate image');
