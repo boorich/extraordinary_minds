@@ -39,27 +39,25 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [options, setOptions] = useState<DialogueOption[]>([]);
+  const [nextOptions, setNextOptions] = useState<DialogueOption[]>([]);
   const [conversationComplete, setConversationComplete] = useState(false);
   const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
   const [showingProfile, setShowingProfile] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     setOptions(currentPrompt.options || currentPrompt.fallbackOptions);
   }, []);
 
   const handleOptionSelect = async (option: DialogueOption) => {
-    if (conversationComplete) return;
+    if (conversationComplete || isTyping) return;
 
     try {
       setIsTyping(true);
-      
-      // Store the user's choice
       setDialogueChoices(prev => [...prev, option]);
       
-      // Calculate next round number
       const nextRound = round + 1;
       
-      // If this was the last response, show completion
       if (nextRound >= 10) {
         setRound(10);
         setCurrentPrompt({
@@ -69,7 +67,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         setConversationComplete(true);
         setIsTyping(false);
         
-        // Wait a moment before showing the profile generator
         setTimeout(() => {
           setShowingProfile(true);
         }, 2000);
@@ -77,7 +74,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         return;
       }
       
-      // Otherwise, get next response
       const response = await generateResponseOptions({
         context: currentPrompt.context,
         previousExchanges: [{
@@ -88,25 +84,34 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         constraints: currentPrompt.constraints
       });
 
-      // Create new prompt
-      const nextPrompt: DialoguePrompt = {
-        id: Date.now().toString(),
-        text: response.systemResponse,
-        theme: response.nextTheme,
-        context: currentPrompt.context,
-        constraints: currentPrompt.constraints,
-        fallbackOptions: currentPrompt.fallbackOptions
-      };
+      // Store next options before transition
+      setNextOptions(response.options);
 
-      setRound(nextRound);
-      setCurrentPrompt(nextPrompt);
-      setOptions(response.options);
-      setError(null);
+      // Start transition
+      setIsTransitioning(true);
+
+      // Update state after short delay to allow fade out
+      setTimeout(() => {
+        const nextPrompt: DialoguePrompt = {
+          id: Date.now().toString(),
+          text: response.systemResponse,
+          theme: response.nextTheme,
+          context: currentPrompt.context,
+          constraints: currentPrompt.constraints,
+          fallbackOptions: currentPrompt.fallbackOptions
+        };
+
+        setRound(nextRound);
+        setCurrentPrompt(nextPrompt);
+        setOptions(response.options);
+        setError(null);
+        setIsTyping(false);
+        setIsTransitioning(false);
+      }, 500);
 
     } catch (err) {
       console.error('Error in dialogue:', err);
       setError('Arr! The neural winds be unfavorable. Give it another shot, matey!');
-    } finally {
       setIsTyping(false);
     }
   };
@@ -133,34 +138,61 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         </div>
 
         <div className="mb-6 bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30">
-          {isTyping ? (
-            <div className="animate-pulse flex space-x-2 justify-center">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-75"></div>
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-150"></div>
-            </div>
-          ) : (
-            <p className="text-slate-200 pirate-font text-lg">{currentPrompt.text}</p>
-          )}
+          <p className={`text-slate-200 pirate-font text-lg transition-opacity duration-500 ${isTyping ? 'opacity-50' : 'opacity-100'}`}>
+            {currentPrompt.text}
+          </p>
         </div>
 
-        {!isTyping && options && !conversationComplete && (
-          <div className="grid grid-cols-1 gap-3">
-            {options.map((option, index) => (
-              <button
-                key={index}
-                onClick={() => handleOptionSelect(option)}
-                className="text-left p-4 bg-slate-700/50 rounded border border-cyan-400/30 
-                         hover:bg-slate-600/50 hover:border-cyan-400 transition-all duration-200
-                         text-slate-200 hover:text-white flex items-start gap-3"
-                disabled={isTyping}
-              >
-                <div className="mt-1">
-                  {getIcon(option.type)}
+        {!conversationComplete && (
+          <div className="relative min-h-[200px]">
+            {/* Current Options */}
+            <div className={`grid grid-cols-1 gap-3 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+              {options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleOptionSelect(option)}
+                  className="text-left p-4 bg-slate-700/50 rounded border border-cyan-400/30 
+                           hover:bg-slate-600/50 hover:border-cyan-400 transition-all duration-200
+                           text-slate-200 hover:text-white flex items-start gap-3"
+                  disabled={isTyping}
+                >
+                  <div className="mt-1">
+                    {getIcon(option.type)}
+                  </div>
+                  <span>{option.text}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Loading Overlay */}
+            {isTyping && (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 backdrop-blur-sm">
+                <div className="animate-pulse flex space-x-2">
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-75"></div>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-150"></div>
                 </div>
-                <span>{option.text}</span>
-              </button>
-            ))}
+              </div>
+            )}
+
+            {/* Next Options (for transition) */}
+            {isTransitioning && (
+              <div className="absolute inset-0 grid grid-cols-1 gap-3 transition-opacity duration-500 opacity-0">
+                {nextOptions.map((option, index) => (
+                  <button
+                    key={index}
+                    disabled
+                    className="text-left p-4 bg-slate-700/50 rounded border border-cyan-400/30 
+                             text-slate-200 flex items-start gap-3"
+                  >
+                    <div className="mt-1">
+                      {getIcon(option.type)}
+                    </div>
+                    <span>{option.text}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
