@@ -8,7 +8,18 @@ export interface ResponseGenerationParams {
   constraints: string[];
 }
 
-export async function generateResponseOptions(params: ResponseGenerationParams): Promise<string[]> {
+export interface ResponseAnalysis {
+  type: 'technical' | 'philosophical' | 'creative' | 'analytical';
+  score: number;
+  nextTheme: string;
+}
+
+export interface GeneratedOptions {
+  options: DialogueOption[];
+  nextTheme: string;
+}
+
+export async function generateResponseOptions(params: ResponseGenerationParams): Promise<GeneratedOptions> {
   try {
     const response = await fetch('/api/dialogue', {
       method: 'POST',
@@ -23,18 +34,14 @@ export async function generateResponseOptions(params: ResponseGenerationParams):
     }
 
     const data = await response.json();
-    return data.options;
+    return data;
   } catch (error) {
     console.error('Error generating response options:', error);
     throw error;
   }
 }
 
-export async function analyzeResponse(response: string, context: string): Promise<{
-  type: 'technical' | 'philosophical' | 'creative' | 'analytical';
-  score: number;
-  nextTheme?: string;
-}> {
+export async function analyzeResponse(response: string, context: string): Promise<ResponseAnalysis> {
   try {
     const apiResponse = await fetch('/api/dialogue', {
       method: 'PUT',
