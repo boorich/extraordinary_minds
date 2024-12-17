@@ -33,10 +33,18 @@ export async function POST(req: Request) {
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
+  } catch (error: any) {
+    // Convert unknown error to string message
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'An unexpected error occurred';
+    
     console.error('Error in agent completion:', error);
     return NextResponse.json(
-      { error: 'Failed to generate completion', details: error.message },
+      { 
+        error: 'Failed to generate completion', 
+        details: errorMessage 
+      },
       { status: 500 }
     );
   }
