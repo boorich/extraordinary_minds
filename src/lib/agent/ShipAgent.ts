@@ -28,6 +28,19 @@ export class ShipAgent {
     "If you could solve any problem, what would it be?"
   ];
 
+  private readonly ACKNOWLEDGMENTS = [
+    "Your perspective resonates through my quantum processors.",
+    "Fascinating patterns emerge from your response.",
+    "My neural networks light up at your insights.",
+    "Your thoughts create unique ripples in the digital sea.",
+    "This adds an intriguing dimension to your profile.",
+    "The currents of your thoughts run deep.",
+    "Your mental architecture reveals interesting pathways.",
+    "These insights illuminate new neural connections.",
+    "A most enlightening response.",
+    "Your thought patterns show remarkable coherence."
+  ];
+
   constructor(config: AgentConfig) {
     this.config = config;
     this.context = {
@@ -56,21 +69,21 @@ export class ShipAgent {
     // Get next question or generate final response
     const systemResponse = this.currentQuestion >= this.QUESTIONS.length 
       ? this.generateFinalInsight()
-      : await this.generateContextualResponse(input);
-
-    // Prepare next response including follow-up question
-    const nextQuestion = this.QUESTIONS[this.currentQuestion];
-    const fullResponse = this.currentQuestion >= this.QUESTIONS.length 
-      ? systemResponse
-      : `${systemResponse}\n\n${nextQuestion}`;
+      : this.generateAcknowledgment() + '\n\n' + this.QUESTIONS[this.currentQuestion];
 
     this.currentQuestion++;
 
     return {
       options: this.generateDynamicOptions(input),
       nextTheme: this.determineNextTheme(input),
-      systemResponse: fullResponse
+      systemResponse
     };
+  }
+
+  private generateAcknowledgment(): string {
+    // Get a random acknowledgment, but don't repeat if possible
+    const index = Math.floor(Math.random() * this.ACKNOWLEDGMENTS.length);
+    return this.ACKNOWLEDGMENTS[index];
   }
 
   private analyzeResponse(input: string) {
@@ -110,45 +123,13 @@ export class ShipAgent {
     }
   }
 
-  private async generateContextualResponse(input: string): Promise<string> {
-    const systemPrompt = `
-Previous exchange: ${input}
-Current metrics: ${JSON.stringify(this.context.userMetrics)}
-Interests noted: ${this.conversationContext.interests.join(', ')}
-Character style: ${this.config.style.all.join(', ')}
-Respond as the Neural Voyager ship AI, keeping responses engaging but concise.
-    `.trim();
-
-    try {
-      const response = await fetch('/api/agent/completion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{ role: 'system', content: systemPrompt }],
-          temperature: 0.7,
-          max_tokens: 150
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate response');
-      }
-
-      const data = await response.json();
-      return data.choices[0].message.content;
-    } catch (error) {
-      console.error('Error generating contextual response:', error);
-      return "Your thoughts create intriguing patterns in my neural matrices. Tell me more.";
-    }
-  }
-
   private generateFinalInsight(): string {
     const dominantTraits = Object.entries(this.context.userMetrics)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 2)
       .map(([trait]) => trait);
 
-    // Get unique interests using a Map instead of Set
+    // Get unique interests using a Map
     const uniqueInterests = Array.from(
       this.conversationContext.interests.reduce((map, interest) => {
         map.set(interest.toLowerCase(), interest);
@@ -167,7 +148,7 @@ Let me generate a visualization that captures your unique essence...`;
     
     const dominantTrait = traits[0][0];
     
-    // Get unique interests using a Map instead of Set
+    // Get unique interests using a Map
     const uniqueInterests = Array.from(
       this.conversationContext.interests.reduce((map, interest) => {
         map.set(interest.toLowerCase(), interest);
@@ -191,8 +172,6 @@ Color scheme: Deep blues and cyans with ${dominantTrait === 'technical' ? 'elect
   }
 
   private generateDynamicOptions(input: string): DialogueOption[] {
-    // For the Eliza-style interaction, we don't need predefined options
-    // But we need to return something for type compatibility
     return [{
       text: input,
       type: this.determineResponseType(input),
