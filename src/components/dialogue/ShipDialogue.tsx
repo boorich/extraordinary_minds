@@ -5,30 +5,21 @@ import { DialoguePrompt, DialogueOption, DialogueMetrics } from '@/types/dialogu
 import { ShipAgent } from '@/lib/agent/ShipAgent';
 import shipConfig from '@/config/ship.character.json';
 import ProfileGenerator from '../profile/ProfileGenerator';
-import { 
-  Compass, 
-  Lightbulb, 
-  Brain, 
-  Code2,
-} from 'lucide-react';
 
 interface ShipDialogueProps {
   onMetricsUpdate?: (metrics: DialogueMetrics) => void;
 }
 
-interface DialogueMessage {
-  id: string;
-  text: string;
-  isUser: boolean;
+interface DialogueStep {
+  question: string;
+  answer?: string;
 }
 
 const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [agent] = useState(() => new ShipAgent(shipConfig));
-  const [messages, setMessages] = useState<DialogueMessage[]>([{
-    id: 'initial',
-    text: "Welcome aboard the Neural Voyager. What drives your exploration of these digital realms?",
-    isUser: false
-  }]);
+  const [currentStep, setCurrentStep] = useState<DialogueStep>({
+    question: "Welcome aboard the Neural Voyager. What drives your exploration of these digital realms?"
+  });
   
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -36,21 +27,15 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [error, setError] = useState<string | null>(null);
   const [showingProfile, setShowingProfile] = useState(false);
   const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const handleUserInput = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userInput.trim() || isTyping) return;
+    if (!userInput.trim() || isTyping || isTransitioning) return;
 
     const currentInput = userInput.trim();
     setUserInput('');
     setIsTyping(true);
-
-    // Add user message immediately
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      text: currentInput,
-      isUser: true
-    }]);
 
     try {
       // Track the dialogue choice for profile generation
@@ -61,6 +46,15 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       };
       setDialogueChoices(prev => [...prev, choice]);
 
+      // Start transition
+      setIsTransitioning(true);
+      
+      // Update current step with answer
+      setCurrentStep(prev => ({
+        ...prev,
+        answer: currentInput
+      }));
+
       const nextRound = round + 1;
       if (nextRound > 10) {
         await handleConversationComplete();
@@ -70,38 +64,43 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       // Get response from agent
       const response = await agent.generateResponse(currentInput, 'ongoing');
       
-      // Add agent's response after a short delay
+      // Fade out current step
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Set new question
+      setCurrentStep({
+        question: response.systemResponse
+      });
+      
+      setRound(nextRound);
+      setIsTyping(false);
+      
+      // End transition
       setTimeout(() => {
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: response.systemResponse,
-          isUser: false
-        }]);
-        setRound(nextRound);
-        setIsTyping(false);
+        setIsTransitioning(false);
       }, 500);
 
     } catch (err) {
       console.error('Error in dialogue:', err);
       setError('The neural winds are unfavorable. Try rephrasing your thoughts.');
       setIsTyping(false);
+      setIsTransitioning(false);
     }
   };
 
   const handleConversationComplete = async () => {
     setIsTyping(true);
+    setIsTransitioning(true);
     
-    // Add final message
-    setMessages(prev => [...prev, {
-      id: 'final',
-      text: "Thank you for sharing your thoughts. I've analyzed our conversation and will now generate a unique visualization that captures your essence...",
-      isUser: false
-    }]);
+    setCurrentStep({
+      question: "Thank you for sharing your thoughts. I've analyzed our conversation and will now generate a unique visualization that captures your essence..."
+    });
 
     setIsTyping(false);
     setTimeout(() => {
+      setIsTransitioning(false);
       setShowingProfile(true);
-    }, 2000);
+    }, 1000);
   };
 
   return (
@@ -125,19 +124,24 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
           </div>
         </div>
 
-        <div className="mb-6 space-y-4 max-h-[60vh] overflow-y-auto">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`p-4 rounded-lg border ${
-                message.isUser
-                  ? 'bg-slate-700/30 border-cyan-400/30 ml-8'
-                  : 'bg-slate-700/50 border-cyan-400/50 mr-8'
-              }`}
-            >
-              <p className="text-slate-200">{message.text}</p>
+        <div className="mb-6 min-h-[200px] flex flex-col justify-center">
+          <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'}`}>
+            {/* Question */}
+            <div className="bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30 mb-4">
+              <p className="text-slate-200 pirate-font text-lg">
+                {currentStep.question}
+              </p>
             </div>
-          ))}
+            
+            {/* Answer (if exists) */}
+            {currentStep.answer && (
+              <div className="bg-slate-700/30 p-4 rounded-lg border border-cyan-400/30 ml-8">
+                <p className="text-slate-200">
+                  {currentStep.answer}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {!showingProfile && (
@@ -150,20 +154,20 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
                        focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
                        placeholder-slate-400"
               placeholder="Share your thoughts with the ship's AI..."
-              disabled={isTyping}
+              disabled={isTyping || isTransitioning}
             />
             <button
               type="submit"
-              disabled={isTyping || !userInput.trim()}
+              disabled={isTyping || isTransitioning || !userInput.trim()}
               className={`absolute right-3 top-1/2 -translate-y-1/2 px-4 py-1 rounded
-                       ${isTyping || !userInput.trim() 
+                       ${isTyping || isTransitioning || !userInput.trim() 
                          ? 'bg-slate-600 cursor-not-allowed' 
                          : 'water-effect hover:brightness-110'}`}
             >
               Send
             </button>
 
-            {isTyping && (
+            {(isTyping || isTransitioning) && (
               <div className="absolute left-3 top-1/2 -translate-y-1/2">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
@@ -176,7 +180,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         )}
       </div>
 
-      {/* Profile Generation */}
       {showingProfile && (
         <div className="animate-fadeIn">
           <ProfileGenerator 
