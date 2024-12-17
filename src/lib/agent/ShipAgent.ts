@@ -130,13 +130,17 @@ ${this.getRelevantExamples()}`;
   }
 
   private determineNextTheme(input: string, options: DialogueOption[]): string {
-    // Simple theme progression based on user metrics
+    // Get the metric with the highest value
     const metrics = this.context.userMetrics;
-    const maxMetric = Object.entries(metrics).reduce((a, b) => 
-      metrics[a] > metrics[b[0]] ? a : b[0]
+    const entries = Object.entries(metrics);
+    
+    if (entries.length === 0) return this.context.currentTheme;
+    
+    const maxEntry = entries.reduce((max, current) => 
+      current[1] > max[1] ? current : max
     );
     
-    return maxMetric;
+    return maxEntry[0];
   }
 
   private generateSystemResponse(options: DialogueOption[]): string {
