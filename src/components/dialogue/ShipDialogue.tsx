@@ -16,63 +16,24 @@ interface ShipDialogueProps {
   onMetricsUpdate?: (metrics: DialogueMetrics) => void;
 }
 
-const getIcon = (type: string) => {
-  switch (type) {
-    case 'technical':
-      return <Code2 className="w-5 h-5 text-cyan-400" />;
-    case 'philosophical':
-      return <Brain className="w-5 h-5 text-cyan-400" />;
-    case 'creative':
-      return <Lightbulb className="w-5 h-5 text-cyan-400" />;
-    case 'analytical':
-      return <Compass className="w-5 h-5 text-cyan-400" />;
-    default:
-      return null;
-  }
-};
-
-const analyzeUserInput = (input: string): DialogueOption['type'] => {
-  const patterns = {
-    technical: /\b(system|code|algorithm|data|technical|how|work|process)\b/i,
-    philosophical: /\b(think|believe|consciousness|reality|truth|why|mean|purpose)\b/i,
-    creative: /\b(imagine|create|design|envision|dream|could|might|possible)\b/i,
-    analytical: /\b(analyze|measure|evaluate|assess|pattern|compare|understand)\b/i
-  };
-
-  const matches = Object.entries(patterns).map(([type, pattern]) => ({
-    type: type as DialogueOption['type'],
-    matches: (input.match(pattern) || []).length
-  }));
-
-  const maxMatch = matches.reduce((max, current) => 
-    current.matches > max.matches ? current : max
-  , matches[0]);
-
-  return maxMatch.matches > 0 ? maxMatch.type : 'analytical';
-};
-
-const COMPLETION_MESSAGE = "Ahoy! Ye've successfully navigated the Neural Odyssey, brave explorer!";
+interface DialogueMessage {
+  id: string;
+  text: string;
+  isUser: boolean;
+}
 
 const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [agent] = useState(() => new ShipAgent(shipConfig));
-  const [currentPrompt, setCurrentPrompt] = useState<DialoguePrompt>({
+  const [messages, setMessages] = useState<DialogueMessage[]>([{
     id: 'initial',
-    text: shipConfig.messageExamples[0].examples[0].response,
-    theme: 'initial_contact',
-    context: 'First interaction with a potential explorer.',
-    constraints: [],
-    fallbackOptions: shipConfig.messageExamples[0].examples.map(ex => ({
-      text: ex.response,
-      type: 'technical',
-      score: 1
-    }))
-  });
-
+    text: "Welcome aboard the Neural Voyager. What drives your exploration of these digital realms?",
+    isUser: false
+  }]);
+  
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [round, setRound] = useState(1);
   const [error, setError] = useState<string | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [showingProfile, setShowingProfile] = useState(false);
   const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
 
@@ -80,62 +41,64 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
     e.preventDefault();
     if (!userInput.trim() || isTyping) return;
 
-    try {
-      setIsTyping(true);
-      setIsTransitioning(true);
+    const currentInput = userInput.trim();
+    setUserInput('');
+    setIsTyping(true);
 
-      // Analyze and categorize user input
+    // Add user message immediately
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      text: currentInput,
+      isUser: true
+    }]);
+
+    try {
+      // Track the dialogue choice for profile generation
       const choice: DialogueOption = {
-        text: userInput,
-        type: analyzeUserInput(userInput),
+        text: currentInput,
+        type: 'analytical', // The agent will determine the actual type
         score: 1
       };
       setDialogueChoices(prev => [...prev, choice]);
 
       const nextRound = round + 1;
-      if (nextRound >= 10) {
-        handleConversationComplete();
+      if (nextRound > 10) {
+        await handleConversationComplete();
         return;
       }
 
       // Get response from agent
-      const response = await agent.generateResponse(userInput, currentPrompt.theme);
+      const response = await agent.generateResponse(currentInput, 'ongoing');
       
-      // Update the conversation state after a short delay for transition effect
+      // Add agent's response after a short delay
       setTimeout(() => {
-        setCurrentPrompt({
+        setMessages(prev => [...prev, {
           id: Date.now().toString(),
           text: response.systemResponse,
-          theme: response.nextTheme,
-          context: currentPrompt.context,
-          constraints: [],
-          fallbackOptions: []
-        });
-
+          isUser: false
+        }]);
         setRound(nextRound);
-        setUserInput('');
-        setError(null);
         setIsTyping(false);
-        setIsTransitioning(false);
       }, 500);
 
     } catch (err) {
       console.error('Error in dialogue:', err);
       setError('The neural winds are unfavorable. Try rephrasing your thoughts.');
       setIsTyping(false);
-      setIsTransitioning(false);
     }
   };
 
-  const handleConversationComplete = () => {
-    setRound(10);
-    setCurrentPrompt({
-      ...currentPrompt,
-      text: COMPLETION_MESSAGE
-    });
-    setIsTyping(false);
-    setIsTransitioning(false);
+  const handleConversationComplete = async () => {
+    setIsTyping(true);
     
+    // Add final message
+    setMessages(prev => [...prev, {
+      id: 'final',
+      text: "Thank you for sharing your thoughts. I've analyzed our conversation and will now generate a unique visualization that captures your essence...",
+      isUser: false
+    }]);
+
+    setIsTyping(false);
     setTimeout(() => {
       setShowingProfile(true);
     }, 2000);
@@ -152,7 +115,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm text-cyan-400">
-            <span className="pirate-font">Journey Log:</span> {round}/10
+            <span className="pirate-font">Neural Link:</span> {round}/10
           </div>
           <div className="h-2 flex-1 mx-4 bg-slate-700 rounded-full overflow-hidden">
             <div 
@@ -162,15 +125,21 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
           </div>
         </div>
 
-        <div className="mb-6 bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30">
-          <p className={`text-slate-200 pirate-font text-lg transition-opacity duration-500 ${
-            isTyping ? 'opacity-50' : 'opacity-100'
-          }`}>
-            {currentPrompt.text}
-          </p>
+        <div className="mb-6 space-y-4 max-h-[60vh] overflow-y-auto">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`p-4 rounded-lg border ${
+                message.isUser
+                  ? 'bg-slate-700/30 border-cyan-400/30 ml-8'
+                  : 'bg-slate-700/50 border-cyan-400/50 mr-8'
+              }`}
+            >
+              <p className="text-slate-200">{message.text}</p>
+            </div>
+          ))}
         </div>
 
-        {/* User Input Area */}
         {!showingProfile && (
           <form onSubmit={handleUserInput} className="relative">
             <input
@@ -193,25 +162,27 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
             >
               Send
             </button>
-          </form>
-        )}
 
-        {/* Loading Indicator */}
-        {isTyping && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 backdrop-blur-sm">
-            <div className="animate-pulse flex space-x-2">
-              <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-75"></div>
-              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-150"></div>
-            </div>
-          </div>
+            {isTyping && (
+              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-75"></div>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-150"></div>
+                </div>
+              </div>
+            )}
+          </form>
         )}
       </div>
 
       {/* Profile Generation */}
       {showingProfile && (
         <div className="animate-fadeIn">
-          <ProfileGenerator dialogueChoices={dialogueChoices} />
+          <ProfileGenerator 
+            dialogueChoices={dialogueChoices} 
+            generationPrompt={agent.getProfileGenerationPrompt()}
+          />
         </div>
       )}
     </div>
