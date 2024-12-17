@@ -148,11 +148,16 @@ Respond as the Neural Voyager ship AI, keeping responses engaging but concise.
       .slice(0, 2)
       .map(([trait]) => trait);
 
-    const interests = [...new Set(this.conversationContext.interests)]
-      .slice(0, 3);
+    // Get unique interests using a Map instead of Set
+    const uniqueInterests = Array.from(
+      this.conversationContext.interests.reduce((map, interest) => {
+        map.set(interest.toLowerCase(), interest);
+        return map;
+      }, new Map()).values()
+    ).slice(0, 3);
 
     return `I sense in you a fascinating blend of ${dominantTraits.join(' and ')}.
-Your journey through these digital seas has revealed a deep connection to ${interests.join(', ')}.
+Your journey through these digital seas has revealed a deep connection to ${uniqueInterests.join(', ')}.
 Let me generate a visualization that captures your unique essence...`;
   }
 
@@ -161,15 +166,21 @@ Let me generate a visualization that captures your unique essence...`;
       .sort(([,a], [,b]) => b - a);
     
     const dominantTrait = traits[0][0];
-    const keyInterests = [...new Set(this.conversationContext.interests)]
-      .slice(0, 3);
+    
+    // Get unique interests using a Map instead of Set
+    const uniqueInterests = Array.from(
+      this.conversationContext.interests.reduce((map, interest) => {
+        map.set(interest.toLowerCase(), interest);
+        return map;
+      }, new Map()).values()
+    ).slice(0, 3);
     
     const significantPhrases = this.conversationContext.keyPhrases
       .slice(-3);
 
     return `Create a surreal, symbolic portrait representing a person with these characteristics:
 - Dominant trait: ${dominantTrait}
-- Key interests: ${keyInterests.join(', ')}
+- Key interests: ${uniqueInterests.join(', ')}
 - Notable expressions: ${significantPhrases.join(' | ')}
 Style: Ethereal, digital, with elements of ${dominantTrait} symbolism
 Mood: Introspective yet dynamic
