@@ -31,6 +31,26 @@ const getIcon = (type: string) => {
   }
 };
 
+const analyzeUserInput = (input: string): DialogueOption['type'] => {
+  const patterns = {
+    technical: /\b(system|code|algorithm|data|technical|how|work|process)\b/i,
+    philosophical: /\b(think|believe|consciousness|reality|truth|why|mean|purpose)\b/i,
+    creative: /\b(imagine|create|design|envision|dream|could|might|possible)\b/i,
+    analytical: /\b(analyze|measure|evaluate|assess|pattern|compare|understand)\b/i
+  };
+
+  const matches = Object.entries(patterns).map(([type, pattern]) => ({
+    type: type as DialogueOption['type'],
+    matches: (input.match(pattern) || []).length
+  }));
+
+  const maxMatch = matches.reduce((max, current) => 
+    current.matches > max.matches ? current : max
+  , matches[0]);
+
+  return maxMatch.matches > 0 ? maxMatch.type : 'analytical';
+};
+
 const COMPLETION_MESSAGE = "Ahoy! Ye've successfully navigated the Neural Odyssey, brave explorer!";
 
 const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
@@ -64,10 +84,10 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       setIsTyping(true);
       setIsTransitioning(true);
 
-      // Track user input for profile generation
+      // Analyze and categorize user input
       const choice: DialogueOption = {
         text: userInput,
-        type: 'user_input',
+        type: analyzeUserInput(userInput),
         score: 1
       };
       setDialogueChoices(prev => [...prev, choice]);
