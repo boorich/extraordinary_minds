@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { DialoguePrompt, DialogueOption, DialogueMetrics } from '@/types/dialogue';
-import { generateResponseOptions } from '@/lib/openai';
-import { initialDialogues } from '@/config/dialogues';
+import { ShipAgent } from '@/lib/agent/ShipAgent';
+import shipConfig from '@/config/ship.character.json';
 import ProfileGenerator from '../profile/ProfileGenerator';
 import { 
   Compass, 
@@ -34,76 +34,66 @@ const getIcon = (type: string) => {
 const COMPLETION_MESSAGE = "Ahoy! Ye've successfully navigated the Neural Odyssey, brave explorer!";
 
 const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
-  const [currentPrompt, setCurrentPrompt] = useState<DialoguePrompt>(initialDialogues[0]);
-  const [round, setRound] = useState(1);
+  const [agent] = useState(() => new ShipAgent(shipConfig));
+  const [currentPrompt, setCurrentPrompt] = useState<DialoguePrompt>({
+    id: 'initial',
+    text: shipConfig.messageExamples[0].examples[0].response,
+    theme: 'initial_contact',
+    context: 'First interaction with a potential explorer.',
+    constraints: [],
+    fallbackOptions: shipConfig.messageExamples[0].examples.map(ex => ({
+      text: ex.response,
+      type: 'technical',
+      score: 1
+    }))
+  });
+
+  const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [round, setRound] = useState(1);
   const [error, setError] = useState<string | null>(null);
-  const [options, setOptions] = useState<DialogueOption[]>([]);
-  const [nextOptions, setNextOptions] = useState<DialogueOption[]>([]);
-  const [conversationComplete, setConversationComplete] = useState(false);
-  const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
-  const [showingProfile, setShowingProfile] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showingProfile, setShowingProfile] = useState(false);
+  const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
 
-  useEffect(() => {
-    setOptions(currentPrompt.options || currentPrompt.fallbackOptions);
-  }, []);
-
-  const handleOptionSelect = async (option: DialogueOption) => {
-    if (conversationComplete || isTyping) return;
+  const handleUserInput = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userInput.trim() || isTyping) return;
 
     try {
       setIsTyping(true);
-      setDialogueChoices(prev => [...prev, option]);
-      
-      const nextRound = round + 1;
-      
-      if (nextRound >= 10) {
-        setRound(10);
-        setCurrentPrompt({
-          ...currentPrompt,
-          text: COMPLETION_MESSAGE
-        });
-        setConversationComplete(true);
-        setIsTyping(false);
-        
-        setTimeout(() => {
-          setShowingProfile(true);
-        }, 2000);
-        
-        return;
-      }
-      
-      const response = await generateResponseOptions({
-        context: currentPrompt.context,
-        previousExchanges: [{
-          prompt: currentPrompt.text,
-          response: option.text
-        }],
-        theme: currentPrompt.theme,
-        constraints: currentPrompt.constraints
-      });
-
-      // Store next options before transition
-      setNextOptions(response.options);
-
-      // Start transition
       setIsTransitioning(true);
 
-      // Update state after short delay to allow fade out
+      // Track user input for profile generation
+      const choice: DialogueOption = {
+        text: userInput,
+        type: 'user_input',
+        score: 1
+      };
+      setDialogueChoices(prev => [...prev, choice]);
+
+      const nextRound = round + 1;
+      if (nextRound >= 10) {
+        handleConversationComplete();
+        return;
+      }
+
+      // Get response from agent
+      const response = await agent.generateResponse(userInput, currentPrompt.theme);
+      
+      // Update the conversation state after a short delay for transition effect
       setTimeout(() => {
-        const nextPrompt: DialoguePrompt = {
+        setCurrentPrompt({
           id: Date.now().toString(),
           text: response.systemResponse,
           theme: response.nextTheme,
           context: currentPrompt.context,
-          constraints: currentPrompt.constraints,
-          fallbackOptions: currentPrompt.fallbackOptions
-        };
+          constraints: [],
+          fallbackOptions: []
+        });
 
         setRound(nextRound);
-        setCurrentPrompt(nextPrompt);
-        setOptions(response.options);
+        setUserInput('');
         setError(null);
         setIsTyping(false);
         setIsTransitioning(false);
@@ -111,9 +101,24 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
 
     } catch (err) {
       console.error('Error in dialogue:', err);
-      setError('Arr! The neural winds be unfavorable. Give it another shot, matey!');
+      setError('The neural winds are unfavorable. Try rephrasing your thoughts.');
       setIsTyping(false);
+      setIsTransitioning(false);
     }
+  };
+
+  const handleConversationComplete = () => {
+    setRound(10);
+    setCurrentPrompt({
+      ...currentPrompt,
+      text: COMPLETION_MESSAGE
+    });
+    setIsTyping(false);
+    setIsTransitioning(false);
+    
+    setTimeout(() => {
+      setShowingProfile(true);
+    }, 2000);
   };
 
   return (
@@ -138,65 +143,52 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         </div>
 
         <div className="mb-6 bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30">
-          <p className={`text-slate-200 pirate-font text-lg transition-opacity duration-500 ${isTyping ? 'opacity-50' : 'opacity-100'}`}>
+          <p className={`text-slate-200 pirate-font text-lg transition-opacity duration-500 ${
+            isTyping ? 'opacity-50' : 'opacity-100'
+          }`}>
             {currentPrompt.text}
           </p>
         </div>
 
-        {!conversationComplete && (
-          <div className="relative min-h-[200px]">
-            {/* Current Options */}
-            <div className={`grid grid-cols-1 gap-3 transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-              {options.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleOptionSelect(option)}
-                  className="text-left p-4 bg-slate-700/50 rounded border border-cyan-400/30 
-                           hover:bg-slate-600/50 hover:border-cyan-400 transition-all duration-200
-                           text-slate-200 hover:text-white flex items-start gap-3"
-                  disabled={isTyping}
-                >
-                  <div className="mt-1">
-                    {getIcon(option.type)}
-                  </div>
-                  <span>{option.text}</span>
-                </button>
-              ))}
+        {/* User Input Area */}
+        {!showingProfile && (
+          <form onSubmit={handleUserInput} className="relative">
+            <input
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
+                       focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
+                       placeholder-slate-400"
+              placeholder="Share your thoughts with the ship's AI..."
+              disabled={isTyping}
+            />
+            <button
+              type="submit"
+              disabled={isTyping || !userInput.trim()}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 px-4 py-1 rounded
+                       ${isTyping || !userInput.trim() 
+                         ? 'bg-slate-600 cursor-not-allowed' 
+                         : 'water-effect hover:brightness-110'}`}
+            >
+              Send
+            </button>
+          </form>
+        )}
+
+        {/* Loading Indicator */}
+        {isTyping && (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 backdrop-blur-sm">
+            <div className="animate-pulse flex space-x-2">
+              <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-75"></div>
+              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-150"></div>
             </div>
-
-            {/* Loading Overlay */}
-            {isTyping && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 backdrop-blur-sm">
-                <div className="animate-pulse flex space-x-2">
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-75"></div>
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-150"></div>
-                </div>
-              </div>
-            )}
-
-            {/* Next Options (for transition) */}
-            {isTransitioning && (
-              <div className="absolute inset-0 grid grid-cols-1 gap-3 transition-opacity duration-500 opacity-0">
-                {nextOptions.map((option, index) => (
-                  <button
-                    key={index}
-                    disabled
-                    className="text-left p-4 bg-slate-700/50 rounded border border-cyan-400/30 
-                             text-slate-200 flex items-start gap-3"
-                  >
-                    <div className="mt-1">
-                      {getIcon(option.type)}
-                    </div>
-                    <span>{option.text}</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
 
+      {/* Profile Generation */}
       {showingProfile && (
         <div className="animate-fadeIn">
           <ProfileGenerator dialogueChoices={dialogueChoices} />
