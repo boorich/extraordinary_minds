@@ -124,11 +124,11 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
           </div>
         </div>
 
-        <div className="mb-6 min-h-[200px] flex flex-col justify-center">
+        <div className="mb-6 min-h-[100px] flex flex-col justify-center overflow-y-auto">
           <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'}`}>
             {/* Question */}
             <div className="bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30 mb-4">
-              <p className="text-slate-200 pirate-font text-lg">
+              <p className="text-slate-200 pirate-font text-lg break-words">
                 {currentStep.question}
               </p>
             </div>
@@ -136,7 +136,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
             {/* Answer (if exists) */}
             {currentStep.answer && (
               <div className="bg-slate-700/30 p-4 rounded-lg border border-cyan-400/30 ml-8">
-                <p className="text-slate-200">
+                <p className="text-slate-200 break-words">
                   {currentStep.answer}
                 </p>
               </div>
