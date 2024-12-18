@@ -16,11 +16,13 @@ interface DialogueStep {
   answer?: string;
 }
 
+const MAX_ROUNDS = 5;
+
 const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate }) => {
   const agent = React.useMemo(() => new ShipAgent(shipConfig as Character), []);
   
   const [currentStep, setCurrentStep] = useState<DialogueStep>({
-    question: "Welcome aboard the Neural Voyager. What drives your exploration of these digital realms?"
+    question: "Welcome. What brings you to explore these digital realms?"
   });
   
   const [userInput, setUserInput] = useState('');
@@ -38,6 +40,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
     analytical: 0
   });
   const startTimeRef = useRef<number>(Date.now());
+  const explorerNameRef = useRef<string>('');
 
   const questionRef = useRef<HTMLParagraphElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -91,14 +94,15 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       // Update the round counter
       setRound(prev => {
         const newRound = prev + 1;
-        if (newRound > 10) {
+        if (newRound > MAX_ROUNDS) {
+          explorerNameRef.current = agent.generateExplorerName();
           handleConversationComplete();
         }
         return newRound;
       });
 
     } catch (err) {
-      setError('Apologies, but our neural link seems to be experiencing interference. Please try again.');
+      setError('Neural link interference detected. Please try again.');
       console.error('Error in dialogue:', err);
     } finally {
       setIsTyping(false);
@@ -143,12 +147,12 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
         
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm text-cyan-400">
-            <span className="pirate-font">Neural Link:</span> {round}/10
+            <span className="pirate-font">Neural Link:</span> {round}/{MAX_ROUNDS}
           </div>
           <div className="h-2 flex-1 mx-4 bg-slate-700 rounded-full overflow-hidden">
             <div 
               className="h-full bg-cyan-400 transition-all duration-500"
-              style={{ width: `${(round / 10) * 100}%` }}
+              style={{ width: `${(round / MAX_ROUNDS) * 100}%` }}
             />
           </div>
         </div>
@@ -190,7 +194,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
               className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
                        focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
                        placeholder-slate-400"
-              placeholder="Share your thoughts with the ship's AI..."
+              placeholder={explorerNameRef.current || "Share your thoughts with the ship's AI..."}
               disabled={isTyping || isTransitioning}
               aria-disabled={isTyping || isTransitioning}
             />
