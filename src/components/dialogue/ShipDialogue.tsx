@@ -56,6 +56,26 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
     }
   }, [currentStep.question]);
 
+  const handleConversationComplete = useCallback(async () => {
+    try {
+      setShowingProfile(true);
+      const choices = await agent.generateDynamicOptions(currentTheme);
+      setDialogueChoices(choices);
+      
+      if (onMetricsUpdate) {
+        onMetricsUpdate({
+          choices: choices,
+          scores: dialogueState,
+          startTime: startTimeRef.current,
+          endTime: Date.now()
+        });
+      }
+    } catch (err) {
+      console.error('Error generating profile:', err);
+      setError('Unable to generate your neural profile at this time.');
+    }
+  }, [agent, currentTheme, dialogueState, onMetricsUpdate]);
+
   const handleUserInput = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -114,26 +134,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       setIsTyping(false);
     }
   }, [userInput, isTyping, isTransitioning, round, agent, currentTheme, dialogueComplete, handleConversationComplete]);
-
-  const handleConversationComplete = useCallback(async () => {
-    try {
-      setShowingProfile(true);
-      const choices = await agent.generateDynamicOptions(currentTheme);
-      setDialogueChoices(choices);
-      
-      if (onMetricsUpdate) {
-        onMetricsUpdate({
-          choices: choices,
-          scores: dialogueState,
-          startTime: startTimeRef.current,
-          endTime: Date.now()
-        });
-      }
-    } catch (err) {
-      console.error('Error generating profile:', err);
-      setError('Unable to generate your neural profile at this time.');
-    }
-  }, [round, agent, onMetricsUpdate, currentTheme, dialogueState]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
