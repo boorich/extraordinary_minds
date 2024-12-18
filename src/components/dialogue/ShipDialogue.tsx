@@ -30,6 +30,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const [showingProfile, setShowingProfile] = useState(false);
   const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('initial_contact');
 
   const questionRef = useRef<HTMLParagraphElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,7 +62,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       setUserInput('');
       
       // Generate response from the agent
-      const response = await agent.generateResponse(input);
+      const { systemResponse, nextTheme } = await agent.generateResponse(input, currentTheme);
       
       // Update the conversation state
       setCurrentStep(prev => ({
@@ -74,9 +75,10 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       
       setIsTransitioning(false);
       
-      // Update with the new question
+      // Update the theme and question
+      setCurrentTheme(nextTheme);
       setCurrentStep({
-        question: response,
+        question: systemResponse,
       });
       
       // Update the round counter
@@ -94,12 +96,12 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
     } finally {
       setIsTyping(false);
     }
-  }, [userInput, isTyping, isTransitioning, round, agent]);
+  }, [userInput, isTyping, isTransitioning, round, agent, currentTheme]);
 
   const handleConversationComplete = useCallback(async () => {
     try {
       setShowingProfile(true);
-      const choices = await agent.generateDynamicOptions();
+      const choices = await agent.generateDynamicOptions(currentTheme);
       setDialogueChoices(choices);
       
       if (onMetricsUpdate) {
@@ -112,7 +114,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       console.error('Error generating profile:', err);
       setError('Unable to generate your neural profile at this time.');
     }
-  }, [round, agent, onMetricsUpdate]);
+  }, [round, agent, onMetricsUpdate, currentTheme]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
