@@ -96,7 +96,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       // Generate response from the agent
       const { systemResponse, nextTheme } = await agent.generateResponse(input, currentTheme, round);
       
-      // Update the conversation state
+      // Always update the conversation state with the current input first
       setCurrentStep(prev => ({
         ...prev,
         answer: input,
@@ -115,17 +115,18 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       if (newRound === MAX_ROUNDS) {
         setDialogueComplete(true);
         explorerNameRef.current = agent.generateExplorerName();
+        // For the final round, only update the question without showing the last answer
         setCurrentStep({
           question: "Neural link analysis complete. Your unique traits have emerged. Ready to generate your explorer profile?"
         });
         handleConversationComplete();
       } else {
-        // Otherwise, continue with the normal dialogue
+        // For normal rounds, show both question and previous answer
         setCurrentTheme(nextTheme);
-        setCurrentStep({
+        setCurrentStep(prev => ({
           question: systemResponse,
-          answer: input
-        });
+          answer: prev.answer // Preserve the current answer while updating the question
+        }));
       }
 
     } catch (err) {
@@ -143,7 +144,8 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const handleProfileGeneration = useCallback(async () => {
     setIsGeneratingProfile(true);
     setShowingProfile(true);
-    await new Promise(resolve => setTimeout(resolve, 100)); // Let loading state show
+    // Slight delay to ensure loading state is visible
+    await new Promise(resolve => setTimeout(resolve, 100));
   }, []);
 
   return (
@@ -188,7 +190,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
               </p>
             </div>
             
-            {currentStep.answer && (
+            {currentStep.answer && !dialogueComplete && (
               <div className="bg-slate-700/30 p-4 rounded-lg border border-cyan-400/30 ml-8">
                 <p className="text-slate-200 break-words whitespace-pre-wrap">
                   {currentStep.answer}

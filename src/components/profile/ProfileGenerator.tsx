@@ -16,6 +16,15 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
 const MAX_IMAGE_REGENERATIONS = 2;
 
+const LoadingOverlay = ({ message }: { message: string }) => (
+  <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+    <div className="flex flex-col items-center text-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-4 border-cyan-400 border-t-transparent"></div>
+      <p className="text-cyan-400 mt-6 text-lg font-medium">{message}</p>
+    </div>
+  </div>
+);
+
 const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, generationPrompt, explorerName = '' }) => {
   const [name, setName] = useState(explorerName);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -35,6 +44,9 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
   }, [explorerName]);
 
   const generateImage = async (description: string, profileId: string): Promise<string> => {
+    setIsImageGenerating(true);
+    setImageGenProgress('Neural portrait synthesis in progress...');
+    
     const response = await fetch('/api/profile/image', {
       method: 'POST',
       headers: {
@@ -65,7 +77,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
     setRegenerationsLeft(prev => prev - 1);
     setShowImageControls(false);
     setIsImageGenerating(true);
-    setImageGenProgress('Regenerating your portrait...');
+    setImageGenProgress('Regenerating neural portrait pattern...');
 
     try {
       const imageUrl = await generateImage(generationPrompt, profile.profileId);
@@ -92,7 +104,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
     try {
       setIsGenerating(true);
       setError(null);
-      setImageGenProgress('');
+      setImageGenProgress('Initializing Neural Pattern Analysis...');
       setRetryCount(0);
       setIsTransitioning(true);
       setRegenerationsLeft(MAX_IMAGE_REGENERATIONS);
@@ -117,7 +129,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
       setProfile(profileData);
 
       setIsImageGenerating(true);
-      setImageGenProgress('Creating your unique portrait...');
+      setImageGenProgress('Synthesizing your neural portrait...');
 
       let lastError: Error | null = null;
       
@@ -130,7 +142,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
             imageUrl
           };
           setProfile(updatedProfile);
-          setImageGenProgress('Portrait completed!');
+          setImageGenProgress('Portrait synthesis complete');
           setShowImageControls(true);
           return;
           
@@ -139,7 +151,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
           setRetryCount(i + 1);
           
           if (i < MAX_RETRIES - 1) {
-            setImageGenProgress(`Retrying image generation (${i + 1}/${MAX_RETRIES})...`);
+            setImageGenProgress(`Neural pattern interference detected. Recalibrating... (${i + 1}/${MAX_RETRIES})`);
             await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
           }
         }
@@ -149,7 +161,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
 
     } catch (err) {
       console.error('Profile generation error:', err);
-      setError('Failed to generate your profile. The neural winds are unfavorable.');
+      setError('Failed to generate your profile. Neural interference detected.');
     } finally {
       setIsGenerating(false);
       setIsImageGenerating(false);
@@ -235,15 +247,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
                       )}
                     </>
                   ) : isImageGenerating ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-                        <p className="text-cyan-400 mt-4 text-center px-4">
-                          {imageGenProgress || 'Generating your portrait...'}
-                          {retryCount > 0 && <span className="block text-sm mt-1">Attempt {retryCount}/{MAX_RETRIES}</span>}
-                        </p>
-                      </div>
-                    </div>
+                    <LoadingOverlay message={imageGenProgress} />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
                       <div className="animate-pulse flex space-x-4">
