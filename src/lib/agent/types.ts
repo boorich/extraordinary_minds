@@ -37,6 +37,11 @@ export interface AgentContext {
 
 export interface AgentType {
   getProfileGenerationPrompt(): string;
+  generateResponse(input: string, theme: string): Promise<{
+    options: any[];
+    nextTheme: string;
+    systemResponse: string;
+  }>;
 }
 
 export interface Message {
