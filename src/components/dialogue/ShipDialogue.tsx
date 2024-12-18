@@ -33,6 +33,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('initial_contact');
+  const [dialogueComplete, setDialogueComplete] = useState(false);
   const [dialogueState, setDialogueState] = useState<DialogueState>({
     technical: 0,
     philosophical: 0,
@@ -58,7 +59,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const handleUserInput = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userInput.trim() || isTyping || isTransitioning) {
+    if (!userInput.trim() || isTyping || isTransitioning || dialogueComplete) {
       return;
     }
 
@@ -66,6 +67,19 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       setIsTyping(true);
       setError(null);
       setIsTransitioning(true);
+      
+      if (round >= MAX_ROUNDS) {
+        setIsTyping(false);
+        setUserInput('');
+        setDialogueComplete(true);
+        setCurrentStep({
+          question: "Neural link analysis complete. Your unique traits have emerged. Ready to generate your explorer profile?",
+          answer: userInput
+        });
+        explorerNameRef.current = agent.generateExplorerName();
+        handleConversationComplete();
+        return;
+      }
       
       // Store the current input and clear the field
       const input = userInput;
@@ -92,14 +106,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       });
       
       // Update the round counter
-      setRound(prev => {
-        const newRound = prev + 1;
-        if (newRound > MAX_ROUNDS) {
-          explorerNameRef.current = agent.generateExplorerName();
-          handleConversationComplete();
-        }
-        return newRound;
-      });
+      setRound(prev => prev + 1);
 
     } catch (err) {
       setError('Neural link interference detected. Please try again.');
@@ -107,7 +114,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
     } finally {
       setIsTyping(false);
     }
-  }, [userInput, isTyping, isTransitioning, round, agent, currentTheme]);
+  }, [userInput, isTyping, isTransitioning, round, agent, currentTheme, dialogueComplete]);
 
   const handleConversationComplete = useCallback(async () => {
     try {
@@ -187,41 +194,52 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
 
         {!showingProfile && (
           <form onSubmit={handleUserInput} className="relative" aria-label="User Input Form">
-            <input
-              type="text"
-              value={userInput}
-              onChange={handleInputChange}
-              className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
-                       focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
-                       placeholder-slate-400"
-              placeholder="Share your thoughts with the ship's AI..."
-              disabled={isTyping || isTransitioning}
-              aria-disabled={isTyping || isTransitioning}
-            />
-            <button
-              type="submit"
-              disabled={isTyping || isTransitioning || !userInput.trim()}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 px-4 py-1 rounded
-                       ${isTyping || isTransitioning || !userInput.trim() 
-                         ? 'bg-slate-600 cursor-not-allowed' 
-                         : 'water-effect hover:brightness-110'}`}
-              aria-label="Send message"
-            >
-              Send
-            </button>
-
-            {(isTyping || isTransitioning) && (
-              <div 
-                className="absolute left-3 top-1/2 -translate-y-1/2" 
-                aria-live="polite" 
-                aria-label="Processing response"
+            {dialogueComplete ? (
+              <button
+                onClick={() => setShowingProfile(true)}
+                className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110"
               >
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-75"></div>
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-150"></div>
-                </div>
-              </div>
+                Generate Explorer Profile
+              </button>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={userInput}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
+                          focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
+                          placeholder-slate-400"
+                  placeholder="Share your thoughts with the ship's AI..."
+                  disabled={isTyping || isTransitioning}
+                  aria-disabled={isTyping || isTransitioning}
+                />
+                <button
+                  type="submit"
+                  disabled={isTyping || isTransitioning || !userInput.trim()}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 px-4 py-1 rounded
+                          ${isTyping || isTransitioning || !userInput.trim() 
+                            ? 'bg-slate-600 cursor-not-allowed' 
+                            : 'water-effect hover:brightness-110'}`}
+                  aria-label="Send message"
+                >
+                  Send
+                </button>
+
+                {(isTyping || isTransitioning) && (
+                  <div 
+                    className="absolute left-3 top-1/2 -translate-y-1/2" 
+                    aria-live="polite" 
+                    aria-label="Processing response"
+                  >
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
+                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-75"></div>
+                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-150"></div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </form>
         )}

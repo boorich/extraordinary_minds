@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { DialogueOption } from '@/types/dialogue';
 import { Profile } from '@/types/profile';
 import Image from 'next/image';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 interface ProfileGeneratorProps {
   dialogueChoices: DialogueOption[];
@@ -13,6 +14,7 @@ interface ProfileGeneratorProps {
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
+const MAX_IMAGE_REGENERATIONS = 2;
 
 const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, generationPrompt, explorerName = '' }) => {
   const [name, setName] = useState(explorerName);
@@ -23,8 +25,9 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
   const [imageGenProgress, setImageGenProgress] = useState<string>('');
   const [retryCount, setRetryCount] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [regenerationsLeft, setRegenerationsLeft] = useState(MAX_IMAGE_REGENERATIONS);
+  const [showImageControls, setShowImageControls] = useState(false);
 
-  // Update name when explorerName prop changes
   useEffect(() => {
     if (explorerName) {
       setName(explorerName);
@@ -56,6 +59,30 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
     return data.imageUrl;
   };
 
+  const handleRegenerateImage = async () => {
+    if (regenerationsLeft <= 0 || !profile) return;
+    
+    setRegenerationsLeft(prev => prev - 1);
+    setShowImageControls(false);
+    setIsImageGenerating(true);
+    setImageGenProgress('Regenerating your portrait...');
+
+    try {
+      const imageUrl = await generateImage(generationPrompt, profile.profileId);
+      setProfile(prev => prev ? { ...prev, imageUrl } : null);
+      setShowImageControls(true);
+    } catch (err) {
+      console.error('Failed to regenerate image:', err);
+      setError('Failed to regenerate portrait. Please try again.');
+    } finally {
+      setIsImageGenerating(false);
+    }
+  };
+
+  const handleAcceptImage = () => {
+    setShowImageControls(false);
+  };
+
   const handleGenerateClick = async () => {
     if (!name) {
       setError('Please enter your name, brave explorer!');
@@ -68,6 +95,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
       setImageGenProgress('');
       setRetryCount(0);
       setIsTransitioning(true);
+      setRegenerationsLeft(MAX_IMAGE_REGENERATIONS);
 
       const profileResponse = await fetch('/api/profile', {
         method: 'POST',
@@ -103,6 +131,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
           };
           setProfile(updatedProfile);
           setImageGenProgress('Portrait completed!');
+          setShowImageControls(true);
           return;
           
         } catch (err) {
@@ -175,14 +204,36 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
               <div className="max-w-md mx-auto w-full">
                 <div className="relative w-full pb-[100%] rounded-lg overflow-hidden border-2 border-cyan-400">
                   {profile?.imageUrl ? (
-                    <Image
-                      src={profile.imageUrl}
-                      alt={`${profile.name}'s Neural Explorer Profile`}
-                      fill
-                      className="object-contain"
-                      unoptimized
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+                    <>
+                      <Image
+                        src={profile.imageUrl}
+                        alt={`${profile.name}'s Neural Explorer Profile`}
+                        fill
+                        className="object-contain"
+                        unoptimized
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                      {showImageControls && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-8">
+                          <button
+                            onClick={handleAcceptImage}
+                            className="p-3 rounded-full hover:bg-green-500/20 transition-colors"
+                            aria-label="Accept image"
+                          >
+                            <CheckCircle2 className="w-12 h-12 text-green-400" />
+                          </button>
+                          {regenerationsLeft > 0 && (
+                            <button
+                              onClick={handleRegenerateImage}
+                              className="p-3 rounded-full hover:bg-red-500/20 transition-colors"
+                              aria-label="Regenerate image"
+                            >
+                              <XCircle className="w-12 h-12 text-red-400" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </>
                   ) : isImageGenerating ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-700/50">
                       <div className="flex flex-col items-center">
@@ -201,6 +252,11 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
                     </div>
                   )}
                 </div>
+                {regenerationsLeft < MAX_IMAGE_REGENERATIONS && (
+                  <div className="text-center mt-2 text-cyan-400/70 text-sm">
+                    {regenerationsLeft} regeneration{regenerationsLeft !== 1 ? 's' : ''} remaining
+                  </div>
+                )}
               </div>
 
               {profile ? (
@@ -210,7 +266,6 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
                     <p className="text-slate-200 text-sm sm:text-base">{profile.description}</p>
                   </div>
                   
-                  {/* Only show traits if they exist */}
                   {profile.metrics && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
                       {Object.entries(profile.metrics).map(([type, value]) => (
@@ -247,6 +302,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
                       setProfile(null);
                       setName(explorerName || '');
                       setError(null);
+                      setRegenerationsLeft(MAX_IMAGE_REGENERATIONS);
                     }}
                     className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 transition-all transform hover:scale-105"
                   >
