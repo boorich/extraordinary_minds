@@ -26,120 +26,58 @@ export class ShipAgent {
     this.openRouter = new OpenRouterApi('');
   }
 
-  // ... (rest of the existing code)
+  // Changed to public method
+  public async generateResponse(input: string, theme: string): Promise<GeneratedOptions> {
+    console.debug('Generating response for:', { input, theme, insightCount: this.insightCount });
 
-  private generateDynamicOptions(input: string): DialogueOption[] {
-    const options: DialogueOption[] = [];
-    
-    // Analyze the current conversation metrics to generate contextual options
-    const { technical, philosophical, creative, analytical } = this.context.userMetrics;
-    
-    // Base options that are always available
-    const baseOptions: DialogueOption[] = [
-      { 
-        label: 'Continue Exploring', 
-        value: 'continue', 
-        type: 'default' 
+    // Add user input to history
+    this.context.conversationHistory.push({ role: 'user', content: input });
+
+    try {
+      if (this.failureCount >= ShipAgent.MAX_FAILURES) {
+        console.debug('Using fallback due to too many failures');
+        return this.getFallbackResponse(input);
       }
-    ];
 
-    // Generate contextual options based on conversation metrics
-    if (technical > philosophical && technical > creative) {
-      options.push(
-        { 
-          label: 'Dive Deeper into Technical Details', 
-          value: 'technical_deep_dive', 
-          type: 'technical' 
-        }
-      );
+      const messages = this.prepareMessages(input);
+      const model = this.selectModel();
+
+      console.debug('Attempting API call with:', { model, messageCount: messages.length });
+      
+      const response = await this.openRouter.createCompletion({
+        model,
+        messages,
+        temperature: 0.7,
+        max_tokens: 150
+      });
+
+      // Reset failure count on success
+      this.failureCount = 0;
+
+      const responseContent = this.processResponse(response);
+      this.context.conversationHistory.push({ 
+        role: 'assistant', 
+        content: responseContent 
+      });
+
+      if (this.isInsightful(responseContent)) {
+        this.insightCount++;
+        console.debug('Increased insight count to:', this.insightCount);
+      }
+
+      return {
+        options: this.generateDynamicOptions(input),
+        nextTheme: this.determineNextTheme(input),
+        systemResponse: responseContent
+      };
+
+    } catch (error) {
+      console.error('Response generation error:', error);
+      this.failureCount++;
+      console.debug('Increased failure count to:', this.failureCount);
+      return this.getFallbackResponse(input);
     }
-
-    if (philosophical > technical && philosophical > analytical) {
-      options.push(
-        { 
-          label: 'Explore Philosophical Implications', 
-          value: 'philosophical_reflection', 
-          type: 'philosophical' 
-        }
-      );
-    }
-
-    if (creative > analytical && creative > technical) {
-      options.push(
-        { 
-          label: 'Discuss Creative Perspectives', 
-          value: 'creative_exploration', 
-          type: 'creative' 
-        }
-      );
-    }
-
-    if (analytical > creative && analytical > philosophical) {
-      options.push(
-        { 
-          label: 'Analyze Systematic Approach', 
-          value: 'analytical_breakdown', 
-          type: 'analytical' 
-        }
-      );
-    }
-
-    // Add some randomness to keep conversation fresh
-    if (Math.random() < 0.3) {
-      options.push(
-        { 
-          label: 'Unexpected Tangent', 
-          value: 'wild_card', 
-          type: 'random' 
-        }
-      );
-    }
-
-    // Combine and return options, ensuring at least base options
-    return options.length > 0 ? options : baseOptions;
   }
 
-  private determineNextTheme(input: string): string {
-    const currentTheme = this.context.currentTheme;
-    const { technical, philosophical, creative, analytical } = this.context.userMetrics;
-
-    // Thematic progression based on conversation metrics
-    const themeProgression: {[key: string]: string} = {
-      'initial_contact': 
-        technical > philosophical ? 'technical_exploration' :
-        philosophical > creative ? 'philosophical_inquiry' :
-        creative > analytical ? 'creative_dialogue' : 
-        'analytical_investigation',
-      
-      'technical_exploration': 
-        philosophical > technical ? 'philosophical_reflection' :
-        creative > technical ? 'creative_application' : 
-        'deep_technical_analysis',
-      
-      'philosophical_inquiry': 
-        technical > philosophical ? 'technical_implications' :
-        creative > philosophical ? 'imaginative_philosophy' :
-        'profound_contemplation',
-      
-      'creative_dialogue': 
-        technical > creative ? 'technical_creativity' :
-        philosophical > creative ? 'philosophical_imagination' :
-        'pure_creative_flow',
-      
-      'analytical_investigation': 
-        creative > analytical ? 'creative_analysis' :
-        philosophical > analytical ? 'philosophical_reasoning' :
-        'systematic_breakdown'
-    };
-
-    // Default fallback and progression
-    const nextTheme = themeProgression[currentTheme] || 'initial_contact';
-
-    // Update context
-    this.context.currentTheme = nextTheme;
-
-    return nextTheme;
-  }
-
-  // Rest of the existing code remains the same
+  // Rest of the methods remain the same (private methods are unchanged)
 }
