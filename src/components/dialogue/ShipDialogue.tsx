@@ -34,6 +34,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('initial_contact');
   const [dialogueComplete, setDialogueComplete] = useState(false);
+  const [isGeneratingProfile, setIsGeneratingProfile] = useState(false);
   const [dialogueState, setDialogueState] = useState<DialogueState>({
     technical: 0,
     philosophical: 0,
@@ -115,8 +116,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
         setDialogueComplete(true);
         explorerNameRef.current = agent.generateExplorerName();
         setCurrentStep({
-          question: "Neural link analysis complete. Your unique traits have emerged. Ready to generate your explorer profile?",
-          answer: input
+          question: "Neural link analysis complete. Your unique traits have emerged. Ready to generate your explorer profile?"
         });
         handleConversationComplete();
       } else {
@@ -124,6 +124,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
         setCurrentTheme(nextTheme);
         setCurrentStep({
           question: systemResponse,
+          answer: input
         });
       }
 
@@ -137,6 +138,12 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
+  }, []);
+
+  const handleProfileGeneration = useCallback(async () => {
+    setIsGeneratingProfile(true);
+    setShowingProfile(true);
+    await new Promise(resolve => setTimeout(resolve, 100)); // Let loading state show
   }, []);
 
   return (
@@ -195,10 +202,19 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
           <form onSubmit={handleUserInput} className="relative" aria-label="User Input Form">
             {dialogueComplete ? (
               <button
-                onClick={() => setShowingProfile(true)}
-                className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110"
+                type="button"
+                onClick={handleProfileGeneration}
+                disabled={isGeneratingProfile}
+                className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 flex items-center justify-center space-x-2"
               >
-                Generate Explorer Profile
+                {isGeneratingProfile ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Initializing Neural Portrait...</span>
+                  </>
+                ) : (
+                  <span>Generate Explorer Profile</span>
+                )}
               </button>
             ) : (
               <>
