@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { DialoguePrompt, DialogueOption, DialogueMetrics } from '@/types/dialogue';
+import { DialoguePrompt, DialogueOption, DialogueMetrics, DialogueState } from '@/types/dialogue';
 import { ShipAgent } from '@/lib/agent/ShipAgent';
 import { Character } from '@/lib/agent/types';
 import shipConfig from '@/config/ship.character.json';
@@ -31,6 +31,13 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('initial_contact');
+  const [dialogueState, setDialogueState] = useState<DialogueState>({
+    technical: 0,
+    philosophical: 0,
+    creative: 0,
+    analytical: 0
+  });
+  const startTimeRef = useRef<number>(Date.now());
 
   const questionRef = useRef<HTMLParagraphElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -106,15 +113,17 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       
       if (onMetricsUpdate) {
         onMetricsUpdate({
-          rounds: round,
           choices: choices,
+          scores: dialogueState,
+          startTime: startTimeRef.current,
+          endTime: Date.now()
         });
       }
     } catch (err) {
       console.error('Error generating profile:', err);
       setError('Unable to generate your neural profile at this time.');
     }
-  }, [round, agent, onMetricsUpdate, currentTheme]);
+  }, [round, agent, onMetricsUpdate, currentTheme, dialogueState]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
