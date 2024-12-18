@@ -37,11 +37,13 @@ export interface AgentContext {
 
 export interface AgentType {
   getProfileGenerationPrompt(): string;
+  generateExplorerName(): string;
   generateResponse(input: string, theme: string, round: number): Promise<{
     options: any[];
     nextTheme: string;
     systemResponse: string;
   }>;
+  generateDynamicOptions(input: string): any[];
 }
 
 export interface Message {
