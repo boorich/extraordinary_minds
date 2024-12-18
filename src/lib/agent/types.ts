@@ -37,7 +37,7 @@ export interface AgentContext {
 
 export interface AgentType {
   getProfileGenerationPrompt(): string;
-  generateResponse(input: string, theme: string): Promise<{
+  generateResponse(input: string, theme: string, round: number): Promise<{
     options: any[];
     nextTheme: string;
     systemResponse: string;
