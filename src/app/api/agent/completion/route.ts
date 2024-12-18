@@ -5,64 +5,76 @@ export async function POST(req: Request) {
     const { model, messages, temperature, max_tokens } = await req.json();
     
     if (!process.env.OPENROUTER_API_KEY) {
-      console.error('OpenRouter API key missing');
-      throw new Error('OpenRouter API key is not configured');
+      console.error('OpenRouter API key missing in environment');
+      return NextResponse.json(
+        { error: 'Configuration error', details: 'API key not configured' },
+        { status: 500 }
+      );
     }
 
-    console.log('Making OpenRouter request:', {
+    console.log('Starting OpenRouter request:', {
       model,
       messagesCount: messages.length,
+      firstMessage: messages[0]?.content?.substring(0, 100),
       temperature,
-      max_tokens
+      max_tokens,
+      hasApiKey: !!process.env.OPENROUTER_API_KEY
     });
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    const body = {
+      model: model || 'anthropic/claude-instant-v1',
+      messages,
+      temperature: temperature || 0.7,
+      max_tokens: max_tokens || 150,
+    };
+
+    console.log('OpenRouter request URL:', openRouterUrl);
+    console.log('OpenRouter request body:', JSON.stringify(body, null, 2));
+
+    const response = await fetch(openRouterUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'HTTP-Referer': process.env.VERCEL_URL || 'http://localhost:3000',
-        'OpenRouter-Completions-Override': JSON.stringify({
-          temperature: temperature || 0.7,
-          max_tokens: max_tokens || 150
-        })
       },
-      body: JSON.stringify({
-        model: model || 'mistral-7b-instruct',
-        messages,
-        temperature: temperature || 0.7,
-        max_tokens: max_tokens || 150,
-      })
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: response.statusText }));
-      console.error('OpenRouter API error:', {
+      const errorBody = await response.text();
+      console.error('OpenRouter error response:', {
         status: response.status,
         statusText: response.statusText,
-        error
+        body: errorBody,
+        headers: Object.fromEntries(response.headers.entries())
       });
-      throw new Error(`OpenRouter API call failed: ${error.error || response.statusText}`);
+      throw new Error(`OpenRouter API call failed: ${response.status} ${response.statusText} - ${errorBody}`);
     }
 
     const data = await response.json();
-    console.log('OpenRouter response success:', {
+    console.log('OpenRouter success response:', {
       model: data.model,
-      messageLength: data.choices?.[0]?.message?.content?.length,
+      promptTokens: data.usage?.prompt_tokens,
+      completionTokens: data.usage?.completion_tokens,
+      messageLength: data.choices?.[0]?.message?.content?.length
     });
 
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error('Error in agent completion:', {
+    console.error('Completion error details:', {
       name: error.name,
       message: error.message,
       stack: error.stack,
+      cause: error.cause
     });
     
     return NextResponse.json(
       { 
         error: 'Failed to generate completion', 
-        details: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: error.message,
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
