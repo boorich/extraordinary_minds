@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+// Trigger redeploy for new API key
 export async function POST(req: Request) {
   try {
     const { model, messages, temperature, max_tokens } = await req.json();
