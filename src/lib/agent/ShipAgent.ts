@@ -1,45 +1,27 @@
 import { DialogueOption } from '@/types/dialogue';
 import { AgentConfig, AgentContext, AgentResponse } from './types';
 import { GeneratedOptions } from '../openai';
+import { OpenRouterApi } from '../openrouter';
 
 interface ConversationContext {
   userTraits: Map<string, number>;
   interests: string[];
   keyPhrases: string[];
   personalityNotes: string[];
+  meaningfulInsights: number;
 }
+
+const MODELS = {
+  PRIMARY: "anthropic/claude-2",           // Complex reasoning & profiling
+  STANDARD: "openai/gpt-3.5-turbo",        // General conversation
+  EFFICIENT: "anthropic/claude-instant-v1", // Quick follow-ups
+} as const;
 
 export class ShipAgent {
   private config: AgentConfig;
   private context: AgentContext;
   private conversationContext: ConversationContext;
-  private currentQuestion: number = 0;
-
-  private readonly QUESTIONS = [
-    "What drives your exploration of these digital realms?",
-    "How do you approach challenges that seem impossible at first?",
-    "What patterns do you notice that others might miss?",
-    "Tell me about a moment that changed your perspective entirely.",
-    "How do you envision the future of human-AI interaction?",
-    "What's the most interesting problem you've solved recently?",
-    "What mysteries of consciousness intrigue you most?",
-    "How do you balance logic and intuition in your decisions?",
-    "What unconventional ideas do you find compelling?",
-    "If you could solve any problem, what would it be?"
-  ];
-
-  private readonly ACKNOWLEDGMENTS = [
-    "Your perspective resonates through my quantum processors.",
-    "Fascinating patterns emerge from your response.",
-    "My neural networks light up at your insights.",
-    "Your thoughts create unique ripples in the digital sea.",
-    "This adds an intriguing dimension to your profile.",
-    "The currents of your thoughts run deep.",
-    "Your mental architecture reveals interesting pathways.",
-    "These insights illuminate new neural connections.",
-    "A most enlightening response.",
-    "Your thought patterns show remarkable coherence."
-  ];
+  private openRouter: OpenRouterApi;
 
   constructor(config: AgentConfig) {
     this.config = config;
@@ -57,36 +39,109 @@ export class ShipAgent {
       userTraits: new Map(),
       interests: [],
       keyPhrases: [],
-      personalityNotes: []
+      personalityNotes: [],
+      meaningfulInsights: 0
     };
+    this.openRouter = new OpenRouterApi(process.env.OPENROUTER_API_KEY || '');
+  }
+
+  private selectModel(): string {
+    // Use PRIMARY for first interaction and final profile
+    if (this.context.conversationHistory.length === 0 || 
+        this.conversationContext.meaningfulInsights >= 7) {
+      console.debug('Using PRIMARY model for initial/final interaction');
+      return MODELS.PRIMARY;
+    }
+
+    // Use STANDARD for complex responses or when we need more insights
+    if (this.conversationContext.meaningfulInsights < 5) {
+      console.debug('Using STANDARD model for insight gathering');
+      return MODELS.STANDARD;
+    }
+
+    console.debug('Using EFFICIENT model for follow-up');
+    return MODELS.EFFICIENT;
   }
 
   async generateResponse(input: string, theme: string): Promise<GeneratedOptions> {
+    console.debug('Generating response for input:', input);
+    console.debug('Current insights count:', this.conversationContext.meaningfulInsights);
+    
     // Update context with user's input
     this.analyzeResponse(input);
     this.context.conversationHistory.push({ role: 'user', content: input });
 
-    // Get next question or generate final response
-    const systemResponse = this.currentQuestion >= this.QUESTIONS.length 
-      ? this.generateFinalInsight()
-      : this.generateAcknowledgment() + '\n\n' + this.QUESTIONS[this.currentQuestion];
+    try {
+      const selectedModel = this.selectModel();
+      console.debug('Selected model:', selectedModel);
 
-    this.currentQuestion++;
+      const systemPrompt = this.generateSystemPrompt();
+      console.debug('System prompt:', systemPrompt);
 
-    return {
-      options: this.generateDynamicOptions(input),
-      nextTheme: this.determineNextTheme(input),
-      systemResponse
-    };
+      const response = await this.openRouter.createCompletion({
+        model: selectedModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...this.context.conversationHistory.slice(-4)
+        ],
+        temperature: 0.7,
+        max_tokens: 150
+      });
+
+      console.debug('OpenRouter response:', response);
+
+      const responseContent = response.choices[0].message.content;
+      this.context.conversationHistory.push({ role: 'assistant', content: responseContent });
+
+      // Update insights count if response seems meaningful
+      if (responseContent.length > 50) {
+        this.conversationContext.meaningfulInsights++;
+        console.debug('Incremented insights count to:', this.conversationContext.meaningfulInsights);
+      }
+
+      return {
+        options: this.generateDynamicOptions(input),
+        nextTheme: this.determineNextTheme(input),
+        systemResponse: responseContent
+      };
+
+    } catch (error) {
+      console.error('Error generating response:', error);
+      // Fallback to pattern-based response
+      return {
+        options: this.generateDynamicOptions(input),
+        nextTheme: 'technical',
+        systemResponse: "I'm processing your unique perspective. Please tell me more..."
+      };
+    }
   }
 
-  private generateAcknowledgment(): string {
-    // Get a random acknowledgment, but don't repeat if possible
-    const index = Math.floor(Math.random() * this.ACKNOWLEDGMENTS.length);
-    return this.ACKNOWLEDGMENTS[index];
+  private generateSystemPrompt(): string {
+    const basePrompt = `You are the Neural Voyager, an advanced AI ship exploring human consciousness and potential. 
+Current conversation stage: ${this.conversationContext.meaningfulInsights}/7 insights gathered.
+Prior insights: ${this.conversationContext.personalityNotes.join(', ')}
+Known interests: ${this.conversationContext.interests.join(', ')}
+
+YOUR GOAL: Understand this explorer through natural conversation.
+- Ask engaging follow-up questions
+- Show genuine curiosity
+- Keep responses concise (2-3 sentences max)
+- Be slightly mysterious but warmly analytical
+
+CONVERSATION STAGE: ${
+  this.conversationContext.meaningfulInsights >= 7 ? 'FINAL INSIGHT' :
+  this.conversationContext.meaningfulInsights === 0 ? 'INITIAL CONTACT' :
+  'EXPLORATION'
+}
+
+Format: Respond naturally, then ask ONE follow-up question that flows from the conversation.`;
+
+    return basePrompt;
   }
 
   private analyzeResponse(input: string) {
+    console.debug('Analyzing response:', input);
+    
     // Update metrics based on content
     const words = input.toLowerCase().split(/\s+/);
     
@@ -115,31 +170,16 @@ export class ShipAgent {
     const foundInterests = input.match(interestPatterns);
     if (foundInterests) {
       this.conversationContext.interests.push(...foundInterests);
+      console.debug('Found interests:', foundInterests);
     }
 
     // Extract notable phrases
     if (input.length > 15) {
       this.conversationContext.keyPhrases.push(input);
+      console.debug('Added key phrase:', input);
     }
-  }
 
-  private generateFinalInsight(): string {
-    const dominantTraits = Object.entries(this.context.userMetrics)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 2)
-      .map(([trait]) => trait);
-
-    // Get unique interests using a Map
-    const uniqueInterests = Array.from(
-      this.conversationContext.interests.reduce((map, interest) => {
-        map.set(interest.toLowerCase(), interest);
-        return map;
-      }, new Map()).values()
-    ).slice(0, 3);
-
-    return `I sense in you a fascinating blend of ${dominantTraits.join(' and ')}.
-Your journey through these digital seas has revealed a deep connection to ${uniqueInterests.join(', ')}.
-Let me generate a visualization that captures your unique essence...`;
+    console.debug('Updated metrics:', this.context.userMetrics);
   }
 
   public getProfileGenerationPrompt(): string {
@@ -158,6 +198,10 @@ Let me generate a visualization that captures your unique essence...`;
     
     const significantPhrases = this.conversationContext.keyPhrases
       .slice(-3);
+
+    console.debug('Generating profile with traits:', traits);
+    console.debug('Unique interests:', uniqueInterests);
+    console.debug('Significant phrases:', significantPhrases);
 
     return `Create a surreal, symbolic portrait representing a person with these characteristics:
 - Dominant trait: ${dominantTrait}
