@@ -63,7 +63,6 @@ Color scheme: Deep blues and cyans with ${
     
     const suffixes = ['Walker', 'Weaver', 'Seeker', 'Runner', 'Diver'];
     
-    // Select prefix based on dominant trait
     const traits = [
       { name: 'technical', value: technical },
       { name: 'philosophical', value: philosophical },
@@ -139,6 +138,44 @@ Color scheme: Deep blues and cyans with ${
     return options.length > 0 ? options : baseOptions;
   }
 
+  public determineNextTheme(input: string): string {
+    const currentTheme = this.context.currentTheme;
+    const { technical, philosophical, creative, analytical } = this.context.userMetrics;
+
+    const themeProgression: {[key: string]: string} = {
+      'initial_contact': 
+        technical > philosophical ? 'technical_exploration' :
+        philosophical > creative ? 'philosophical_inquiry' :
+        creative > analytical ? 'creative_dialogue' : 
+        'analytical_investigation',
+      
+      'technical_exploration': 
+        philosophical > technical ? 'philosophical_reflection' :
+        creative > technical ? 'creative_application' : 
+        'deep_technical_analysis',
+      
+      'philosophical_inquiry': 
+        technical > philosophical ? 'technical_implications' :
+        creative > philosophical ? 'imaginative_philosophy' :
+        'profound_contemplation',
+      
+      'creative_dialogue': 
+        technical > creative ? 'technical_creativity' :
+        philosophical > creative ? 'philosophical_imagination' :
+        'pure_creative_flow',
+      
+      'analytical_investigation': 
+        creative > analytical ? 'creative_analysis' :
+        philosophical > analytical ? 'philosophical_reasoning' :
+        'systematic_breakdown'
+    };
+
+    const nextTheme = themeProgression[currentTheme] || 'initial_contact';
+    this.context.currentTheme = nextTheme;
+
+    return nextTheme;
+  }
+
   public prepareMessages(input: string, round: number): Message[] {
     const systemPrompt = this.generateSystemPrompt(round);
     const recentHistory = this.context.conversationHistory.slice(-2);
@@ -197,7 +234,6 @@ Color scheme: Deep blues and cyans with ${
   }
 
   public selectModel(): string {
-    // Focus on more direct models
     if (this.context.conversationHistory.length === 0) {
       return "anthropic/claude-3-haiku-20240307";
     }
@@ -211,12 +247,10 @@ Color scheme: Deep blues and cyans with ${
 
   public processResponse(response: any): string {
     const content = response.choices[0].message.content.trim();
-    // Ensure the response ends with a question mark and isn't too long
     const sentences: string[] = content.split(/[.!?]+/).filter((s: string) => s.trim());
     let processedContent = '';
     
     if (sentences.length > 0) {
-      // Take up to 2 sentences max
       const mainContent = sentences.slice(0, 2).join('. ').trim();
       const question = sentences.find((s: string) => s.trim().endsWith('?'))?.trim() || 
                       "what draws your attention here?";
@@ -242,7 +276,6 @@ Goal: Natural conversation that reveals the explorer's key traits`;
   }
 
   private updateUserMetrics(input: string): void {
-    // Analyze input for trait indicators
     const patterns = {
       technical: /\b(how|works|system|code|data|process|technical)\b/i,
       philosophical: /\b(why|meaning|purpose|think|believe|consciousness)\b/i,
