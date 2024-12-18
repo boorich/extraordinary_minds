@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DialoguePrompt, DialogueOption, DialogueMetrics } from '@/types/dialogue';
 import { ShipAgent } from '@/lib/agent/ShipAgent';
+import { Character } from '@/lib/agent/types';
 import shipConfig from '@/config/ship.character.json';
 import ProfileGenerator from '../profile/ProfileGenerator';
 
@@ -16,7 +17,8 @@ interface DialogueStep {
 }
 
 const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
-  const [agent] = useState(() => new ShipAgent(shipConfig));
+  // Explicitly type the configuration and pass as argument
+  const [agent] = useState(() => new ShipAgent(shipConfig as Character));
   const [currentStep, setCurrentStep] = useState<DialogueStep>({
     question: "Welcome aboard the Neural Voyager. What drives your exploration of these digital realms?"
   });
@@ -42,7 +44,8 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       const choice: DialogueOption = {
         text: currentInput,
         type: 'analytical', // The agent will determine the actual type
-        score: 1
+        score: 1,
+        nextPrompt: 'continue'
       };
       setDialogueChoices(prev => [...prev, choice]);
 
