@@ -13,7 +13,6 @@ interface ShipDialogueProps {
 
 interface DialogueStep {
   question: string;
-  answer?: string;
 }
 
 const MAX_ROUNDS = 5;
@@ -96,12 +95,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       // Generate response from the agent
       const { systemResponse, nextTheme } = await agent.generateResponse(input, currentTheme, round);
       
-      // Always update the conversation state with the current input first
-      setCurrentStep(prev => ({
-        ...prev,
-        answer: input,
-      }));
-      
       // Allow the transition animation to complete
       await new Promise(resolve => setTimeout(resolve, 500));
       
@@ -115,18 +108,16 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       if (newRound === MAX_ROUNDS) {
         setDialogueComplete(true);
         explorerNameRef.current = agent.generateExplorerName();
-        // For the final round, only update the question without showing the last answer
         setCurrentStep({
           question: "Neural link analysis complete. Your unique traits have emerged. Ready to generate your explorer profile?"
         });
         handleConversationComplete();
       } else {
-        // For normal rounds, show both question and previous answer
+        // For normal rounds, just show the new question
         setCurrentTheme(nextTheme);
-        setCurrentStep(prev => ({
-          question: systemResponse,
-          answer: prev.answer // Preserve the current answer while updating the question
-        }));
+        setCurrentStep({
+          question: systemResponse
+        });
       }
 
     } catch (err) {
@@ -144,7 +135,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const handleProfileGeneration = useCallback(async () => {
     setIsGeneratingProfile(true);
     setShowingProfile(true);
-    // Slight delay to ensure loading state is visible
     await new Promise(resolve => setTimeout(resolve, 100));
   }, []);
 
@@ -189,14 +179,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
                 {currentStep.question}
               </p>
             </div>
-            
-            {currentStep.answer && !dialogueComplete && (
-              <div className="bg-slate-700/30 p-4 rounded-lg border border-cyan-400/30 ml-8">
-                <p className="text-slate-200 break-words whitespace-pre-wrap">
-                  {currentStep.answer}
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
