@@ -175,13 +175,13 @@ Color scheme: Deep blues and cyans with ${
   public processResponse(response: any): string {
     const content = response.choices[0].message.content.trim();
     // Ensure the response ends with a question mark and isn't too long
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim());
+    const sentences: string[] = content.split(/[.!?]+/).filter((s: string) => s.trim());
     let processedContent = '';
     
     if (sentences.length > 0) {
       // Take up to 2 sentences max
       const mainContent = sentences.slice(0, 2).join('. ').trim();
-      const question = sentences.find(s => s.trim().endsWith('?'))?.trim() || 
+      const question = sentences.find((s: string) => s.trim().endsWith('?'))?.trim() || 
                       "what draws your attention here?";
                       
       processedContent = `${mainContent}. ${question}`;
@@ -193,7 +193,6 @@ Color scheme: Deep blues and cyans with ${
   }
 
   public generateExplorerName(): string {
-    // Generate a name based on the conversation context
     const { technical, philosophical, creative, analytical } = this.context.userMetrics;
     
     const prefixes = {
