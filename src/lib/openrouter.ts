@@ -10,34 +10,24 @@ interface CompletionParams {
 
 export class OpenRouterApi {
   private apiKey: string;
-  private baseUrl = 'https://openrouter.ai/api/v1';
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
 
   async createCompletion(params: CompletionParams) {
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetch('/api/agent/completion', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-        'HTTP-Referer': process.env.NEXT_PUBLIC_URL || 'http://localhost:3000',
-        'OpenRouter-Completions-Override': JSON.stringify({
-          temperature: params.temperature || 0.7,
-          max_tokens: params.max_tokens || 150
-        })
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: params.model,
-        messages: params.messages,
-        temperature: params.temperature,
-        max_tokens: params.max_tokens
-      })
+      body: JSON.stringify(params)
     });
 
     if (!response.ok) {
-      throw new Error(`OpenRouter API call failed: ${response.statusText}`);
+      const errorData = await response.json();
+      console.error('API error:', errorData);
+      throw new Error(errorData.details || 'Failed to generate completion');
     }
 
     return response.json();
