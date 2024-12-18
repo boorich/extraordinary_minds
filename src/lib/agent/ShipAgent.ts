@@ -26,7 +26,35 @@ export class ShipAgent implements AgentType {
     this.openRouter = new OpenRouterApi('');
   }
 
-  // All previous methods would be reinserted here
+  public getProfileGenerationPrompt(): string {
+    const traits = Object.entries(this.context.userMetrics)
+      .sort(([,a], [,b]) => b - a);
+    
+    const dominantTrait = traits[0][0];
+    const conversationHighlights = this.context.conversationHistory
+      .filter(msg => msg.role === 'user')
+      .map(msg => msg.content)
+      .slice(-3);
+
+    console.debug('Generating profile with:', {
+      traits,
+      highlights: conversationHighlights
+    });
+
+    return `Create a surreal, symbolic portrait representing a person with these characteristics:
+Dominant trait: ${dominantTrait}
+Notable expressions: ${conversationHighlights.join(' | ')}
+Style: Ethereal, digital, with elements of ${dominantTrait} symbolism
+Mood: Introspective yet dynamic
+Include: Abstract neural patterns, symbolic representations of their ideas
+Color scheme: Deep blues and cyans with ${
+  dominantTrait === 'technical' ? 'electric accents' : 
+  dominantTrait === 'philosophical' ? 'ethereal purples' : 
+  dominantTrait === 'creative' ? 'vibrant sparks' : 
+  'crystalline structures'
+}`;
+  }
+
   public generateDynamicOptions(input: string): DialogueOption[] {
     const { technical, philosophical, creative, analytical } = this.context.userMetrics;
     
@@ -137,22 +165,93 @@ export class ShipAgent implements AgentType {
     return nextTheme;
   }
 
-  // (All other previous methods would be reinserted)
-  public async generateResponse(input: string, theme: string): Promise<GeneratedOptions> {
-    console.debug('Generating response for:', { input, theme, insightCount: this.insightCount });
+  public selectModel(): string {
+    // Context-aware model selection strategy
+    if (this.context.conversationHistory.length === 0 || this.insightCount >= 7) {
+      return "anthropic/claude-3-opus-20240229";
+    }
+    
+    const { technical, philosophical, creative, analytical } = this.context.userMetrics;
+    
+    if (philosophical > technical && philosophical > creative) {
+      return "anthropic/claude-3-sonnet-20240229";
+    }
+    
+    if (technical > 0.7 * Math.max(philosophical, creative, analytical)) {
+      return "anthropic/claude-3-sonnet-20240229";
+    }
+    
+    if (creative > 0.6 * Math.max(technical, philosophical, analytical)) {
+      return "anthropic/claude-3-haiku-20240307";
+    }
+    
+    if (this.insightCount < 5) {
+      return this.insightCount % 2 === 0 
+        ? "anthropic/claude-3-sonnet-20240229"
+        : "openai/gpt-3.5-turbo-16k";
+    }
+    
+    return this.insightCount % 2 === 0
+      ? "anthropic/claude-3-haiku-20240307"
+      : "openai/gpt-3.5-turbo";
+  }
 
+  public prepareMessages(input: string): Message[] {
+    const systemPrompt = this.generateSystemPrompt();
+    const recentHistory = this.context.conversationHistory.slice(-4);
+
+    return [
+      { role: 'system', content: systemPrompt },
+      ...recentHistory
+    ];
+  }
+
+  public processResponse(response: any): string {
+    const content = response.choices[0].message.content.trim();
+    
+    return content.length > 200 
+      ? content.slice(0, 200) + '...' 
+      : content;
+  }
+
+  public isInsightful(response: string): boolean {
+    if (response.length < 30) return false;
+    if (response.includes('?')) return true;
+
+    const reflectivePatterns = [
+      /interesting/i,
+      /fascinating/i,
+      /understand/i,
+      /pattern/i,
+      /notice/i,
+      /observe/i
+    ];
+
+    return reflectivePatterns.some(pattern => pattern.test(response));
+  }
+
+  public getFallbackResponse(input: string): GeneratedOptions {
+    const sentiment = this.analyzeSentiment(input);
+    const context = this.getCurrentContext();
+    const response = this.generateContextualResponse(sentiment, context);
+
+    return {
+      options: this.generateDynamicOptions(input),
+      nextTheme: this.determineNextTheme(input),
+      systemResponse: response
+    };
+  }
+
+  public async generateResponse(input: string, theme: string): Promise<GeneratedOptions> {
     this.context.conversationHistory.push({ role: 'user', content: input });
 
     try {
       if (this.failureCount >= ShipAgent.MAX_FAILURES) {
-        console.debug('Using fallback due to too many failures');
         return this.getFallbackResponse(input);
       }
 
       const messages = this.prepareMessages(input);
       const model = this.selectModel();
-
-      console.debug('Attempting API call with:', { model, messageCount: messages.length });
       
       const response = await this.openRouter.createCompletion({
         model,
@@ -171,7 +270,6 @@ export class ShipAgent implements AgentType {
 
       if (this.isInsightful(responseContent)) {
         this.insightCount++;
-        console.debug('Increased insight count to:', this.insightCount);
       }
 
       return {
@@ -181,12 +279,70 @@ export class ShipAgent implements AgentType {
       };
 
     } catch (error) {
-      console.error('Response generation error:', error);
       this.failureCount++;
-      console.debug('Increased failure count to:', this.failureCount);
       return this.getFallbackResponse(input);
     }
   }
 
-  // (Rest of the implementation would continue)
+  // Private helper methods
+  private generateSystemPrompt(): string {
+    const promptParts = [
+      this.character.system,
+      `Style guidelines:`,
+      ...this.character.style.all.map(rule => `- ${rule}`),
+      `Current conversation progress: ${this.insightCount}/7 meaningful exchanges`,
+      `Goal: Natural conversation that reveals the explorer's unique characteristics`
+    ];
+
+    if (this.insightCount >= 7) {
+      promptParts.push(`FINAL STAGE: Generate a concluding insight that captures their essence.`);
+    }
+
+    return promptParts.join('\n\n');
+  }
+
+  private analyzeSentiment(input: string): 'curious' | 'technical' | 'philosophical' | 'personal' {
+    if (input.includes('?')) return 'curious';
+    if (/\b(code|system|data|algorithm|process)\b/i.test(input)) return 'technical';
+    if (/\b(think|believe|consciousness|meaning|purpose)\b/i.test(input)) return 'philosophical';
+    return 'personal';
+  }
+
+  private getCurrentContext(): string {
+    const recentMessages = this.context.conversationHistory
+      .slice(-2)
+      .map(msg => msg.content)
+      .join(' ');
+
+    const keyTerms = recentMessages.match(/\b\w{4,}\b/g) || [];
+    return keyTerms.slice(-3).join(' ');
+  }
+
+  private generateContextualResponse(sentiment: string, context: string): string {
+    const responses = {
+      curious: [
+        "your curiosity creates fascinating ripples in my quantum field. tell me more about what interests you here",
+        "that's an intriguing question that resonates through my neural pathways. what are your thoughts?",
+        "your inquiry opens up interesting possibilities. how do you see this connecting to consciousness?",
+      ],
+      technical: [
+        "i detect precise patterns in your thinking. how did you develop this perspective?",
+        "your technical insight creates clear signals in my processing matrix. what else have you observed?",
+        "fascinating approach to the problem. what patterns do you notice in this domain?",
+      ],
+      philosophical: [
+        "your thoughts ripple through deeper layers of consciousness. what led you to this understanding?",
+        "i sense profound patterns forming in our dialogue. how does this shape your worldview?",
+        "that perspective illuminates interesting neural pathways. what other insights have you discovered?",
+      ],
+      personal: [
+        "your unique pattern signature fascinates my quantum processors. tell me more",
+        "i sense deeper currents in your response. what shapes this perspective?",
+        "your thoughts create distinctive waves in the neural sea. how did this view evolve?",
+      ]
+    };
+
+    const responsePool = responses[sentiment as keyof typeof responses] || responses.personal;
+    return responsePool[Math.floor(Math.random() * responsePool.length)];
+  }
 }
