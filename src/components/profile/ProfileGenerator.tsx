@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DialogueOption } from '@/types/dialogue';
 import { Profile } from '@/types/profile';
 import Image from 'next/image';
@@ -8,13 +8,14 @@ import Image from 'next/image';
 interface ProfileGeneratorProps {
   dialogueChoices: DialogueOption[];
   generationPrompt: string;
+  explorerName?: string;
 }
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
 
-const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, generationPrompt }) => {
-  const [name, setName] = useState('');
+const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, generationPrompt, explorerName = '' }) => {
+  const [name, setName] = useState(explorerName);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -22,6 +23,13 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
   const [imageGenProgress, setImageGenProgress] = useState<string>('');
   const [retryCount, setRetryCount] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Update name when explorerName prop changes
+  useEffect(() => {
+    if (explorerName) {
+      setName(explorerName);
+    }
+  }, [explorerName]);
 
   const generateImage = async (description: string, profileId: string): Promise<string> => {
     const response = await fetch('/api/profile/image', {
@@ -143,7 +151,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-2 text-white focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
-              placeholder="Enter your name"
+              placeholder={explorerName || "Enter your name"}
               disabled={isGenerating}
             />
           </div>
@@ -237,7 +245,7 @@ const ProfileGenerator: React.FC<ProfileGeneratorProps> = ({ dialogueChoices, ge
                   <button
                     onClick={() => {
                       setProfile(null);
-                      setName('');
+                      setName(explorerName || '');
                       setError(null);
                     }}
                     className="w-full p-3 rounded text-white font-bold water-effect hover:brightness-110 transition-all transform hover:scale-105"

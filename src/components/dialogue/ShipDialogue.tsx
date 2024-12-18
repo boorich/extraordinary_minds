@@ -194,7 +194,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
               className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
                        focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
                        placeholder-slate-400"
-              placeholder={explorerNameRef.current || "Share your thoughts with the ship's AI..."}
+              placeholder="Share your thoughts with the ship's AI..."
               disabled={isTyping || isTransitioning}
               aria-disabled={isTyping || isTransitioning}
             />
@@ -232,6 +232,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
           <ProfileGenerator 
             dialogueChoices={dialogueChoices} 
             generationPrompt={agent.getProfileGenerationPrompt()}
+            explorerName={explorerNameRef.current}
           />
         </div>
       )}
