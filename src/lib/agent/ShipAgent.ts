@@ -6,16 +6,16 @@ export class ShipAgent implements AgentType {
   public selectModel(): string {
     // For first interaction or final synthesis, use more powerful model
     if (this.context.conversationHistory.length === 0 || this.insightCount >= 7) {
-      return "anthropic/claude-3-opus-20240229";  // Updated to a current Claude 3 model
+      return "openai/gpt-4"; // Most advanced model for critical interactions
     }
     
     // For regular conversation, use standard model
     if (this.insightCount < 5) {
-      return "openai/gpt-3.5-turbo";  // Keeping this as a fallback
+      return "openai/gpt-3.5-turbo-16k"; // High context, efficient model
     }
     
-    // For simple follow-ups, use an efficient model
-    return "anthropic/claude-3-haiku-20240307";  // Updated to current Haiku model
+    // For simple follow-ups, use a standard model
+    return "openai/gpt-3.5-turbo"; // Fastest, standard model
   }
 
   // (Rest of the implementation remains the same)
