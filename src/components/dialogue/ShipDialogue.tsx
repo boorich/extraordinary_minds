@@ -36,24 +36,83 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const [containerHeight, setContainerHeight] = useState('auto');
 
   useEffect(() => {
-    // Dynamically adjust container height to fit full content
     if (questionRef.current) {
-      // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
         const scrollHeight = questionRef.current?.scrollHeight || 0;
-        // Add some extra padding to ensure full visibility
         setContainerHeight(`${scrollHeight + 40}px`);
       });
     }
   }, [currentStep.question]);
 
   const handleUserInput = useCallback(async (e: React.FormEvent) => {
-    // ... (previous implementation remains the same)
+    e.preventDefault();
+    
+    if (!userInput.trim() || isTyping || isTransitioning) {
+      return;
+    }
+
+    try {
+      setIsTyping(true);
+      setError(null);
+      setIsTransitioning(true);
+      
+      // Store the current input and clear the field
+      const input = userInput;
+      setUserInput('');
+      
+      // Generate response from the agent
+      const response = await agent.generateResponse(input);
+      
+      // Update the conversation state
+      setCurrentStep(prev => ({
+        ...prev,
+        answer: input,
+      }));
+      
+      // Allow the transition animation to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setIsTransitioning(false);
+      
+      // Update with the new question
+      setCurrentStep({
+        question: response,
+      });
+      
+      // Update the round counter
+      setRound(prev => {
+        const newRound = prev + 1;
+        if (newRound > 10) {
+          handleConversationComplete();
+        }
+        return newRound;
+      });
+
+    } catch (err) {
+      setError('Apologies, but our neural link seems to be experiencing interference. Please try again.');
+      console.error('Error in dialogue:', err);
+    } finally {
+      setIsTyping(false);
+    }
   }, [userInput, isTyping, isTransitioning, round, agent]);
 
   const handleConversationComplete = useCallback(async () => {
-    // ... (previous implementation remains the same)
-  }, []);
+    try {
+      setShowingProfile(true);
+      const choices = await agent.generateDynamicOptions();
+      setDialogueChoices(choices);
+      
+      if (onMetricsUpdate) {
+        onMetricsUpdate({
+          rounds: round,
+          choices: choices,
+        });
+      }
+    } catch (err) {
+      console.error('Error generating profile:', err);
+      setError('Unable to generate your neural profile at this time.');
+    }
+  }, [round, agent, onMetricsUpdate]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
