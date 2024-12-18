@@ -35,6 +35,10 @@ export interface AgentContext {
   userMetrics: Record<string, number>;
 }
 
+export interface AgentType {
+  getProfileGenerationPrompt(): string;
+}
+
 export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
