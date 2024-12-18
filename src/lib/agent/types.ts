@@ -1,25 +1,29 @@
-export interface AgentConfig {
+export interface Character {
   name: string;
+  plugins: string[];
+  clients: string[];
   modelProvider: string;
   settings: {
-    defaultModel: string;
-    fallbackModel: string;
-    escalationModel: string;
-    escalationTriggers: string[];
+    secrets: Record<string, string>;
+    voice?: {
+      model: string;
+    };
   };
   system: string;
   bio: string[];
-  messageExamples: Array<{
-    type: string;
-    examples: Array<{
-      input: string;
-      response: string;
-    }>;
-  }>;
+  messageExamples: Array<Array<{
+    user: string;
+    content: {
+      text: string;
+      action?: string;
+    };
+  }>>;
   style: {
     all: string[];
+    chat?: string[];
+    post?: string[];
   };
-  topics: string[];
+  topics?: string[];
 }
 
 export interface AgentContext {
@@ -31,8 +35,7 @@ export interface AgentContext {
   userMetrics: Record<string, number>;
 }
 
-export interface AgentResponse {
-  text: string;
-  type: 'technical' | 'philosophical' | 'creative' | 'analytical';
-  nextTheme?: string;
+export interface Message {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
 }
