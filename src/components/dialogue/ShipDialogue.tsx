@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DialoguePrompt, DialogueOption, DialogueMetrics } from '@/types/dialogue';
 import { ShipAgent } from '@/lib/agent/ShipAgent';
 import { Character } from '@/lib/agent/types';
@@ -16,9 +16,9 @@ interface DialogueStep {
   answer?: string;
 }
 
-const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
-  // Explicitly type the configuration and pass as argument
-  const [agent] = useState(() => new ShipAgent(shipConfig as Character));
+const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate }) => {
+  const agent = React.useMemo(() => new ShipAgent(shipConfig as Character), []);
+  
   const [currentStep, setCurrentStep] = useState<DialogueStep>({
     question: "Welcome aboard the Neural Voyager. What drives your exploration of these digital realms?"
   });
@@ -31,7 +31,17 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
   const [dialogueChoices, setDialogueChoices] = useState<DialogueOption[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleUserInput = async (e: React.FormEvent) => {
+  const questionRef = useRef<HTMLParagraphElement>(null);
+  const [questionHeight, setQuestionHeight] = useState('auto');
+
+  useEffect(() => {
+    if (questionRef.current) {
+      // Set height to the scroll height to show full content
+      setQuestionHeight(`${questionRef.current.scrollHeight}px`);
+    }
+  }, [currentStep.question]);
+
+  const handleUserInput = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim() || isTyping || isTransitioning) return;
 
@@ -40,19 +50,16 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
     setIsTyping(true);
 
     try {
-      // Track the dialogue choice for profile generation
       const choice: DialogueOption = {
         text: currentInput,
-        type: 'analytical', // The agent will determine the actual type
+        type: 'analytical',
         score: 1,
         nextPrompt: 'continue'
       };
       setDialogueChoices(prev => [...prev, choice]);
 
-      // Start transition
       setIsTransitioning(true);
       
-      // Update current step with answer
       setCurrentStep(prev => ({
         ...prev,
         answer: currentInput
@@ -64,13 +71,10 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         return;
       }
 
-      // Get response from agent
       const response = await agent.generateResponse(currentInput, 'ongoing');
       
-      // Fade out current step
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Set new question
       setCurrentStep({
         question: response.systemResponse
       });
@@ -78,7 +82,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       setRound(nextRound);
       setIsTyping(false);
       
-      // End transition
       setTimeout(() => {
         setIsTransitioning(false);
       }, 500);
@@ -89,9 +92,9 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       setIsTyping(false);
       setIsTransitioning(false);
     }
-  };
+  }, [userInput, isTyping, isTransitioning, round, agent]);
 
-  const handleConversationComplete = async () => {
+  const handleConversationComplete = useCallback(async () => {
     setIsTyping(true);
     setIsTransitioning(true);
     
@@ -104,13 +107,20 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       setIsTransitioning(false);
       setShowingProfile(true);
     }, 1000);
-  };
+  }, []);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInput(e.target.value);
+  }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" aria-label="Neural Voyager Dialogue Interface">
       <div className="relative bg-slate-800/90 rounded-lg border border-cyan-400 p-6 max-w-4xl mx-auto">
         {error && (
-          <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300">
+          <div 
+            className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -127,16 +137,20 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
           </div>
         </div>
 
-        <div className="mb-6 min-h-[100px] flex flex-col justify-center overflow-y-auto">
+        <div 
+          className="mb-6 flex flex-col justify-center"
+          style={{ minHeight: questionHeight }}
+        >
           <div className={`transition-all duration-500 ${isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'}`}>
-            {/* Question */}
             <div className="bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30 mb-4">
-              <p className="text-slate-200 pirate-font text-lg break-words">
+              <p 
+                ref={questionRef}
+                className="text-slate-200 pirate-font text-lg break-words"
+              >
                 {currentStep.question}
               </p>
             </div>
             
-            {/* Answer (if exists) */}
             {currentStep.answer && (
               <div className="bg-slate-700/30 p-4 rounded-lg border border-cyan-400/30 ml-8">
                 <p className="text-slate-200 break-words">
@@ -148,16 +162,17 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
         </div>
 
         {!showingProfile && (
-          <form onSubmit={handleUserInput} className="relative">
+          <form onSubmit={handleUserInput} className="relative" aria-label="User Input Form">
             <input
               type="text"
               value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
+              onChange={handleInputChange}
               className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
                        focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
                        placeholder-slate-400"
               placeholder="Share your thoughts with the ship's AI..."
               disabled={isTyping || isTransitioning}
+              aria-disabled={isTyping || isTransitioning}
             />
             <button
               type="submit"
@@ -166,12 +181,17 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
                        ${isTyping || isTransitioning || !userInput.trim() 
                          ? 'bg-slate-600 cursor-not-allowed' 
                          : 'water-effect hover:brightness-110'}`}
+              aria-label="Send message"
             >
               Send
             </button>
 
             {(isTyping || isTransitioning) && (
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              <div 
+                className="absolute left-3 top-1/2 -translate-y-1/2" 
+                aria-live="polite" 
+                aria-label="Processing response"
+              >
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
                   <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-75"></div>
@@ -193,6 +213,6 @@ const ShipDialogue: React.FC<ShipDialogueProps> = ({ onMetricsUpdate }) => {
       )}
     </div>
   );
-};
+});
 
 export default ShipDialogue;
