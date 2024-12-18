@@ -4,79 +4,105 @@ export async function POST(req: Request) {
   try {
     const { model, messages, temperature, max_tokens } = await req.json();
     
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.error('OpenRouter API key missing in environment');
+    // Check API key exists and format
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      console.error('OpenRouter API key missing');
       return NextResponse.json(
         { error: 'Configuration error', details: 'API key not configured' },
         { status: 500 }
       );
     }
 
-    console.log('Starting OpenRouter request:', {
+    if (!apiKey.startsWith('sk-or-v1-')) {
+      console.error('OpenRouter API key appears to be in wrong format');
+      return NextResponse.json(
+        { error: 'Configuration error', details: 'API key format invalid' },
+        { status: 500 }
+      );
+    }
+
+    // Log request details (safely)
+    console.log('OpenRouter request details:', {
       model,
       messagesCount: messages.length,
-      firstMessage: messages[0]?.content?.substring(0, 100),
+      apiKeyPrefix: apiKey.substring(0, 10) + '...',
+      referer: process.env.VERCEL_URL || 'http://localhost:3000',
       temperature,
-      max_tokens,
-      hasApiKey: !!process.env.OPENROUTER_API_KEY
+      max_tokens
     });
 
-    const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
-    const body = {
-      model: model || 'anthropic/claude-instant-v1',
-      messages,
-      temperature: temperature || 0.7,
-      max_tokens: max_tokens || 150,
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': process.env.VERCEL_URL || 'http://localhost:3000',
+      'OpenRouter-Completions-Override': JSON.stringify({
+        temperature: temperature || 0.7,
+        max_tokens: max_tokens || 150
+      })
     };
 
-    console.log('OpenRouter request URL:', openRouterUrl);
-    console.log('OpenRouter request body:', JSON.stringify(body, null, 2));
+    // Log full headers (except auth)
+    console.log('Request headers:', {
+      ...headers,
+      'Authorization': 'Bearer [REDACTED]'
+    });
 
-    const response = await fetch(openRouterUrl, {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': process.env.VERCEL_URL || 'http://localhost:3000',
-      },
-      body: JSON.stringify(body),
+      headers,
+      body: JSON.stringify({
+        model: model || 'anthropic/claude-instant-v1',
+        messages,
+        temperature: temperature || 0.7,
+        max_tokens: max_tokens || 150,
+      })
+    });
+
+    // Log response status and headers
+    console.log('OpenRouter response:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
+      const errorText = await response.text();
       console.error('OpenRouter error response:', {
         status: response.status,
         statusText: response.statusText,
-        body: errorBody,
+        body: errorText,
         headers: Object.fromEntries(response.headers.entries())
       });
-      throw new Error(`OpenRouter API call failed: ${response.status} ${response.statusText} - ${errorBody}`);
+      
+      return NextResponse.json({
+        error: 'OpenRouter API error',
+        details: `${response.status} ${response.statusText}: ${errorText}`,
+        timestamp: new Date().toISOString()
+      }, { status: response.status });
     }
 
     const data = await response.json();
-    console.log('OpenRouter success response:', {
+    
+    // Log successful response details
+    console.log('OpenRouter success:', {
       model: data.model,
-      promptTokens: data.usage?.prompt_tokens,
-      completionTokens: data.usage?.completion_tokens,
+      usage: data.usage,
       messageLength: data.choices?.[0]?.message?.content?.length
     });
 
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error('Completion error details:', {
+    console.error('Completion error:', {
       name: error.name,
       message: error.message,
-      stack: error.stack,
-      cause: error.cause
+      stack: error.stack?.split('\n').slice(0, 3)
     });
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to generate completion', 
-        details: error.message,
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      error: 'Failed to generate completion',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
