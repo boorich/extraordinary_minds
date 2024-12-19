@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Manifesto: React.FC = () => {
+  const [activePoint, setActivePoint] = useState<number | null>(null);
+
   const manifestoPoints = [
     {
       title: "I Am the Architect of Agentic Systems",
@@ -45,18 +47,33 @@ const Manifesto: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 px-4 bg-gray-50">
+    <section className="py-16 px-4">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-12">
+        <h2 className="text-3xl font-bold text-center mb-12 text-cyan-400 pirate-font glow">
           Manifesto for the Future of Software Development
         </h2>
         <div className="space-y-8">
           {manifestoPoints.map((point, index) => (
-            <div key={index} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
-              <h3 className="text-xl font-semibold mb-3">
-                {index + 1}. {point.title}
+            <div 
+              key={index}
+              className={`
+                bg-slate-800/80 p-6 rounded-lg border border-cyan-400 
+                hover:border-cyan-300 transition-all duration-300 
+                backdrop-blur-sm cursor-pointer
+                ${activePoint === index ? 'transform scale-102 shadow-lg shadow-cyan-400/20' : ''}
+              `}
+              onClick={() => setActivePoint(activePoint === index ? null : index)}
+              onMouseEnter={() => setActivePoint(index)}
+              onMouseLeave={() => setActivePoint(null)}
+            >
+              <h3 className="text-xl font-semibold mb-3 text-cyan-300 flex items-center">
+                <span className="text-cyan-400 mr-2">{index + 1}.</span>
+                {point.title}
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <p className={`
+                text-slate-300 leading-relaxed 
+                ${activePoint === index ? 'text-white' : ''}
+              `}>
                 {point.content}
               </p>
             </div>
