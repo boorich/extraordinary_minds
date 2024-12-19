@@ -10,6 +10,7 @@ import DigitalCursor from './visual/DigitalCursor';
 import ContactModal from './contact/ContactModal';
 import RiddleSuccess from './RiddleSuccess';
 import ShipDialogue from './dialogue/ShipDialogue';
+import Manifesto from './Manifesto';
 import { sections } from '@/config/sections';
 import { DialogueMetrics } from '@/types/dialogue';
 
@@ -87,6 +88,14 @@ const VisionaryLanding = () => {
 
           <ShipsWheel />
           <CardSection title="Is This You?" items={sections.traits} />
+          
+          {/* Our Manifesto */}
+          <div className="relative z-10 mb-12 md:mb-16">
+            <div className="bg-slate-800/80 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm overflow-hidden">
+              <Manifesto />
+            </div>
+          </div>
+
           <CardSection title="Our Testament" items={sections.manifesto} />
 
           <div className="mb-12">
