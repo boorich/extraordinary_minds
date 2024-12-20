@@ -1,5 +1,5 @@
 import { Character } from './types';
-import { DialogueResponse } from '@/types/dialogue';
+import { DialogueResponse, DialogueOption } from '@/types/dialogue';
 
 const EVALUATION_QUESTIONS = [
   {
@@ -31,17 +31,17 @@ const EVALUATION_QUESTIONS = [
 
 export class ShipAgent {
   private character: Character;
-  private failureThreshold = 0.4; // 40% minimum score required
+  private failureThreshold = 0.4;
   private currentEvaluationScore = 0;
   private evaluationHistory: number[] = [];
+  private userResponses: string[] = [];
 
   constructor(character: Character) {
     this.character = character;
   }
 
   async evaluateResponse(input: string, round: number): Promise<DialogueResponse> {
-    // Here you would typically make an API call to your AI model
-    // For now, we'll implement basic evaluation logic
+    this.userResponses.push(input);
     
     if (!input.trim() || input.length < 10) {
       return {
@@ -52,7 +52,6 @@ export class ShipAgent {
       };
     }
 
-    // Calculate basic evaluation metrics
     const wordCount = input.split(' ').length;
     const hasComplexity = input.length > 50;
     const hasConcreteness = /specific|example|instance|case|when|how/i.test(input);
@@ -65,9 +64,7 @@ export class ShipAgent {
     this.evaluationHistory.push(score);
     this.currentEvaluationScore = this.evaluationHistory.reduce((a, b) => a + b, 0) / this.evaluationHistory.length;
 
-    // Generate appropriate response based on score
     let response: DialogueResponse;
-    
     if (score < this.failureThreshold) {
       response = {
         content: "Your response falls short of our standards. Be more specific and demonstrate deeper understanding.",
@@ -84,6 +81,94 @@ export class ShipAgent {
     }
 
     return response;
+  }
+
+  // Restored method with modifications to fit evaluation system
+  async generateResponse(input: string, theme: string, round: number): Promise<{
+    systemResponse: string;
+    nextTheme: string;
+  }> {
+    const response = await this.evaluateResponse(input, round);
+    const nextTheme = this.determineThemeFromScore(this.currentEvaluationScore);
+    
+    return {
+      systemResponse: response.isValid ? response.content : response.failureReason || "Response inadequate",
+      nextTheme
+    };
+  }
+
+  private determineThemeFromScore(score: number): string {
+    if (score > 0.8) return 'exceptional';
+    if (score > 0.6) return 'promising';
+    if (score > 0.4) return 'adequate';
+    return 'struggling';
+  }
+
+  // Restored method with evaluation-based options
+  generateDynamicOptions(currentTheme: string): DialogueOption[] {
+    const score = this.currentEvaluationScore;
+    
+    const options: DialogueOption[] = [
+      {
+        text: 'Continue Evaluation',
+        value: 'continue',
+        type: 'analytical'
+      }
+    ];
+
+    if (score > 0.6) {
+      options.push({
+        text: 'Demonstrate Technical Expertise',
+        value: 'technical',
+        type: 'technical'
+      });
+    }
+
+    if (score > 0.7) {
+      options.push({
+        text: 'Share Strategic Insights',
+        value: 'strategic',
+        type: 'analytical'
+      });
+    }
+
+    return options;
+  }
+
+  // Restored method with evaluation-based profile generation
+  getProfileGenerationPrompt(): string {
+    const strengths = this.determineStrengths();
+    const responses = this.userResponses.slice(-2); // Get last two responses
+    
+    return `Generate a crew member profile with these characteristics:
+Demonstrated strengths: ${strengths.join(', ')}
+Overall evaluation score: ${(this.currentEvaluationScore * 100).toFixed(1)}%
+Notable responses: ${responses.join(' | ')}
+Style: Professional, maritime-inspired
+Include: Commentary on potential role aboard the vessel`;
+  }
+
+  // Restored method with evaluation-based naming
+  generateExplorerName(): string {
+    const score = this.currentEvaluationScore;
+    const strengths = this.determineStrengths();
+    
+    const prefixes = {
+      high: ['Navigator', 'Captain', 'Admiral'],
+      medium: ['Officer', 'Ensign', 'Pilot'],
+      low: ['Recruit', 'Cadet', 'Apprentice']
+    };
+
+    const suffixes = strengths.map(str => str.split(' ')[0]);
+    
+    const prefix = score > 0.7 ? prefixes.high : 
+                  score > 0.5 ? prefixes.medium :
+                  prefixes.low;
+    
+    const randomPrefix = prefix[Math.floor(Math.random() * prefix.length)];
+    const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    
+    return `${randomPrefix} ${randomSuffix}`;
   }
 
   private generatePositiveResponse(score: number, round: number): string {
@@ -112,14 +197,6 @@ export class ShipAgent {
     if (this.currentEvaluationScore < this.failureThreshold) return "Overall evaluation score below threshold";
     
     return "Insufficient demonstration of required capabilities";
-  }
-
-  getExplorerProfile(): string {
-    if (!this.hasPassedEvaluation()) return "";
-    
-    // Generate profile based on evaluation history and scores
-    const strengths = this.determineStrengths();
-    return `A promising recruit showing particular aptitude in ${strengths.join(", ")}.`;
   }
 
   private determineStrengths(): string[] {
