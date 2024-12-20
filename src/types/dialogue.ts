@@ -1,6 +1,15 @@
 export interface DialoguePrompt {
+  id: string;
   text: string;
-  context?: string;
+  theme: string;
+  context: string;
+  constraints: string[];
+  isSystemMessage?: boolean;
+  fallbackOptions?: Array<{
+    text: string;
+    type: 'technical' | 'philosophical' | 'creative' | 'analytical';
+    score: number;
+  }>;
 }
 
 export interface DialogueOption {
