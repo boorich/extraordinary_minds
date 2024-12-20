@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { DialoguePrompt, DialogueOption, DialogueMetrics, DialogueState } from '@/types/dialogue';
+import { DialoguePrompt, DialogueOption, DialogueMetrics, DialogueState, ConversationDetails } from '@/types/dialogue';
 import { ShipAgent } from '@/lib/agent/ShipAgent';
 import { Character } from '@/lib/agent/types';
 import shipConfig from '@/config/ship.character.json';
@@ -86,7 +86,10 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       setIsTransitioning(true);
       
       // Generate response from the agent
-      const { systemResponse, nextTheme } = await agent.generateResponse(userInput, currentTheme, round);
+      const { systemResponse, nextTheme, dialogueState: newState } = await agent.generateResponse(userInput, currentTheme, round);
+      
+      // Update dialogue state with new skill scores
+      setDialogueState(newState);
       
       // Clear input field
       setUserInput('');
@@ -132,19 +135,22 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
     setShowingProfile(false);
     setEvaluationFailed(false);
     setCurrentTheme('initial_contact');
+    setDialogueState({
+      technical: 0,
+      philosophical: 0,
+      creative: 0,
+      analytical: 0
+    });
     startTimeRef.current = Date.now();
   }, [agent]);
 
   if (dialogueComplete) {
+    const details = agent.getConversationDetails() as ConversationDetails;
     return (
       <div className="space-y-6" aria-label="Neural Voyager Dialogue Interface">
         <DialogueSummary
-          state={{
-            ...dialogueState,
-            evaluationPassed: agent.hasPassedEvaluation(),
-            failureReason: agent.hasPassedEvaluation() ? undefined : agent.getFailureReason()
-          }}
-          conversations={agent.getConversationDetails()}
+          state={details.skillScores}
+          conversations={details.conversations}
           onRetry={handleRetry}
           onProceed={handleProfileGeneration}
         />

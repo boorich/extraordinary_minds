@@ -1,18 +1,12 @@
 export interface DialoguePrompt {
-  id?: string; // Made optional to support both old and new formats
   text: string;
   context?: string;
-  theme?: string;
-  constraints?: string[];
-  isSystemMessage?: boolean;
-  fallbackOptions?: DialogueOption[];
 }
 
 export interface DialogueOption {
   text: string;
-  value?: string;
+  value: string;
   type: 'technical' | 'philosophical' | 'creative' | 'analytical';
-  score?: number;
 }
 
 export interface DialogueMetrics {
@@ -37,4 +31,21 @@ export interface DialogueResponse {
   isValid: boolean;
   evaluationScore: number;
   failureReason?: string;
+}
+
+export interface ConversationDetail {
+  question: string;
+  response: string;
+  score: number;
+  skillScores: {
+    technical: number;
+    philosophical: number;
+    creative: number;
+    analytical: number;
+  };
+}
+
+export interface ConversationDetails {
+  conversations: ConversationDetail[];
+  skillScores: DialogueState;
 }
