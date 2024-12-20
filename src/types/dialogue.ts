@@ -1,19 +1,20 @@
-export interface DialogueOption {
+export interface DialoguePrompt {
   text: string;
-  type: 'technical' | 'philosophical' | 'creative' | 'analytical';
-  score: number;
-  nextPrompt?: string;
+  context?: string;
 }
 
-export interface DialoguePrompt {
-  id: string;
+export interface DialogueOption {
   text: string;
-  theme: string;
-  context: string;
-  constraints: string[];
-  options?: DialogueOption[];
-  fallbackOptions: DialogueOption[];
-  isSystemMessage?: boolean;
+  value: string;
+  type: 'technical' | 'philosophical' | 'creative' | 'analytical';
+}
+
+export interface DialogueMetrics {
+  choices: DialogueOption[];
+  scores: DialogueState;
+  startTime: number;
+  endTime: number;
+  evaluationScore?: number;
 }
 
 export interface DialogueState {
@@ -21,17 +22,13 @@ export interface DialogueState {
   philosophical: number;
   creative: number;
   analytical: number;
+  evaluationPassed?: boolean;
+  failureReason?: string;
 }
 
-export interface DialogueMetrics {
-  choices: DialogueOption[];
-  scores: DialogueState;
-  startTime: number;
-  endTime?: number;
-}
-
-export interface GeneratedDialogueResponse {
-  options: DialogueOption[];
-  nextTheme: string;
-  systemResponse: string;
+export interface DialogueResponse {
+  content: string;
+  isValid: boolean;
+  evaluationScore: number;
+  failureReason?: string;
 }
