@@ -81,11 +81,10 @@ export class ShipAgent {
         messages: [
           {
             role: 'system',
-            content: `You are evaluating the response of a potential crew member for a highly advanced vessel. Rate each dimension 0.0-1.0. Be concise.
-
-Current question: ${EVALUATION_QUESTIONS[round - 1].question}
+            content: `You are evaluating a response to: "${EVALUATION_QUESTIONS[round - 1].question}"
 Context: ${EVALUATION_QUESTIONS[round - 1].context}
 
+Rate each dimension 0.0-1.0 and provide a brief reasoning.
 Return only JSON:
 {
   "scores": {
@@ -191,6 +190,7 @@ ${this.character.style.all.join('\n')}`;
     try {
       // Get AI response with next question
       const nextQuestion = round < EVALUATION_QUESTIONS.length ? EVALUATION_QUESTIONS[round].question : null;
+      const nextContext = round < EVALUATION_QUESTIONS.length ? EVALUATION_QUESTIONS[round].context : null;
       
       const completion = await this.openRouter.createCompletion({
         model: "anthropic/claude-3-sonnet-20240229",
@@ -198,15 +198,16 @@ ${this.character.style.all.join('\n')}`;
           ...this.conversationHistory,
           {
             role: 'system',
-            content: `Provide a concise response (max 250 words) in this format:
+            content: `Keep your response under 250 tokens and follow this exact format:
 
-Brief evaluation: (2-3 sentences max)
-${evaluation.reasoning}
+[EVALUATION]
+Brief feedback on previous response (2-3 sentences)
 
-${nextQuestion ? `Next question:
+${nextQuestion ? `[NEXT CHALLENGE - READ CAREFULLY]
 ${nextQuestion}
 
-Please provide a focused response addressing this specific question.` : 'Evaluation complete.'}`
+Evaluation Context: ${nextContext}
+>>> Please address this specific question in your next response. <<<` : '[EVALUATION COMPLETE]'}`
           }
         ],
         temperature: 0.7,
