@@ -81,29 +81,21 @@ export class ShipAgent {
         messages: [
           {
             role: 'system',
-            content: `You are evaluating the response of a potential crew member for a highly advanced vessel. 
-You must provide a detailed evaluation across four dimensions and an overall score.
-Rate each dimension from 0.0 to 1.0 and provide justification.
+            content: `You are evaluating the response of a potential crew member for a highly advanced vessel. Rate each dimension 0.0-1.0. Be concise.
 
 Current question: ${EVALUATION_QUESTIONS[round - 1].question}
 Context: ${EVALUATION_QUESTIONS[round - 1].context}
 
-Evaluate these aspects:
-1. Technical Aptitude: Understanding of systems, technologies, and implementation
-2. Philosophical Depth: Quality of reasoning, conceptual understanding
-3. Creative Thinking: Novel connections, innovative approaches
-4. Analytical Skills: Logic, systematic thinking, problem decomposition
-
-Format your response as JSON:
+Return only JSON:
 {
   "scores": {
-    "technical": <score>,
-    "philosophical": <score>,
-    "creative": <score>,
-    "analytical": <score>
+    "technical": <0.0-1.0>,
+    "philosophical": <0.0-1.0>,
+    "creative": <0.0-1.0>,
+    "analytical": <0.0-1.0>
   },
-  "overallScore": <average score>,
-  "reasoning": "<brief explanation of scores>"
+  "overallScore": <0.0-1.0>,
+  "reasoning": "<25 words max>"
 }`
           },
           {
@@ -119,7 +111,6 @@ Format your response as JSON:
       return response as AIEvaluation;
     } catch (error) {
       console.error('Error getting LLM evaluation:', error);
-      // Fallback to basic evaluation
       return {
         scores: {
           technical: 0.5,
@@ -198,22 +189,24 @@ ${this.character.style.all.join('\n')}`;
     });
 
     try {
-      // Get AI response
+      // Get AI response with next question
+      const nextQuestion = round < EVALUATION_QUESTIONS.length ? EVALUATION_QUESTIONS[round].question : null;
+      
       const completion = await this.openRouter.createCompletion({
         model: "anthropic/claude-3-sonnet-20240229",
         messages: [
           ...this.conversationHistory,
           {
             role: 'system',
-            content: `Current evaluation:
-Score: ${score.toFixed(2)}
-Round: ${round}/5
-Context: ${EVALUATION_QUESTIONS[round - 1].context}
-Reasoning: ${evaluation.reasoning}
+            content: `Provide a concise response (max 250 words) in this format:
 
-If the response quality is below ${this.failureThreshold}, be stern but constructive in your criticism.
-If the response is adequate or better, acknowledge strengths while encouraging deeper insight.
-Provide a thorough analysis of their response before asking a follow-up question.`
+Brief evaluation: (2-3 sentences max)
+${evaluation.reasoning}
+
+${nextQuestion ? `Next question:
+${nextQuestion}
+
+Please provide a focused response addressing this specific question.` : 'Evaluation complete.'}`
           }
         ],
         temperature: 0.7,
