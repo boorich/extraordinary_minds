@@ -76,7 +76,7 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const handleUserInput = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userInput.trim() || isTyping || isTransitioning || dialogueComplete || round >= MAX_ROUNDS) {
+    if (!userInput.trim() || isTyping || isTransitioning || dialogueComplete || round > MAX_ROUNDS) {
       return;
     }
 
@@ -98,16 +98,19 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       await new Promise(resolve => setTimeout(resolve, 500));
       setIsTransitioning(false);
 
+      // Calculate if this was the last question
+      const isLastQuestion = round === MAX_ROUNDS;
+
       // Update round counter
       const newRound = round + 1;
       setRound(newRound);
       
-      // Handle last round
-      if (newRound === MAX_ROUNDS) {
+      // Show next question or complete dialogue
+      if (isLastQuestion) {
         setDialogueComplete(true);
         await handleConversationComplete();
       } else {
-        // For normal rounds, show the new question
+        // For all other rounds, show the new question
         setCurrentTheme(nextTheme);
         setCurrentQuestion(systemResponse);
       }
