@@ -51,3 +51,10 @@ export interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
 }
+
+export interface SkillScores {
+  technical: number;
+  philosophical: number;
+  creative: number;
+  analytical: number;
+}
