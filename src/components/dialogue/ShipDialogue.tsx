@@ -29,12 +29,13 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
   const [dialogueComplete, setDialogueComplete] = useState(false);
   const [evaluationFailed, setEvaluationFailed] = useState(false);
   const [isGeneratingProfile, setIsGeneratingProfile] = useState(false);
-  const [dialogueState, setDialogueState] = useState<DialogueState>({
+  const [dialogueState, setDialogueState] = useState<DialogueState>(() => ({
     technical: 0,
     philosophical: 0,
     creative: 0,
-    analytical: 0
-  });
+    analytical: 0,
+    evaluationPassed: false // Add explicit initialization
+  }));
 
   const startTimeRef = useRef<number>(Date.now());
   const questionRef = useRef<HTMLParagraphElement>(null);
