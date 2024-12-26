@@ -53,7 +53,7 @@ private qualityIndicators = {
       if (idx === 0) return score;
       const prevWords = new Set(sentences[idx - 1].toLowerCase().split(' '));
       const currentWords = new Set(sentence.toLowerCase().split(' '));
-      const commonWords = [...prevWords].filter(word => currentWords.has(word));
+      const commonWords = Array.from(prevWords).filter(word => currentWords.has(word));
       return score + (commonWords.length > 0 ? 1 : 0);
     }, 0) / (sentences.length - 1);
 
@@ -77,8 +77,8 @@ private qualityIndicators = {
     };
 
     // Base score from structural quality indicators
-    const qualityScore = Object.values(this.qualityIndicators)
-      .reduce((score, indicator) => score + (indicator(input) ? 0.25 : 0), 0);
+    const qualityScore = Object.keys(this.qualityIndicators)
+      .reduce((score, key) => score + (this.qualityIndicators[key as keyof typeof this.qualityIndicators](input) ? 0.25 : 0), 0);
 
     // Analyze response structure
     const sentences = input.split(/[.!?]+/).filter(s => s.trim().length > 0);
@@ -92,7 +92,7 @@ private qualityIndicators = {
     const depthIndicators = {
       technical: this.qualityIndicators.hasExamples(input) && this.qualityIndicators.hasCausality(input),
       philosophical: this.qualityIndicators.hasNuance(input) && sentences.length > 3,
-      creative: new Set(input.split(' ')).size / input.split(' ').length > 0.7, // vocabulary richness
+      creative: Array.from(new Set(input.split(' '))).length / input.split(' ').length > 0.7, // vocabulary richness
       analytical: this.qualityIndicators.hasCausality(input) && this.qualityIndicators.hasConclusions(input)
     };
 
