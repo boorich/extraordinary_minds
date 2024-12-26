@@ -55,14 +55,20 @@ const ShipDialogue: React.FC<ShipDialogueProps> = React.memo(({ onMetricsUpdate 
       const choices = await agent.generateDynamicOptions(currentTheme);
       setDialogueChoices(choices);
       
+      // Update dialogue state with evaluation result
+      const hasPassed = agent.hasPassedEvaluation();
+      const updatedState = {
+        ...dialogueState,
+        evaluationPassed: hasPassed,
+        failureReason: hasPassed ? undefined : agent.getFailureReason()
+      };
+      
+      setDialogueState(updatedState);
+      
       if (onMetricsUpdate) {
         onMetricsUpdate({
           choices: choices,
-          scores: {
-            ...dialogueState,
-            evaluationPassed: agent.hasPassedEvaluation(),
-            failureReason: agent.hasPassedEvaluation() ? undefined : agent.getFailureReason()
-          },
+          scores: updatedState,
           startTime: startTimeRef.current,
           endTime: Date.now()
         });
