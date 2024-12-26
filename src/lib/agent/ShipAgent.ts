@@ -1,4 +1,6 @@
 import { Character } from './types';
+import { ConversationMemory } from './memory';
+import { EnhancedEvaluation } from './evaluation';
 import { DialogueResponse, DialogueOption, DialogueState, ConversationDetails } from '@/types/dialogue';
 import { OpenRouterApi } from '../openrouter';
 
@@ -51,6 +53,8 @@ export class ShipAgent {
   private evaluationHistory: number[] = [];
   private userResponses: string[] = [];
   private conversationHistory: Array<{ role: string; content: string }> = [];
+  private memory: ConversationMemory;
+  private evaluator: EnhancedEvaluation;
   private conversationDetails: Array<{
     question: string;
     response: string;
@@ -65,6 +69,8 @@ export class ShipAgent {
   };
 
   constructor(character: Character) {
+    this.memory = new ConversationMemory(20);
+    this.evaluator = new EnhancedEvaluation();
     this.character = character;
     this.openRouter = new OpenRouterApi('');
     
@@ -75,6 +81,22 @@ export class ShipAgent {
   }
 
   private async getLLMEvaluation(input: string, round: number): Promise<AIEvaluation> {
+    // First, get the enhanced evaluation
+    const enhancedEval = this.evaluator.evaluate(
+      input,
+      EVALUATION_QUESTIONS[round - 1].context
+    );
+
+    // Store in memory
+    this.memory.addMemory(
+      input,
+      'response',
+      {
+        round,
+        relevance: enhancedEval.relevance,
+        context: EVALUATION_QUESTIONS[round - 1].context
+      }
+    );
     try {
       const completion = await this.openRouter.createCompletion({
         model: "anthropic/claude-3-sonnet-20240229",
@@ -371,16 +393,9 @@ Include: Commentary on potential role aboard the vessel`;
   }
 
   hasPassedEvaluation(): boolean {
-    // We need at least 4 responses
-    if (this.evaluationHistory.length < 4) return false;
-    
-    // If average score is above 80%, it should always pass
-    if (this.currentEvaluationScore >= 0.8) return true;
-    
-    // For scores between threshold and 80%, require at least 4 responses
-    const hasHighEnoughScore = this.currentEvaluationScore >= this.failureThreshold;
+    const minRequiredScore = this.failureThreshold;
+    const hasHighEnoughScore = this.currentEvaluationScore >= minRequiredScore;
     const hasCompletedMinRounds = this.evaluationHistory.length >= 4;
-    
     return hasHighEnoughScore && hasCompletedMinRounds;
   }
 
