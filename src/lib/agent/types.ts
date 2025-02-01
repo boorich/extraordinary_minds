@@ -53,8 +53,15 @@ export interface Message {
 }
 
 export interface SkillScores {
-  technical: number;
-  philosophical: number;
-  creative: number;
-  analytical: number;
+  // MCP specific scores
+  understanding?: number;
+  potential?: number;
+  readiness?: number;
+  investment?: number;
+  
+  // Legacy scores (optional)
+  technical?: number;
+  philosophical?: number;
+  creative?: number;
+  analytical?: number;
 }
