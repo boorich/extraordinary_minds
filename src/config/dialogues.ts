@@ -3,115 +3,114 @@ import { DialoguePrompt } from '@/types/dialogue';
 export const initialDialogues: DialoguePrompt[] = [
   {
     id: 'welcome',
-    text: "Welcome to T4E. I see you're interested in transforming how your organization works with AI.",
+    text: "How can I help you understand how T4E's MCP servers could enhance your company's capabilities?",
     theme: 'initial_contact',
-    context: 'First interaction with potential pilot customer. Establishing their understanding and needs.',
+    context: 'Open-ended start to understand their interests and needs',
     constraints: [
-      'Focus on enterprise transformation',
-      'Highlight MCP technology potential',
-      'Gauge readiness for pilot program'
+      'Keep responses brief and natural',
+      'Ask relevant follow-up questions',
+      'Note key points about their situation'
     ],
-    isSystemMessage: true,
     fallbackOptions: [
       {
-        text: "We want to better integrate AI with our existing resources.",
-        value: 'understand_integration',
+        text: "What does T4E mean?",
+        value: 'company_info',
         type: 'understanding',
         score: 0.8
       },
       {
-        text: "Our experts need better tools to leverage their knowledge.",
-        value: 'expert_enhancement',
+        text: "How would this help our experts?",
+        value: 'value_prop',
         type: 'potential',
         score: 0.9
       },
       {
-        text: "We're looking to be early adopters of transformative AI technology.",
-        value: 'early_adoption',
-        type: 'readiness',
-        score: 1.0
-      },
-      {
-        text: "We're evaluating enterprise AI solutions for potential investment.",
-        value: 'investment_eval',
+        text: "Tell me about the pilot program.",
+        value: 'pilot_info',
         type: 'investment',
         score: 0.7
       }
     ]
   },
   {
-    id: 'capabilities',
-    text: "MCP servers create a powerful synergy between LLMs, human expertise, and company resources. What aspects of this integration interest you most?",
-    theme: 'technological_fit',
-    context: 'Understanding their specific needs and use cases.',
+    id: 'use_cases',
+    text: "Could you tell me more about the specific challenges your experts face in their daily work?",
+    theme: 'pain_points',
+    context: 'Understanding their current workflow challenges',
     constraints: [
-      'Focus on practical applications',
-      'Identify key value drivers',
-      'Assess technical readiness'
+      'Focus on practical problems',
+      'Note specific pain points',
+      'Connect issues to MCP capabilities'
     ],
-    isSystemMessage: true,
     fallbackOptions: [
       {
-        text: "The ability to connect AI directly with our internal systems.",
-        value: 'system_integration',
+        text: "Our documentation is hard to search through.",
+        value: 'doc_access',
         type: 'understanding',
-        score: 0.9
-      },
-      {
-        text: "Empowering our experts to achieve more with AI assistance.",
-        value: 'expert_empowerment',
-        type: 'potential',
         score: 0.8
       },
       {
-        text: "We have specific workflows that could benefit from this.",
-        value: 'workflow_enhancement',
-        type: 'readiness',
-        score: 1.0
+        text: "Data analysis takes too long.",
+        value: 'data_analysis',
+        type: 'potential',
+        score: 0.9
       },
       {
-        text: "The potential ROI from enhanced productivity and capabilities.",
-        value: 'roi_focus',
-        type: 'investment',
-        score: 0.9
+        text: "Experts spend too much time on routine tasks.",
+        value: 'efficiency',
+        type: 'readiness',
+        score: 0.8
       }
     ]
   },
   {
-    id: 'pilot_interest',
-    text: "As one of our first 5 pilot customers, you'll help shape the future of enterprise AI integration. What timeline are you considering for implementation?",
-    theme: 'commitment',
-    context: 'Assessing readiness for pilot program and creating urgency.',
+    id: 'current_solutions',
+    text: "What solutions have you tried so far to address these challenges?",
+    theme: 'current_state',
+    context: 'Understanding their technology landscape and previous attempts',
     constraints: [
-      'Emphasize limited pilot spots',
-      'Focus on strategic advantages',
-      'Gauge investment readiness'
+      'Note current tools and limitations',
+      'Identify integration points',
+      'Look for quick wins'
     ],
-    isSystemMessage: true,
     fallbackOptions: [
       {
-        text: "We'd like to start as soon as possible to gain competitive advantage.",
-        value: 'immediate_start',
-        type: 'readiness',
-        score: 1.0
-      },
-      {
-        text: "We need to understand the integration process better first.",
-        value: 'understanding_needed',
+        text: "We use various internal tools but they're not connected.",
+        value: 'fragmented',
         type: 'understanding',
-        score: 0.7
-      },
-      {
-        text: "We're prepared to invest if we can see clear value alignment.",
-        value: 'value_alignment',
-        type: 'investment',
         score: 0.9
       },
       {
-        text: "We have pressing use cases that need this solution.",
-        value: 'urgent_need',
+        text: "We've tried some AI tools but they can't access our data.",
+        value: 'limited_ai',
         type: 'potential',
         score: 0.8
+      },
+      {
+        text: "Our current process is mostly manual.",
+        value: 'manual',
+        type: 'readiness',
+        score: 0.7
+      }
+    ]
+  },
+  {
+    id: 'synthesis',
+    text: "Based on what you've shared, let me summarize how I think MCP servers could help...",
+    theme: 'conclusion',
+    context: 'Synthesizing the conversation and demonstrating understanding',
+    constraints: [
+      'Reference specific points from the conversation',
+      'Show clear understanding of their needs',
+      'Demonstrate intelligent reasoning',
+      'Lead naturally to meeting invitation'
+    ],
+    fallbackOptions: [
+      {
+        text: "Would you like to discuss implementing this for your specific needs?",
+        value: 'schedule',
+        type: 'investment',
+        score: 1.0
       }
     ]
   }
