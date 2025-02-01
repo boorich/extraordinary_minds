@@ -36,21 +36,6 @@ const VisionaryLanding = () => {
               <MCPDialogue onMetricsUpdate={handleMetricsUpdate} />
             </div>
 
-            {/* Transformation Section */}
-            <div className="max-w-4xl mx-auto space-y-12">
-              <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-12">
-                The Transformation
-              </h2>
-              <div className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl">
-                <p className="text-xl md:text-2xl leading-relaxed text-gray-300 font-light">
-                  Every company has valuable expertise locked in their people, processes, and data. MCP servers unlock this potential by connecting your experts with advanced AI capabilities and your existing resources. This creates a powerful synergy that enhances productivity and unlocks new possibilities.
-                </p>
-                <p className="text-xl md:text-2xl leading-relaxed text-gray-300 font-light mt-6">
-                  As one of our first 5 pilot customers, you'll help shape how this technology transforms expert work in your industry.
-                </p>
-              </div>
-            </div>
-
             {/* Social Proof Section with updated styling */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {sections.credibility.map((item, index) => (
@@ -68,9 +53,24 @@ const VisionaryLanding = () => {
               ))}
             </div>
 
-            {/* Is This You Section with updated styling */}
+            {/* Is This You Section */}
             <div className="max-w-4xl mx-auto">
               <CardSection title="Is This You?" items={sections.traits} />
+            </div>
+
+            {/* Transformation Section - Moved to bottom */}
+            <div className="max-w-4xl mx-auto space-y-12">
+              <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-12">
+                The Transformation
+              </h2>
+              <div className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl">
+                <p className="text-xl md:text-2xl leading-relaxed text-gray-300 font-light">
+                  Every company has valuable expertise locked in their people, processes, and data. MCP servers unlock this potential by connecting your experts with advanced AI capabilities and your existing resources. This creates a powerful synergy that enhances productivity and unlocks new possibilities.
+                </p>
+                <p className="text-xl md:text-2xl leading-relaxed text-gray-300 font-light mt-6">
+                  As one of our first 5 pilot customers, you'll help shape how this technology transforms expert work in your industry.
+                </p>
+              </div>
             </div>
           </div>
         </main>
