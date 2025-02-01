@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DialogueMetrics } from '@/types/dialogue';
-import { ShipAgent } from '@/lib/agent/ShipAgent';
+import { MCPAgent } from '@/lib/agent/MCPAgent';
 import { Character } from '@/lib/agent/types';
 import mcpConfig from '@/config/mcp.character.json';
 
@@ -11,7 +11,7 @@ interface MCPDialogueProps {
 }
 
 const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate }) => {
-  const agent = React.useMemo(() => new ShipAgent(mcpConfig as Character), []);
+  const agent = React.useMemo(() => new MCPAgent(mcpConfig as Character), []);
   
   const [conversation, setConversation] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [userInput, setUserInput] = useState('');
