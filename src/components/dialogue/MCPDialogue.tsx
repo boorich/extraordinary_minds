@@ -13,7 +13,11 @@ interface MCPDialogueProps {
 const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate }) => {
   const agent = React.useMemo(() => new MCPAgent(mcpConfig as Character), []);
   
-  const [conversation, setConversation] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
+  const [conversation, setConversation] = useState<Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    model?: string;
+  }>>([]);
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +30,6 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
   };
 
   useEffect(() => {
-    // Only scroll when conversation has messages
     if (conversation.length > 0) {
       scrollToBottom();
     }
@@ -47,10 +50,14 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
       setConversation(prev => [...prev, { role: 'user', content: userInput }]);
       
       // Generate response from the agent
-      const response = await agent.generateResponse(userInput, 'mcp_dialogue', 1);
+      const response = await agent.generateResponse(userInput, 'mcp_dialogue', conversation.filter(msg => msg.role === 'user').length + 1);
       
-      // Add assistant message to conversation
-      setConversation(prev => [...prev, { role: 'assistant', content: response.systemResponse }]);
+      // Add assistant message to conversation with model info
+      setConversation(prev => [...prev, { 
+        role: 'assistant', 
+        content: response.systemResponse,
+        model: response.selectedModel // This will be added to the type definitions
+      }]);
       
       // Clear input field
       setUserInput('');
@@ -61,7 +68,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
     } finally {
       setIsTyping(false);
     }
-  }, [userInput, isTyping, agent]);
+  }, [userInput, isTyping, agent, conversation.length]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInput(e.target.value);
@@ -100,6 +107,11 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
                     : 'bg-slate-700/50 border border-cyan-400/30 mr-12'
                 }`}
               >
+                {msg.role === 'assistant' && msg.model && (
+                  <div className="text-xs text-cyan-400/70 mb-2">
+                    Using model: {msg.model}
+                  </div>
+                )}
                 <p className="text-slate-200 text-lg break-words whitespace-pre-wrap">
                   {msg.content}
                 </p>

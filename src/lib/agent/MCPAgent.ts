@@ -1,8 +1,11 @@
+'use client';
+
 import { Character } from './types';
 import { ConversationMemory } from './memory';
 import { EnhancedEvaluation } from './evaluation';
 import { DialogueResponse, DialogueOption, DialogueState, ConversationDetails } from '@/types/dialogue';
 import { OpenRouterApi } from '../openrouter';
+import { selectModel, ModelSelectionCriteria } from './modelSelection';
 
 const CONVERSATION_FLOW = [
   {
@@ -59,6 +62,25 @@ export class MCPAgent {
     });
   }
 
+  private calculateInputComplexity(input: string): number {
+    const factors = {
+      length: Math.min(input.length / 500, 1), // Normalize by expected max length
+      technicalTerms: (input.match(/\b(api|integration|workflow|automation|algorithm|interface|protocol|backend|frontend|database|server|client|endpoint|request|response)\b/gi) || []).length / 5,
+      numericalData: (input.match(/\d+(\.\d+)?/g) || []).length / 3,
+      questionMarks: (input.match(/\?/g) || []).length / 2
+    };
+    
+    // Weight and combine factors
+    const complexity = (
+      factors.length * 0.3 +
+      factors.technicalTerms * 0.3 +
+      factors.numericalData * 0.2 +
+      factors.questionMarks * 0.2
+    );
+    
+    return Math.min(Math.max(complexity, 0), 1); // Ensure result is between 0 and 1
+  }
+
   private generateSystemPrompt(): string {
     return `${this.character.system}
 
@@ -80,6 +102,7 @@ ${this.character.style.all.join('\n')}`;
     systemResponse: string;
     nextTheme: string;
     dialogueState: DialogueState;
+    selectedModel: string;
   }> {
     // Store the input
     this.conversationHistory.push({
@@ -113,8 +136,18 @@ Keep it brief and natural. Show your understanding through specific references t
 Keep it brief and conversational.`;
       }
 
+      // Select model based on conversation state
+      const modelCriteria: ModelSelectionCriteria = {
+        conversationStage: round >= 5 ? 'profiling' : round === 1 ? 'initial' : 'followup',
+        inputComplexity: this.calculateInputComplexity(input),
+        insightCount: this.insights.length,
+        requiresContext: this.conversationHistory.length > 4
+      };
+      
+      const selectedModel = selectModel(modelCriteria);
+      
       const completion = await this.openRouter.createCompletion({
-        model: "anthropic/claude-3-sonnet-20240229",
+        model: selectedModel,
         messages: [
           ...this.conversationHistory,
           {
@@ -135,14 +168,16 @@ Keep it brief and conversational.`;
       return {
         systemResponse: response,
         nextTheme: this.determineNextTheme(round),
-        dialogueState: this.calculateDialogueState()
+        dialogueState: this.calculateDialogueState(),
+        selectedModel: selectedModel
       };
     } catch (error) {
       console.error('Error generating response:', error);
       return {
         systemResponse: this.generateFallbackResponse(round),
         nextTheme: 'error',
-        dialogueState: this.calculateDialogueState()
+        dialogueState: this.calculateDialogueState(),
+        selectedModel: 'fallback'
       };
     }
   }
