@@ -9,6 +9,7 @@ export interface DialogueOption {
   nextPrompt?: string;
   value: string;
   score?: number;
+  type?: string; // Category or type of response
 }
 
 export interface DialogueMetrics {
