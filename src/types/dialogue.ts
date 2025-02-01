@@ -1,70 +1,52 @@
 export interface DialoguePrompt {
-  id: string;
   text: string;
-  theme: string;
-  context: string;
-  constraints: string[];
-  isSystemMessage?: boolean;
-  fallbackOptions?: Array<{
-    text: string;
-    type: 'technical' | 'philosophical' | 'creative' | 'analytical';
-    score: number;
-  }>;
+  options?: DialogueOption[];
+  evaluation?: string;
 }
 
 export interface DialogueOption {
   text: string;
+  nextPrompt?: string;
   value: string;
-  type: 'technical' | 'philosophical' | 'creative' | 'analytical';
+  score?: number;
 }
 
 export interface DialogueMetrics {
-  choices: DialogueOption[];
-  scores: DialogueState;
-  startTime: number;
-  endTime: number;
+  choices?: DialogueOption[];
+  scores?: DialogueState;
+  startTime?: number;
+  endTime?: number;
   evaluationScore?: number;
 }
 
 export interface DialogueState {
-  // Legacy evaluation metrics
-  technical?: number;
-  philosophical?: number;
-  creative?: number;
-  analytical?: number;
   // MCP dialogue metrics
   understanding?: number;
   potential?: number;
   readiness?: number;
   investment?: number;
-  technical: number;
-  philosophical: number;
-  creative: number;
-  analytical: number;
+  
+  // Optional legacy metrics (for backward compatibility)
+  technical?: number;
+  philosophical?: number;
+  creative?: number;
+  analytical?: number;
+  
   evaluationPassed?: boolean;
   failureReason?: string;
 }
 
-export interface DialogueResponse {
-  content: string;
-  isValid: boolean;
-  evaluationScore: number;
-  failureReason?: string;
-}
-
-export interface ConversationDetail {
-  question: string;
-  response: string;
-  score: number;
-  skillScores: {
-    technical: number;
-    philosophical: number;
-    creative: number;
-    analytical: number;
-  };
-}
-
 export interface ConversationDetails {
-  conversations: ConversationDetail[];
+  conversations: {
+    question: string;
+    response: string;
+    score: number;
+  }[];
   skillScores: DialogueState;
+}
+
+export interface GenerationData {
+  neuralProfile: string;
+  explorerClass: string;
+  vesselLogs: string[];
 }
