@@ -18,6 +18,13 @@ export interface DialogueOption {
   type?: string; // Category or type of response
 }
 
+export interface DialogueResponse {
+  content: string;              // The response text
+  isValid: boolean;            // Whether the response meets criteria
+  evaluationScore: number;     // Numerical score of the response
+  failureReason?: string;      // Reason for failure if invalid
+}
+
 export interface DialogueMetrics {
   choices?: DialogueOption[];
   scores?: DialogueState;
