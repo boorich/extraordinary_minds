@@ -27,9 +27,9 @@ const VisionaryLanding = () => {
         <div className="relative z-10">
           {/* T4E MCP Experience */}
           <div className="mb-16">
-            <h3 className="text-2xl md:text-3xl text-cyan-400 mb-4 md:mb-6 glow text-center">Experience the Future of Enterprise AI</h3>
+            <h3 className="text-2xl md:text-3xl text-cyan-400 mb-4 md:mb-6 glow text-center">Model Context Protocol Servers</h3>
             <div className="text-center text-slate-300 text-sm mb-6 italic">
-              "Where Human Expertise Meets AI Power through Model Context Protocol"
+              "Connecting Your Experts with AI and Company Resources"
             </div>
             <MCPDialogue onMetricsUpdate={handleMetricsUpdate} />
           </div>
@@ -38,7 +38,7 @@ const VisionaryLanding = () => {
             <h3 className="text-2xl md:text-3xl text-cyan-400 mb-4 md:mb-6 glow">The Transformation</h3>
             <div className="bg-slate-800/80 p-4 md:p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
               <p className="text-base md:text-lg leading-relaxed">
-                Every industry is on the brink of an AI revolution. But connecting advanced AI capabilities with your company's existing resources and expert knowledge has been a challenge - until now. T4E's Model Context Protocol servers bridge this gap, creating a powerful synergy between LLMs, domain experts, and your company's digital assets. As one of our first 5 pilot customers, you'll be at the forefront of this transformation, shaping how AI enhances human expertise in the enterprise.
+                Every company has valuable expertise locked in their people, processes, and data. MCP servers unlock this potential by connecting your experts with advanced AI capabilities and your existing resources. This creates a powerful synergy that enhances productivity and unlocks new possibilities. As one of our first 5 pilot customers, you'll help shape how this technology transforms expert work in your industry.
               </p>
             </div>
           </div>
