@@ -27,6 +27,16 @@ export interface DialogueMetrics {
 }
 
 export interface DialogueState {
+  // Legacy evaluation metrics
+  technical?: number;
+  philosophical?: number;
+  creative?: number;
+  analytical?: number;
+  // MCP dialogue metrics
+  understanding?: number;
+  potential?: number;
+  readiness?: number;
+  investment?: number;
   technical: number;
   philosophical: number;
   creative: number;

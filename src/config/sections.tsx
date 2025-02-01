@@ -1,47 +1,61 @@
-import { Github, Users } from 'lucide-react';
+import { Brain, Cpu, Database, Users, Workflow, BarChart } from 'lucide-react';
 import { SectionsData } from '@/types';
 
 export const sections: SectionsData = {
   traits: [
     {
-      title: "The Obsessed",
-      description: "You've been called crazy. Mad. Obsessive. Because you see what others can't, and you'll spend countless nights bringing those visions to life. Not for glory, but because those ideas consume you."
+      title: "The Innovators",
+      description: "You understand that AI isn't just another tool - it's a transformation catalyst. Your company has the expertise and resources to lead in your industry, but you need the right technology to amplify your capabilities."
     },
     {
-      title: "The Relentless",
-      description: "While others seek comfort, you seek challenges. Your greatest achievements aren't your past successes, but the impossible problems you're solving right now."
+      title: "The Pioneers",
+      description: "You see the limitations of current AI solutions in the enterprise. You know that real value comes from connecting AI with your company's unique expertise and resources, not from generic chatbots."
+    },
+    {
+      title: "The Visionaries",
+      description: "You recognize that being among the first to properly integrate AI into your core operations isn't just an opportunity - it's a competitive necessity. You're ready to shape the future of your industry."
     }
   ],
   manifesto: [
     {
-      title: "Our Mission",
-      description: "To unite the extraordinary few who don't just push boundaries - they ignore them entirely. We're building autonomous systems that will reshape reality itself. Not because it's profitable, but because it's the greatest challenge we can imagine."
-    },
-    {
-      title: "The Code",
-      description: "Excellence isn't our goal - it's our baseline. We reject mediocrity in all its forms. Every line of code, every system design, every decision must push the boundaries of what's possible."
+      title: "The Vision",
+      description: "We're building the bridge between enterprise knowledge and AI capabilities. Our Model Context Protocol servers don't just connect systems - they create a new paradigm where human expertise, AI, and company resources work in perfect synergy."
     },
     {
       title: "The Promise",
-      description: "Here, you'll find your tribe. Other brilliantly obsessed minds who understand that true greatness comes not from chasing profits, but from the relentless pursuit of excellence."
+      description: "As one of our first 5 pilot customers, you'll help shape the future of enterprise AI integration. This isn't just about implementing technology - it's about transforming how your experts work and how your company delivers value."
+    },
+    {
+      title: "The Impact",
+      description: "Phase 1 enhances your experts' capabilities. Phase 2 transforms your entire production process. Together, we're not just improving efficiency - we're redefining what's possible in your industry."
     }
   ],
   crew: [
-    "The midnight architect who can't sleep because the perfect solution is almost within reach",
-    "The visionary who sees the matrix in their dreams and wakes up with breakthrough algorithms",
-    "The perpetual learner who devours knowledge not for acclaim, but for the sheer joy of understanding",
-    "The quiet genius whose greatest satisfaction comes from solving the 'impossible' problem"
+    "Forward-thinking enterprises that understand the transformative power of properly integrated AI",
+    "Companies with deep domain expertise ready to amplify their capabilities through MCP technology",
+    "Organizations that recognize the competitive advantage of being among the first to properly connect AI with their resources",
+    "Businesses ready to invest in becoming industry leaders in the AI age"
   ],
   credibility: [
     {
-      icon: <Github className="w-6 h-6" />,
-      stat: "0",
-      label: "Open Source Contributions"
+      icon: <Brain className="w-6 h-6" />,
+      stat: "3x",
+      label: "Expert Productivity Enhancement"
     },
     {
-      icon: <Users className="w-6 h-6" />,
-      stat: "1",
-      label: "Crewmates"
+      icon: <Database className="w-6 h-6" />,
+      stat: "100%",
+      label: "Resource Integration"
+    },
+    {
+      icon: <Workflow className="w-6 h-6" />,
+      stat: "5",
+      label: "Pilot Positions Available"
+    },
+    {
+      icon: <BarChart className="w-6 h-6" />,
+      stat: "2x",
+      label: "Production Efficiency (Phase 2)"
     }
   ]
 };

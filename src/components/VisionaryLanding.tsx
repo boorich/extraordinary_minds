@@ -3,13 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { CardSection } from './CardSection';
 import ParallaxHero from './ParallaxHero';
-import MatrixRain from './interactive/MatrixRain';
+import MCPDataFlow from './interactive/MatrixRain';
 import HiddenChallenges from './interactive/HiddenChallenges';
 import ShipsWheel from './visual/ShipsWheel';
 import DigitalCursor from './visual/DigitalCursor';
 import ContactModal from './contact/ContactModal';
 import RiddleSuccess from './RiddleSuccess';
-import ShipDialogue from './dialogue/ShipDialogue';
+import MCPDialogue from './dialogue/MCPDialogue';
 import Manifesto from './Manifesto';
 import { sections } from '@/config/sections';
 import { DialogueMetrics } from '@/types/dialogue';
@@ -45,26 +45,26 @@ const VisionaryLanding = () => {
   return (
     <div className="min-h-screen cosmic-background text-slate-100">
       <DigitalCursor />
-      <MatrixRain />
+      <MCPDataFlow />
       <HiddenChallenges />
       <ParallaxHero />
 
       <main id="main-content" className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative min-h-screen" role="main">
         <div className="relative z-10">
-          {/* Neural Odyssey */}
+          {/* T4E MCP Experience */}
           <div className="mb-16">
-            <h3 className="text-2xl md:text-3xl pirate-font text-cyan-400 mb-4 md:mb-6 glow text-center">Neural Odyssey</h3>
+            <h3 className="text-2xl md:text-3xl text-cyan-400 mb-4 md:mb-6 glow text-center">Experience the Future of Enterprise AI</h3>
             <div className="text-center text-slate-300 text-sm mb-6 italic">
-              "Where minds converge with the vessel's consciousness"
+              "Where Human Expertise Meets AI Power through Model Context Protocol"
             </div>
-            <ShipDialogue onMetricsUpdate={handleMetricsUpdate} />
+            <MCPDialogue onMetricsUpdate={handleMetricsUpdate} />
           </div>
 
           <div className="mb-12 md:mb-16">
-            <h3 className="text-2xl md:text-3xl pirate-font text-cyan-400 mb-4 md:mb-6 glow">The Call</h3>
+            <h3 className="text-2xl md:text-3xl text-cyan-400 mb-4 md:mb-6 glow">The Transformation</h3>
             <div className="bg-slate-800/80 p-4 md:p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
               <p className="text-base md:text-lg leading-relaxed">
-                In every age, there are those who aren't content to accept the world as it is. The ones who see beyond the horizon. The ones who build tomorrow. If you're reading this, you might be one of them. We're not offering a job - we're offering a calling. A chance to join a band of brilliant misfits dedicated to pushing the boundaries of what's possible in autonomous systems.
+                Every industry is on the brink of an AI revolution. But connecting advanced AI capabilities with your company's existing resources and expert knowledge has been a challenge - until now. T4E's Model Context Protocol servers bridge this gap, creating a powerful synergy between LLMs, domain experts, and your company's digital assets. As one of our first 5 pilot customers, you'll be at the forefront of this transformation, shaping how AI enhances human expertise in the enterprise.
               </p>
             </div>
           </div>

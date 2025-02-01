@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-const MatrixRain = () => {
+const MCPDataFlow = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -20,75 +20,87 @@ const MatrixRain = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Matrix character set
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()';
-
-    // Sequential hidden letter setup
-    const hiddenWord = 'autonomy';
-    let currentLetterIndex = 0;
-    let currentLetterLifetime = 0;
-    let currentLetterPosition = { col: 0, row: 0 };
+    // MCP-specific character sets
+    const llmChars = '🧠📊🔄💡💭'; // LLM operations
+    const resourceChars = '📁💾📊📈🔍'; // Company resources
+    const expertChars = '👤💼📝✍️💡'; // Expert activities
     
-    // Rain drops
-    const fontSize = 14;
-    const columns = canvas.width / fontSize;
-    const drops: number[] = [];
-
-    // Initialize drops
-    for (let i = 0; i < columns; i++) {
-      drops[i] = 1;
+    const fontSize = 20;
+    const columns = Math.floor(canvas.width / fontSize);
+    
+    // Track different types of data streams
+    interface DataStream {
+      x: number;
+      y: number;
+      type: 'llm' | 'resource' | 'expert';
+      speed: number;
+      active: boolean;
     }
 
-    // Function to reset the current letter's position
-    const resetLetterPosition = () => {
-      currentLetterPosition = {
-        col: Math.floor(Math.random() * (columns - 2)) + 1,
-        row: Math.floor(Math.random() * ((canvas.height / fontSize) - 4)) + 2
-      };
-      currentLetterLifetime = 45;
-    };
+    const streams: DataStream[] = [];
+    
+    // Initialize streams
+    for (let i = 0; i < columns; i++) {
+      if (Math.random() > 0.7) {
+        streams.push({
+          x: i * fontSize,
+          y: Math.random() * canvas.height,
+          type: ['llm', 'resource', 'expert'][Math.floor(Math.random() * 3)] as 'llm' | 'resource' | 'expert',
+          speed: 1 + Math.random() * 2,
+          active: true
+        });
+      }
+    }
 
-    // Initial letter position
-    resetLetterPosition();
+    // Helper to get random character from set
+    const getChar = (type: 'llm' | 'resource' | 'expert') => {
+      const set = type === 'llm' ? llmChars : type === 'resource' ? resourceChars : expertChars;
+      return set[Math.floor(Math.random() * set.length)];
+    };
 
     // Animation
     const draw = () => {
       // Semi-transparent black background for trail effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw rain
-      ctx.font = fontSize + 'px monospace';
-      for (let i = 0; i < drops.length; i++) {
-        // Default matrix rain
-        ctx.fillStyle = '#0fa';
-        const char = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+      // Draw and update streams
+      streams.forEach(stream => {
+        if (!stream.active) return;
 
-        // Reset drop if it reaches bottom
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
-
-        drops[i]++;
-      }
-
-      // Handle the sequential hidden letter
-      if (currentLetterLifetime > 0) {
-        ctx.fillStyle = '#FF66FF';
-        ctx.font = 'bold ' + fontSize + 'px monospace';
-        ctx.fillText(
-          hiddenWord[currentLetterIndex],
-          currentLetterPosition.col * fontSize,
-          currentLetterPosition.row * fontSize
-        );
+        // Color based on type
+        ctx.fillStyle = stream.type === 'llm' ? '#4CAF50' : // Green for LLM
+                       stream.type === 'resource' ? '#2196F3' : // Blue for resources
+                       '#FF9800'; // Orange for experts
         
-        currentLetterLifetime--;
+        ctx.font = `${fontSize}px "Segoe UI Emoji"`;
+        ctx.fillText(getChar(stream.type), stream.x, stream.y);
 
-        // When lifetime expires, move to next letter
-        if (currentLetterLifetime === 0) {
-          currentLetterIndex = (currentLetterIndex + 1) % hiddenWord.length;
-          resetLetterPosition();
+        // Update position
+        stream.y += stream.speed;
+
+        // Reset if out of bounds
+        if (stream.y > canvas.height) {
+          stream.y = -fontSize;
+          stream.active = Math.random() > 0.2; // 80% chance to remain active
+        }
+      });
+
+      // Occasionally add new streams
+      if (Math.random() > 0.99 && streams.filter(s => s.active).length < columns / 2) {
+        const inactiveStream = streams.find(s => !s.active);
+        if (inactiveStream) {
+          inactiveStream.active = true;
+          inactiveStream.type = ['llm', 'resource', 'expert'][Math.floor(Math.random() * 3)] as 'llm' | 'resource' | 'expert';
+          inactiveStream.y = -fontSize;
+        } else {
+          streams.push({
+            x: Math.floor(Math.random() * columns) * fontSize,
+            y: -fontSize,
+            type: ['llm', 'resource', 'expert'][Math.floor(Math.random() * 3)] as 'llm' | 'resource' | 'expert',
+            speed: 1 + Math.random() * 2,
+            active: true
+          });
         }
       }
 
@@ -106,10 +118,11 @@ const MatrixRain = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-10"
+      className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-20"
       style={{ zIndex: 0 }}
+      aria-hidden="true"
     />
   );
 };
 
-export default MatrixRain;
+export default MCPDataFlow;
