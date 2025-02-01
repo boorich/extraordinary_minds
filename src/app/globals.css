@@ -2,23 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@400;700&display=swap');
-
-.pirate-font {
-  font-family: 'Pirata One', cursive;
+.professional-gradient {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #0369a1 75%, #0284c7 100%);
 }
 
-.title-font {
-  font-family: 'Cinzel', serif;
-}
-
-.cosmic-background {
-  background: linear-gradient(to bottom, #0a192f, #172554);
-  background-size: 200% 200%;
-  animation: gradient 15s ease infinite;
-}
-
-@keyframes gradient {
+@keyframes subtle-shift {
   0% {
     background-position: 0% 50%;
   }
@@ -30,24 +18,12 @@
   }
 }
 
+.professional-gradient {
+  background-size: 200% 200%;
+  animation: subtle-shift 15s ease infinite;
+}
+
+/* Keep only relevant utility classes */
 .glow {
   filter: drop-shadow(0 0 0.75rem #38bdf8);
-}
-
-.water-effect {
-  background: linear-gradient(45deg, #0ea5e9, #38bdf8);
-  background-size: 200% 200%;
-  animation: water 10s ease infinite;
-}
-
-@keyframes water {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
 }
