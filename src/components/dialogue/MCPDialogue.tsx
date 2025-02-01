@@ -65,7 +65,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
   }, []);
 
   return (
-    <div className="space-y-6" aria-label="T4E MCP Dialogue Interface">
+    <div className="space-y-6" aria-label="MCP Dialogue Interface">
       <div className="relative bg-slate-800/90 rounded-lg border border-cyan-400 p-6 max-w-4xl mx-auto">
         {error && (
           <div 
@@ -83,7 +83,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
           {conversation.length === 0 ? (
             <div className="bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30 mb-4">
               <p className="text-slate-200 text-lg break-words whitespace-pre-wrap">
-                Welcome! I'm your guide to understanding how T4E's Model Context Protocol servers can transform your business. 
+                Welcome! I'm your guide to understanding how MCP servers can transform your business. 
                 How can I help you explore the potential of connecting your experts with AI and company resources?
               </p>
             </div>
@@ -114,7 +114,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
             className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
                     focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
                     placeholder-slate-400"
-            placeholder="Ask about T4E's MCP technology..."
+            placeholder="Ask about MCP servers..."
             disabled={isTyping}
             aria-disabled={isTyping}
           />
