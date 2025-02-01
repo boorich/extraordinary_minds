@@ -18,49 +18,43 @@ const DialogueSummary: React.FC<DialogueSummaryProps> = ({
   onRetry,
   onProceed,
 }) => {
-  const hasPassedEvaluation = state.evaluationPassed;
   const averageScore = conversations.reduce((acc, conv) => acc + conv.score, 0) / conversations.length;
 
+  // Safely access metrics with defaults
+  const metrics = {
+    understanding: state.understanding || 0,
+    potential: state.potential || 0,
+    readiness: state.readiness || 0,
+    investment: state.investment || 0
+  };
+
   return (
-    <div className={`bg-slate-800/90 rounded-lg border ${hasPassedEvaluation ? 'border-cyan-400' : 'border-red-500'} p-6 space-y-6`}>
+    <div className="bg-slate-800/90 rounded-lg border border-cyan-400 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className={`h-3 w-3 ${hasPassedEvaluation ? 'bg-cyan-400' : 'bg-red-500'} rounded-full animate-pulse`} />
-          <h3 className={`${hasPassedEvaluation ? 'text-cyan-400' : 'text-red-500'} text-xl font-bold`}>
-            {hasPassedEvaluation ? 'Neural Link Assessment Complete' : 'Neural Link Assessment Failed'}
+          <div className="h-3 w-3 bg-cyan-400 rounded-full animate-pulse" />
+          <h3 className="text-cyan-400 text-xl font-bold">
+            MCP Assessment Complete
           </h3>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-slate-400">Final Score:</span>
-          <span className={`${hasPassedEvaluation ? 'text-cyan-400' : 'text-red-400'} font-mono`}>
+          <span className="text-slate-400">Compatibility Score:</span>
+          <span className="text-cyan-400 font-mono">
             {(averageScore * 100).toFixed(1)}%
           </span>
         </div>
       </div>
 
-      {!hasPassedEvaluation && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-          <p className="text-slate-300 mb-2">
-            "I regret to inform you that your responses did not meet the required threshold for crew admission."
-          </p>
-          <p className="text-red-400 font-mono">
-            Reason: {state.failureReason}
-          </p>
-        </div>
-      )}
-
       <div className="space-y-4">
         <div className="bg-slate-700/50 rounded p-4 border border-cyan-400/30">
-          <h4 className="text-cyan-300 mb-2">Response Analysis</h4>
+          <h4 className="text-cyan-300 mb-2">Conversation Analysis</h4>
           <div className="space-y-3">
             {conversations.map((conv, index) => (
               <div key={index} className="space-y-2 p-3 bg-slate-800/50 rounded">
                 <div className="flex justify-between items-center">
-                  <p className="text-slate-400 text-sm font-medium">Round {index + 1}</p>
-                  <span className={`text-sm font-mono ${
-                    conv.score >= 0.4 ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {(conv.score * 100).toFixed(1)}%
+                  <p className="text-slate-400 text-sm font-medium">Topic {index + 1}</p>
+                  <span className="text-sm font-mono text-cyan-400">
+                    {(conv.score * 100).toFixed(1)}% alignment
                   </span>
                 </div>
                 <p className="text-slate-400 text-sm italic">{conv.question}</p>
@@ -71,61 +65,61 @@ const DialogueSummary: React.FC<DialogueSummaryProps> = ({
         </div>
 
         <div className="bg-slate-700/50 rounded p-4 border border-cyan-400/30">
-          <h4 className="text-cyan-300 mb-2">Performance Analysis</h4>
+          <h4 className="text-cyan-300 mb-2">Integration Potential Analysis</h4>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex justify-between">
-                <p className="text-slate-400">Technical Aptitude</p>
+                <p className="text-slate-400">MCP Understanding</p>
                 <span className="text-sm font-mono text-slate-400">
-                  {(state.technical * 100).toFixed(1)}%
+                  {(metrics.understanding * 100).toFixed(1)}%
                 </span>
               </div>
               <div className="h-2 bg-slate-600 rounded-full mt-1">
                 <div 
-                  className={`h-full rounded-full ${hasPassedEvaluation ? 'bg-cyan-400' : 'bg-red-400'}`}
-                  style={{ width: `${state.technical * 100}%` }}
+                  className="h-full rounded-full bg-cyan-400"
+                  style={{ width: `${metrics.understanding * 100}%` }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between">
-                <p className="text-slate-400">Philosophical Depth</p>
+                <p className="text-slate-400">Business Potential</p>
                 <span className="text-sm font-mono text-slate-400">
-                  {(state.philosophical * 100).toFixed(1)}%
+                  {(metrics.potential * 100).toFixed(1)}%
                 </span>
               </div>
               <div className="h-2 bg-slate-600 rounded-full mt-1">
                 <div 
-                  className={`h-full rounded-full ${hasPassedEvaluation ? 'bg-cyan-400' : 'bg-red-400'}`}
-                  style={{ width: `${state.philosophical * 100}%` }}
+                  className="h-full rounded-full bg-cyan-400"
+                  style={{ width: `${metrics.potential * 100}%` }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between">
-                <p className="text-slate-400">Creative Thinking</p>
+                <p className="text-slate-400">Implementation Readiness</p>
                 <span className="text-sm font-mono text-slate-400">
-                  {(state.creative * 100).toFixed(1)}%
+                  {(metrics.readiness * 100).toFixed(1)}%
                 </span>
               </div>
               <div className="h-2 bg-slate-600 rounded-full mt-1">
                 <div 
-                  className={`h-full rounded-full ${hasPassedEvaluation ? 'bg-cyan-400' : 'bg-red-400'}`}
-                  style={{ width: `${state.creative * 100}%` }}
+                  className="h-full rounded-full bg-cyan-400"
+                  style={{ width: `${metrics.readiness * 100}%` }}
                 />
               </div>
             </div>
             <div>
               <div className="flex justify-between">
-                <p className="text-slate-400">Analytical Skills</p>
+                <p className="text-slate-400">Investment Alignment</p>
                 <span className="text-sm font-mono text-slate-400">
-                  {(state.analytical * 100).toFixed(1)}%
+                  {(metrics.investment * 100).toFixed(1)}%
                 </span>
               </div>
               <div className="h-2 bg-slate-600 rounded-full mt-1">
                 <div 
-                  className={`h-full rounded-full ${hasPassedEvaluation ? 'bg-cyan-400' : 'bg-red-400'}`}
-                  style={{ width: `${state.analytical * 100}%` }}
+                  className="h-full rounded-full bg-cyan-400"
+                  style={{ width: `${metrics.investment * 100}%` }}
                 />
               </div>
             </div>
@@ -134,13 +128,11 @@ const DialogueSummary: React.FC<DialogueSummaryProps> = ({
       </div>
 
       <button
-        onClick={hasPassedEvaluation ? onProceed : onRetry}
-        className={`w-full py-3 transition-colors duration-200 font-bold rounded-lg
-          ${hasPassedEvaluation 
-            ? 'bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400 text-cyan-100' 
-            : 'bg-slate-700 hover:bg-slate-600 border border-red-400 text-red-100'}`}
+        onClick={onProceed}
+        className="w-full py-3 transition-colors duration-200 font-bold rounded-lg
+          bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400 text-cyan-100"
       >
-        {hasPassedEvaluation ? 'Generate Neural Explorer Profile' : 'Request Another Evaluation Attempt'}
+        Schedule MCP Integration Consultation
       </button>
     </div>
   );
