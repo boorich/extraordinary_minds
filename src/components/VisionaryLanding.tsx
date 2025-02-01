@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import MCPHeader from './MCPHeader';
-import { CardSection } from './CardSection';
 import MCPDialogue from './dialogue/MCPDialogue';
 import { sections } from '@/config/sections';
 import { DialogueMetrics } from '@/types/dialogue';
@@ -36,7 +35,7 @@ const VisionaryLanding = () => {
               <MCPDialogue onMetricsUpdate={handleMetricsUpdate} />
             </div>
 
-            {/* Social Proof Section with updated styling */}
+            {/* Social Proof Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {sections.credibility.map((item, index) => (
                 <div 
@@ -53,12 +52,7 @@ const VisionaryLanding = () => {
               ))}
             </div>
 
-            {/* Is This You Section */}
-            <div className="max-w-4xl mx-auto">
-              <CardSection title="Is This You?" items={sections.traits} />
-            </div>
-
-            {/* Transformation Section - Moved to bottom */}
+            {/* Transformation Section */}
             <div className="max-w-4xl mx-auto space-y-12">
               <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-12">
                 The Transformation
