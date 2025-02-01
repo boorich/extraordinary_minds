@@ -40,7 +40,7 @@ const VisionaryLanding = () => {
               {sections.credibility.map((item, index) => (
                 <div 
                   key={index} 
-                  className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl transform hover:scale-105 transition-all duration-300 hover:shadow-cyan-300/20 hover:border-white/20"
+                  className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl transform hover:scale-[1.02] transition-transform duration-300"
                   role="presentation"
                 >
                   <div className="text-cyan-300 mb-4 flex justify-center" aria-hidden="true">
