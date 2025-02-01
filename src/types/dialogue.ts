@@ -1,7 +1,13 @@
 export interface DialoguePrompt {
-  text: string;
-  options?: DialogueOption[];
-  evaluation?: string;
+  id?: string;                   // Identifier for the dialogue
+  text: string;                  // The actual dialogue text
+  theme?: string;                // Theme or topic of the dialogue
+  context?: string;              // Additional context for the dialogue
+  constraints?: string[];        // Rules or constraints for responses
+  isSystemMessage?: boolean;     // Whether this is a system message
+  options?: DialogueOption[];    // Possible response options
+  fallbackOptions?: DialogueOption[]; // Default options if none are generated
+  evaluation?: string;           // Evaluation criteria
 }
 
 export interface DialogueOption {
