@@ -17,30 +17,30 @@ const VisionaryLanding = () => {
     <div className="min-h-screen text-slate-100">
       <MCPHeader />
       <div className="professional-gradient min-h-screen">
-        <main id="main-content" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative min-h-screen" role="main">
-          <div className="relative z-10 space-y-24">
+        <main id="main-content" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative" role="main">
+          <div className="relative z-10">
             {/* Hero Section */}
-            <div className="text-center space-y-8">
-              <h1 className="text-4xl md:text-6xl font-light tracking-tight text-white mb-6 fade-in">
+            <div className="text-center mb-24">
+              <h1 className="text-4xl md:text-6xl font-light tracking-tight text-white mb-6">
                 <span className="font-normal">Model Context Protocol</span>
                 <span className="text-cyan-300"> Servers</span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto font-light tracking-wide fade-in-delayed">
+              <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto font-light tracking-wide">
                 "Connecting Your Experts with AI and Company Resources"
               </p>
             </div>
 
             {/* Chat Interface */}
-            <div className="max-w-4xl mx-auto bg-slate-900/40 rounded-2xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
+            <div className="max-w-4xl mx-auto mb-24 bg-slate-900/40 rounded-2xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
               <MCPDialogue onMetricsUpdate={handleMetricsUpdate} />
             </div>
 
             {/* Social Proof Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto mb-24">
               {sections.credibility.map((item, index) => (
                 <div 
                   key={index} 
-                  className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                  className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl"
                   role="presentation"
                 >
                   <div className="text-cyan-300 mb-4 flex justify-center" aria-hidden="true">
@@ -53,7 +53,7 @@ const VisionaryLanding = () => {
             </div>
 
             {/* Transformation Section */}
-            <div className="max-w-4xl mx-auto space-y-12">
+            <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-12">
                 The Transformation
               </h2>
