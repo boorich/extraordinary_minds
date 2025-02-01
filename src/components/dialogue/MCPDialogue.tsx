@@ -26,7 +26,10 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll when conversation has messages
+    if (conversation.length > 0) {
+      scrollToBottom();
+    }
   }, [conversation]);
 
   const handleUserInput = useCallback(async (e: React.FormEvent) => {
