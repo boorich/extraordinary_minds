@@ -2,11 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-.professional-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #0369a1 75%, #0284c7 100%);
+/* Import Inter font for clean, professional look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+/* Apply Inter font globally */
+body {
+  font-family: 'Inter', sans-serif;
 }
 
-@keyframes subtle-shift {
+/* Refined gradient background */
+.professional-gradient {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #0369a1 75%, #0284c7 100%);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
   0% {
     background-position: 0% 50%;
   }
@@ -18,12 +29,41 @@
   }
 }
 
-.professional-gradient {
-  background-size: 200% 200%;
-  animation: subtle-shift 15s ease infinite;
+/* Entrance animations */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1s ease-out forwards;
 }
 
-/* Keep only relevant utility classes */
-.glow {
-  filter: drop-shadow(0 0 0.75rem #38bdf8);
+.fade-in-delayed {
+  opacity: 0;
+  animation: fadeIn 1s ease-out 0.5s forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card hover effects */
+.hover-card {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Glass morphism effects */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
