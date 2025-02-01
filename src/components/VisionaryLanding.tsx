@@ -1,44 +1,19 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { CardSection } from './CardSection';
 import ParallaxHero from './ParallaxHero';
 import MCPDataFlow from './interactive/MatrixRain';
-import HiddenChallenges from './interactive/HiddenChallenges';
-import ShipsWheel from './visual/ShipsWheel';
 import DigitalCursor from './visual/DigitalCursor';
-import ContactModal from './contact/ContactModal';
-import RiddleSuccess from './RiddleSuccess';
 import MCPDialogue from './dialogue/MCPDialogue';
-import Manifesto from './Manifesto';
 import { sections } from '@/config/sections';
 import { DialogueMetrics } from '@/types/dialogue';
 
 const VisionaryLanding = () => {
-  const [secretsFound, setSecretsFound] = useState<string[]>([]);
-  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [dialogueMetrics, setDialogueMetrics] = useState<DialogueMetrics | null>(null);
-
-  useEffect(() => {
-    const handleSecretFound = (event: CustomEvent) => {
-      setSecretsFound(prev => {
-        if (['first_word', 'second_word', 'third_word'].includes(event.detail.type) &&
-            !prev.includes(event.detail.type)) {
-          return [...prev, event.detail.type];
-        }
-        return prev;
-      });
-    };
-
-    document.addEventListener('secretFound', handleSecretFound as EventListener);
-    return () => {
-      document.removeEventListener('secretFound', handleSecretFound as EventListener);
-    };
-  }, []);
 
   const handleMetricsUpdate = (metrics: DialogueMetrics) => {
     setDialogueMetrics(metrics);
-    // We can use these metrics later to personalize the experience
     console.log('Dialogue metrics updated:', metrics);
   };
 
@@ -46,7 +21,6 @@ const VisionaryLanding = () => {
     <div className="min-h-screen cosmic-background text-slate-100">
       <DigitalCursor />
       <MCPDataFlow />
-      <HiddenChallenges />
       <ParallaxHero />
 
       <main id="main-content" className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative min-h-screen" role="main">
@@ -86,47 +60,13 @@ const VisionaryLanding = () => {
             ))}
           </div>
 
-          <ShipsWheel />
           <CardSection title="Is This You?" items={sections.traits} />
-          
-          {/* Our Manifesto */}
-          <div className="relative z-10 mb-12 md:mb-16">
-            <div className="bg-slate-800/80 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm overflow-hidden">
-              <Manifesto />
-            </div>
-          </div>
-
-          <CardSection title="Our Testament" items={sections.manifesto} />
-
-          <div className="mb-12">
-            <h3 className="text-2xl md:text-3xl pirate-font text-cyan-400 mb-4 md:mb-6 glow">Kindred Spirits</h3>
-            <div className="bg-slate-800/80 p-4 md:p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm">
-              <p className="mb-4">We recognize our own:</p>
-              <CardSection title="Our Crew" items={sections.crew} variant="crew" />
-              <div className="flex justify-center w-full">
-                <button 
-                  onClick={() => setIsContactModalOpen(true)}
-                  className="w-full px-6 md:px-8 py-3 md:py-4 water-effect text-white rounded-lg font-bold hover:brightness-110 transition-all transform hover:scale-105 glow"
-                  aria-label="Open contact form"
-                >
-                  Answer the Call
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </main>
 
       <footer className="text-center py-4 md:py-6 bg-slate-800/50 border-t-2 border-cyan-400 backdrop-blur-sm relative z-10" role="contentinfo">
-        <p className="pirate-font text-lg md:text-xl text-cyan-200">"For those who dare to reshape reality."</p>
+        <p className="text-lg md:text-xl text-cyan-200">Transforming Enterprise AI</p>
       </footer>
-      
-      <RiddleSuccess secretsFound={secretsFound} />
-
-      <ContactModal 
-        isOpen={isContactModalOpen} 
-        onClose={() => setIsContactModalOpen(false)} 
-      />
     </div>
   );
 };
