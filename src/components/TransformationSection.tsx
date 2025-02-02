@@ -4,20 +4,20 @@ import React from 'react';
 
 const TransformationSection = () => {
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-8">
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-6">
         The Transformation
       </h2>
       
       {/* Text Section */}
-      <div className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl">
+      <div className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl mb-6">
         <p className="text-xl md:text-2xl leading-relaxed text-gray-300 font-light">
           Every company has valuable expertise locked in their people, processes, and data. MCP servers unlock this potential by connecting your experts with advanced AI capabilities and your existing resources. This creates a powerful synergy that enhances productivity and unlocks new possibilities.
         </p>
       </div>
 
       {/* Architecture Diagram */}
-      <div className="py-8">
+      <div className="py-4 mb-6">
         <svg className="w-full max-w-3xl mx-auto" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Center Circle - MCP Server */}
           <circle cx="400" cy="400" r="80" className="fill-cyan-500/20 stroke-cyan-400" strokeWidth="2" />
