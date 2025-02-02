@@ -21,7 +21,7 @@ const architectureElements: ArchitectureElement[] = [
     title: 'AI Models',
     description: 'Language and domain-specific models',
     icon: <Bot className="w-6 h-6" />,
-    color: '#2563eb', // blue-600
+    color: 'rgba(37, 99, 235, 0.8)', // blue-600 with transparency
     value: 1,
     details: [
       'Language Models (LLMs)',
@@ -34,7 +34,7 @@ const architectureElements: ArchitectureElement[] = [
     title: 'Company Resources',
     description: 'Enterprise data and systems',
     icon: <Database className="w-6 h-6" />,
-    color: '#0d9488', // teal-600
+    color: 'rgba(13, 148, 136, 0.8)', // teal-600 with transparency
     value: 1,
     details: [
       'Enterprise data',
@@ -47,7 +47,7 @@ const architectureElements: ArchitectureElement[] = [
     title: 'LLM Clients',
     description: 'Expert users and tools',
     icon: <Users className="w-6 h-6" />,
-    color: '#9333ea', // purple-600
+    color: 'rgba(147, 51, 234, 0.8)', // purple-600 with transparency
     value: 1,
     details: [
       'Domain Level Experts',
@@ -77,7 +77,7 @@ const MCPArchitecture = () => {
 
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto p-8">
-      <div className="relative w-full h-full">
+      <div className="relative w-full h-full scale-75">
         <svg className="absolute inset-0 w-full h-full">
           {/* Outer dotted circle */}
           <circle
@@ -127,8 +127,8 @@ const MCPArchitecture = () => {
             <circle
               cx="50%"
               cy="50%"
-              r="15%"
-              fill="#0891b2"
+              r="20%"
+              fill="rgba(8, 145, 178, 0.8)"
               stroke="white"
               strokeWidth="2"
               className={`transition-opacity duration-200 ${
@@ -138,8 +138,8 @@ const MCPArchitecture = () => {
             <circle
               cx="50%"
               cy="50%"
-              r="14%"
-              fill="#06b6d4"
+              r="19%"
+              fill="rgba(6, 182, 212, 0.8)"
               className={`transition-opacity duration-200 ${
                 activeElement && activeElement !== 'center' ? 'opacity-30' : 'opacity-100'
               }`}
@@ -162,7 +162,7 @@ const MCPArchitecture = () => {
           <ResponsivePie
             data={architectureElements}
             margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-            innerRadius={0.4}
+            innerRadius={0.45}
             padAngle={0.5}
             cornerRadius={4}
             activeOuterRadiusOffset={8}
@@ -171,25 +171,20 @@ const MCPArchitecture = () => {
             borderColor="white"
             enableArcLabels={false}
             enableArcLinkLabels={false}
-            defs={[
-              {
-                id: 'dots',
-                type: 'patternDots',
-                background: 'inherit',
-                color: 'rgba(255, 255, 255, 0.3)',
-                size: 3,
-                padding: 2,
-                stagger: true
-              }
-            ]}
-            fill={[{ match: '*', id: 'dots' }]}
             onMouseEnter={(data) => {
               setActiveElement(data.id as string);
             }}
             onMouseLeave={() => {
               setActiveElement(null);
             }}
-            motionConfig="gentle"
+            motionConfig={{
+              mass: 1,
+              tension: 170,
+              friction: 26,
+              clamp: false,
+              precision: 0.01,
+              velocity: 0
+            }}
           />
         </div>
 
@@ -197,7 +192,7 @@ const MCPArchitecture = () => {
         <AnimatePresence>
           {activeElement && (
             <motion.div
-              className="absolute top-0 right-0 w-72 bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10"
+              className="absolute top-0 right-0 w-72 bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10 shadow-xl"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
