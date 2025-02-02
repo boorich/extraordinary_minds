@@ -148,7 +148,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             rows={1}
-            className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
+            className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 pr-20 text-white 
                      focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
                      placeholder-slate-400 resize-none overflow-hidden min-h-[44px] max-h-[120px]"
             placeholder="Ask about MCP servers..."
