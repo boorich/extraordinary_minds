@@ -3,15 +3,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResponsivePie } from '@nivo/pie';
-import { Database, Users, Bot, Server } from 'lucide-react';
-import type { ArcLabelComponent } from '@nivo/pie';
+import { Database, Users, Bot } from 'lucide-react';
 
 interface ArchitectureElement {
-  id: 'clients' | 'resources' | 'ai';
+  id: 'center' | 'clients' | 'resources' | 'ai';
   title: string;
   description: string;
   icon: React.ReactNode;
-  features: string[];
   color: string;
   value: number;
   details: string[];
@@ -19,15 +17,23 @@ interface ArchitectureElement {
 
 const architectureElements: ArchitectureElement[] = [
   {
+    id: 'center',
+    title: 'MCP Server',
+    description: 'Central orchestration and processing',
+    icon: <Database className="w-6 h-6" />,
+    color: '#0891b2', // cyan-600
+    value: 0.8, // Smaller value for center circle
+    details: [
+      'Core processing',
+      'Resource orchestration',
+      'Security management'
+    ]
+  },
+  {
     id: 'ai',
     title: 'AI Models',
     description: 'Language and domain-specific models',
     icon: <Bot className="w-6 h-6" />,
-    features: [
-      'OpenRouter integration',
-      'Model selection',
-      'Context management'
-    ],
     color: '#2563eb', // blue-600
     value: 1,
     details: [
@@ -41,11 +47,6 @@ const architectureElements: ArchitectureElement[] = [
     title: 'Company Resources',
     description: 'Enterprise data and systems',
     icon: <Database className="w-6 h-6" />,
-    features: [
-      'Files and documents',
-      'Applications and APIs',
-      'Compute resources'
-    ],
     color: '#0d9488', // teal-600
     value: 1,
     details: [
@@ -59,11 +60,6 @@ const architectureElements: ArchitectureElement[] = [
     title: 'LLM Clients',
     description: 'Expert users and tools',
     icon: <Users className="w-6 h-6" />,
-    features: [
-      'Domain experts',
-      'Access controls',
-      'Integration tools'
-    ],
     color: '#9333ea', // purple-600
     value: 1,
     details: [
@@ -74,52 +70,8 @@ const architectureElements: ArchitectureElement[] = [
   }
 ];
 
-// Type-safe label component
-const ArcLabel: ArcLabelComponent = ({ datum, label }) => (
-  <text
-    textAnchor="middle"
-    dominantBaseline="middle"
-    style={{
-      fontSize: '16px',
-      fontWeight: 500,
-      fill: 'white',
-    }}
-  >
-    {label}
-  </text>
-);
-
 const MCPArchitecture = () => {
   const [activeElement, setActiveElement] = useState<string | null>(null);
-
-  const CenterComponent = () => (
-    <g>
-      <circle r="70" fill="#0891b2" strokeWidth={2} stroke="white" /> {/* cyan-600 */}
-      <circle r="65" fill="#06b6d4" /> {/* cyan-500 */}
-      
-      {/* MCP Server Icon */}
-      <Server 
-        style={{
-          transform: 'translate(-12px, -20px)',
-          color: 'white',
-        }}
-      />
-      
-      <text
-        textAnchor="middle"
-        dominantBaseline="middle"
-        style={{ 
-          fontSize: '18px', 
-          fill: 'white', 
-          fontWeight: 600,
-          letterSpacing: '0.05em'
-        }}
-        dy="15"
-      >
-        MCP Server
-      </text>
-    </g>
-  );
 
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto p-8">
@@ -141,26 +93,15 @@ const MCPArchitecture = () => {
         <ResponsivePie
           data={architectureElements}
           margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
-          innerRadius={0.6}
+          innerRadius={0.7}
           padAngle={0.5}
           cornerRadius={4}
           activeOuterRadiusOffset={8}
           colors={{ datum: 'data.color' }}
           borderWidth={2}
           borderColor="white"
-          arcLabel={d => d.data.title}
-          arcLabelsTextColor="white"
-          arcLabelsRadiusOffset={0.65}
-          arcLabelsSkipAngle={0}
-          arcLabelsComponent={ArcLabel}
+          enableArcLabels={false}
           enableArcLinkLabels={false}
-          layers={['arcs', 'arcLabels', CenterComponent]}
-          onMouseEnter={(data) => {
-            setActiveElement(data.id as string);
-          }}
-          onMouseLeave={() => {
-            setActiveElement(null);
-          }}
           defs={[
             {
               id: 'dots',
@@ -173,6 +114,12 @@ const MCPArchitecture = () => {
             }
           ]}
           fill={[{ match: '*', id: 'dots' }]}
+          onMouseEnter={(data) => {
+            setActiveElement(data.id as string);
+          }}
+          onMouseLeave={() => {
+            setActiveElement(null);
+          }}
           motionConfig="gentle"
         />
 
