@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResponsivePie } from '@nivo/pie';
-import { Database, Users, Bot } from 'lucide-react';
+import { Database, Users, Bot, Server } from 'lucide-react';
 
 interface ArchitectureElement {
-  id: 'client' | 'resources' | 'ai';
+  id: 'clients' | 'resources' | 'ai';
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -20,7 +20,7 @@ const architectureElements: ArchitectureElement[] = [
   {
     id: 'ai',
     title: 'AI Models',
-    description: 'LLMs and specialized models',
+    description: 'Language and domain-specific models',
     icon: <Bot className="w-6 h-6" />,
     features: [
       'OpenRouter integration',
@@ -30,15 +30,15 @@ const architectureElements: ArchitectureElement[] = [
     color: '#2563eb', // blue-600
     value: 1,
     details: [
-      'Advanced language models',
+      'Language Models (LLMs)',
       'Domain-specific AI',
-      'Context optimization'
+      'Model orchestration'
     ]
   },
   {
     id: 'resources',
     title: 'Company Resources',
-    description: 'Enterprise systems and data',
+    description: 'Enterprise data and systems',
     icon: <Database className="w-6 h-6" />,
     features: [
       'Files and documents',
@@ -48,27 +48,27 @@ const architectureElements: ArchitectureElement[] = [
     color: '#0d9488', // teal-600
     value: 1,
     details: [
-      'Secure data access',
-      'System integration',
-      'Resource management'
+      'Enterprise data',
+      'Internal systems',
+      'API integrations'
     ]
   },
   {
-    id: 'client',
-    title: 'MCP Client',
-    description: 'Expert user interface and tools',
+    id: 'clients',
+    title: 'LLM Clients',
+    description: 'Expert users and tools',
     icon: <Users className="w-6 h-6" />,
     features: [
-      'Interactive AI assistance',
-      'Resource access controls',
-      'Domain-specific tools'
+      'Domain experts',
+      'Access controls',
+      'Integration tools'
     ],
     color: '#9333ea', // purple-600
     value: 1,
     details: [
-      'Expert interface',
-      'Security controls',
-      'Collaboration tools'
+      'Domain Level Experts',
+      'Security Controls',
+      'Integration Tools'
     ]
   }
 ];
@@ -78,49 +78,35 @@ const MCPArchitecture = () => {
 
   const CenterComponent = () => (
     <g>
-      <circle r="60" fill="#0891b2" strokeWidth={2} stroke="white" /> {/* cyan-600 */}
-      <circle r="55" fill="#06b6d4" /> {/* cyan-500 */}
+      <circle r="70" fill="#0891b2" strokeWidth={2} stroke="white" /> {/* cyan-600 */}
+      <circle r="65" fill="#06b6d4" /> {/* cyan-500 */}
+      
+      {/* MCP Server Icon */}
+      <Server 
+        style={{
+          transform: 'translate(-12px, -20px)',
+          color: 'white',
+        }}
+      />
+      
       <text
         textAnchor="middle"
         dominantBaseline="middle"
         style={{ 
-          fontSize: '16px', 
+          fontSize: '18px', 
           fill: 'white', 
-          fontWeight: 500,
+          fontWeight: 600,
           letterSpacing: '0.05em'
         }}
-        dy="-10"
+        dy="15"
       >
-        MCP
-      </text>
-      <text
-        textAnchor="middle"
-        dominantBaseline="middle"
-        style={{ 
-          fontSize: '16px', 
-          fill: 'white',
-          letterSpacing: '0.05em'
-        }}
-        dy="10"
-      >
-        Server
+        MCP Server
       </text>
     </g>
   );
 
-  // Calculates position for info boxes and lines
-  const getInfoPosition = (index: number, total: number) => {
-    const angle = ((index + 0.5) * 2 * Math.PI) / total - Math.PI / 2;
-    const radius = 260; // Increased radius for outer position
-    return {
-      x: Math.cos(angle) * radius + 200,
-      y: Math.sin(angle) * radius + 200,
-      angle: (angle * 180) / Math.PI
-    };
-  };
-
   return (
-    <div className="relative w-full aspect-square max-w-3xl mx-auto">
+    <div className="relative w-full aspect-square max-w-3xl mx-auto p-8">
       <div className="w-full h-full">
         <svg className="absolute inset-0 w-full h-full">
           {/* Outer dotted circle */}
@@ -141,14 +127,32 @@ const MCPArchitecture = () => {
           margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
           innerRadius={0.6}
           padAngle={0.5}
-          cornerRadius={0}
+          cornerRadius={4}
           activeOuterRadiusOffset={8}
           colors={{ datum: 'data.color' }}
           borderWidth={2}
           borderColor="white"
+          arcLabel={d => d.data.title}
+          arcLabelsTextColor="white"
+          arcLabelsRadiusOffset={0.65}
+          arcLabelsSkipAngle={0}
+          arcLabelsComponent={({ datum, label, style }) => (
+            <g transform={style.transform}>
+              <text
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  fill: 'white',
+                }}
+              >
+                {label}
+              </text>
+            </g>
+          )}
           enableArcLinkLabels={false}
-          enableArcLabels={false}
-          layers={['arcs', CenterComponent]}
+          layers={['arcs', 'arcLabels', CenterComponent]}
           onMouseEnter={(data) => {
             setActiveElement(data.id as string);
           }}
@@ -167,87 +171,45 @@ const MCPArchitecture = () => {
             }
           ]}
           fill={[{ match: '*', id: 'dots' }]}
-          motionConfig={{
-            mass: 1,
-            tension: 170,
-            friction: 26,
-            clamp: false,
-            precision: 0.01,
-            velocity: 0
-          }}
+          motionConfig="gentle"
         />
 
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
-          {/* Connection points and info boxes */}
-          {architectureElements.map((element, index) => {
-            const position = getInfoPosition(index, architectureElements.length);
-            const isLeft = position.x < 200;
-            
-            return (
-              <g key={element.id}>
-                {/* Connection point */}
-                <circle
-                  cx={position.x}
-                  cy={position.y}
-                  r="4"
-                  className="fill-blue-500"
-                />
-                
-                {/* Connector line */}
-                <path
-                  d={`M ${position.x} ${position.y} ${isLeft ? 'L 50 ' + position.y : 'L 350 ' + position.y}`}
-                  stroke="#4299e1"
-                  strokeWidth="2"
-                  strokeDasharray="4 4"
-                  fill="none"
-                  className="opacity-50"
-                />
-
-                {/* Info boxes */}
-                <AnimatePresence>
-                  {activeElement === element.id && (
-                    <motion.g
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      {element.details.map((detail, detailIndex) => (
-                        <g key={detailIndex} transform={`translate(${isLeft ? 20 : 280}, ${position.y + detailIndex * 30 - 30})`}>
-                          <rect
-                            width="200"
-                            height="24"
-                            rx="4"
-                            fill="#1e40af"
-                            className="opacity-80"
-                          />
-                          <text
-                            x="10"
-                            y="16"
-                            fill="white"
-                            className="text-sm"
-                          >
+        {/* Info Panels */}
+        <AnimatePresence>
+          {activeElement && (
+            <motion.div
+              className="absolute top-0 right-0 w-72 bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+            >
+              {architectureElements.map(element => {
+                if (element.id === activeElement) {
+                  return (
+                    <div key={element.id} className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        {element.icon}
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">{element.title}</h3>
+                          <p className="text-sm text-gray-300">{element.description}</p>
+                        </div>
+                      </div>
+                      <ul className="space-y-2">
+                        {element.details.map((detail, index) => (
+                          <li key={index} className="text-sm text-gray-300 flex items-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2" />
                             {detail}
-                          </text>
-                        </g>
-                      ))}
-                    </motion.g>
-                  )}
-                </AnimatePresence>
-
-                {/* Labels */}
-                <text
-                  x={isLeft ? 40 : 360}
-                  y={position.y}
-                  textAnchor={isLeft ? "start" : "end"}
-                  fill="white"
-                  className="text-lg font-medium"
-                >
-                  {element.title}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
