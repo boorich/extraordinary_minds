@@ -6,7 +6,7 @@ import { ResponsivePie } from '@nivo/pie';
 import { Database, Users, Bot } from 'lucide-react';
 
 interface ArchitectureElement {
-  id: 'center' | 'clients' | 'resources' | 'ai';
+  id: 'clients' | 'resources' | 'ai';
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -16,19 +16,6 @@ interface ArchitectureElement {
 }
 
 const architectureElements: ArchitectureElement[] = [
-  {
-    id: 'center',
-    title: 'MCP Server',
-    description: 'Central orchestration and processing',
-    icon: <Database className="w-6 h-6" />,
-    color: '#0891b2', // cyan-600
-    value: 0.8, // Smaller value for center circle
-    details: [
-      'Core processing',
-      'Resource orchestration',
-      'Security management'
-    ]
-  },
   {
     id: 'ai',
     title: 'AI Models',
@@ -73,9 +60,24 @@ const architectureElements: ArchitectureElement[] = [
 const MCPArchitecture = () => {
   const [activeElement, setActiveElement] = useState<string | null>(null);
 
+  // Center circle mouse handlers
+  const handleCenterEnter = () => setActiveElement('center');
+  const handleCenterLeave = () => setActiveElement(null);
+
+  const centerDetails = {
+    title: 'MCP Server',
+    description: 'Central orchestration and processing',
+    icon: <Database className="w-6 h-6" />,
+    details: [
+      'Core processing',
+      'Resource orchestration',
+      'Security management'
+    ]
+  };
+
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto p-8">
-      <div className="w-full h-full">
+      <div className="relative w-full h-full">
         <svg className="absolute inset-0 w-full h-full">
           {/* Outer dotted circle */}
           <circle
@@ -88,40 +90,108 @@ const MCPArchitecture = () => {
             strokeDasharray="4 4"
             className="opacity-20"
           />
+
+          {/* Connection points */}
+          {[0, 1, 2].map((_, index) => {
+            const angle = (index * 2 * Math.PI) / 3 - Math.PI / 2;
+            return (
+              <g key={index}>
+                {/* Connection point */}
+                <circle
+                  cx={`${50 + 48 * Math.cos(angle)}%`}
+                  cy={`${50 + 48 * Math.sin(angle)}%`}
+                  r="4"
+                  className="fill-blue-500"
+                />
+                {/* Connection line */}
+                <line
+                  x1={`${50 + 40 * Math.cos(angle)}%`}
+                  y1={`${50 + 40 * Math.sin(angle)}%`}
+                  x2={`${50 + 48 * Math.cos(angle)}%`}
+                  y2={`${50 + 48 * Math.sin(angle)}%`}
+                  stroke="#4299e1"
+                  strokeWidth="2"
+                  strokeDasharray="4 4"
+                  className="opacity-50"
+                />
+              </g>
+            );
+          })}
+
+          {/* Center MCP Server circle - interactive */}
+          <g
+            onMouseEnter={handleCenterEnter}
+            onMouseLeave={handleCenterLeave}
+            style={{ cursor: 'pointer' }}
+          >
+            <circle
+              cx="50%"
+              cy="50%"
+              r="15%"
+              fill="#0891b2"
+              stroke="white"
+              strokeWidth="2"
+              className={`transition-opacity duration-200 ${
+                activeElement && activeElement !== 'center' ? 'opacity-30' : 'opacity-100'
+              }`}
+            />
+            <circle
+              cx="50%"
+              cy="50%"
+              r="14%"
+              fill="#06b6d4"
+              className={`transition-opacity duration-200 ${
+                activeElement && activeElement !== 'center' ? 'opacity-30' : 'opacity-100'
+              }`}
+            />
+            <text
+              x="50%"
+              y="50%"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="white"
+              className="text-lg font-semibold"
+            >
+              MCP Server
+            </text>
+          </g>
         </svg>
 
-        <ResponsivePie
-          data={architectureElements}
-          margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
-          innerRadius={0.7}
-          padAngle={0.5}
-          cornerRadius={4}
-          activeOuterRadiusOffset={8}
-          colors={{ datum: 'data.color' }}
-          borderWidth={2}
-          borderColor="white"
-          enableArcLabels={false}
-          enableArcLinkLabels={false}
-          defs={[
-            {
-              id: 'dots',
-              type: 'patternDots',
-              background: 'inherit',
-              color: 'rgba(255, 255, 255, 0.3)',
-              size: 3,
-              padding: 2,
-              stagger: true
-            }
-          ]}
-          fill={[{ match: '*', id: 'dots' }]}
-          onMouseEnter={(data) => {
-            setActiveElement(data.id as string);
-          }}
-          onMouseLeave={() => {
-            setActiveElement(null);
-          }}
-          motionConfig="gentle"
-        />
+        {/* Pie chart layer */}
+        <div className="absolute inset-0">
+          <ResponsivePie
+            data={architectureElements}
+            margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+            innerRadius={0.4}
+            padAngle={0.5}
+            cornerRadius={4}
+            activeOuterRadiusOffset={8}
+            colors={{ datum: 'data.color' }}
+            borderWidth={2}
+            borderColor="white"
+            enableArcLabels={false}
+            enableArcLinkLabels={false}
+            defs={[
+              {
+                id: 'dots',
+                type: 'patternDots',
+                background: 'inherit',
+                color: 'rgba(255, 255, 255, 0.3)',
+                size: 3,
+                padding: 2,
+                stagger: true
+              }
+            ]}
+            fill={[{ match: '*', id: 'dots' }]}
+            onMouseEnter={(data) => {
+              setActiveElement(data.id as string);
+            }}
+            onMouseLeave={() => {
+              setActiveElement(null);
+            }}
+            motionConfig="gentle"
+          />
+        </div>
 
         {/* Info Panels */}
         <AnimatePresence>
@@ -132,30 +202,50 @@ const MCPArchitecture = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              {architectureElements.map(element => {
-                if (element.id === activeElement) {
-                  return (
-                    <div key={element.id} className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        {element.icon}
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{element.title}</h3>
-                          <p className="text-sm text-gray-300">{element.description}</p>
-                        </div>
-                      </div>
-                      <ul className="space-y-2">
-                        {element.details.map((detail, index) => (
-                          <li key={index} className="text-sm text-gray-300 flex items-center">
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2" />
-                            {detail}
-                          </li>
-                        ))}
-                      </ul>
+              {activeElement === 'center' ? (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    {centerDetails.icon}
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{centerDetails.title}</h3>
+                      <p className="text-sm text-gray-300">{centerDetails.description}</p>
                     </div>
-                  );
-                }
-                return null;
-              })}
+                  </div>
+                  <ul className="space-y-2">
+                    {centerDetails.details.map((detail, index) => (
+                      <li key={index} className="text-sm text-gray-300 flex items-center">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2" />
+                        {detail}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                architectureElements.map(element => {
+                  if (element.id === activeElement) {
+                    return (
+                      <div key={element.id} className="space-y-4">
+                        <div className="flex items-center space-x-3">
+                          {element.icon}
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">{element.title}</h3>
+                            <p className="text-sm text-gray-300">{element.description}</p>
+                          </div>
+                        </div>
+                        <ul className="space-y-2">
+                          {element.details.map((detail, index) => (
+                            <li key={index} className="text-sm text-gray-300 flex items-center">
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2" />
+                              {detail}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  }
+                  return null;
+                })
+              )}
             </motion.div>
           )}
         </AnimatePresence>
