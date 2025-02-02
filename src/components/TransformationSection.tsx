@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import MCPArchitecture from './MCPArchitecture';
+import MCPArchitecture from './MCPArchitectureNivo';
 
 const TransformationSection = () => {
   return (
