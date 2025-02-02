@@ -13,6 +13,7 @@ interface ArchitectureElement {
   color: string;
   value: number;
   details: string[];
+  labelPosition: { x: number, y: number }; // Fixed positions for labels
 }
 
 const architectureElements: ArchitectureElement[] = [
@@ -27,7 +28,8 @@ const architectureElements: ArchitectureElement[] = [
       'Language Models (LLMs)',
       'Domain-specific AI',
       'Model orchestration'
-    ]
+    ],
+    labelPosition: { x: 280, y: 120 } // 2 o'clock
   },
   {
     id: 'resources',
@@ -40,7 +42,8 @@ const architectureElements: ArchitectureElement[] = [
       'Enterprise data',
       'Internal systems',
       'API integrations'
-    ]
+    ],
+    labelPosition: { x: 200, y: 300 } // 6 o'clock
   },
   {
     id: 'clients',
@@ -53,27 +56,13 @@ const architectureElements: ArchitectureElement[] = [
       'Domain Level Experts',
       'Security Controls',
       'Integration Tools'
-    ]
+    ],
+    labelPosition: { x: 120, y: 120 } // 10 o'clock
   }
 ];
 
 const MCPArchitecture = () => {
   const [activeElement, setActiveElement] = useState<string | null>(null);
-
-  // Calculate label positions for each segment
-  const getLabelPosition = (index: number) => {
-    const totalSegments = architectureElements.length;
-    const startAngle = (index * 2 * Math.PI) / totalSegments - Math.PI / 2;
-    const endAngle = ((index + 1) * 2 * Math.PI) / totalSegments - Math.PI / 2;
-    const midAngle = (startAngle + endAngle) / 2;
-
-    // Position at 75% of the distance from center to edge
-    const radius = 130;
-    const x = 200 + radius * Math.cos(midAngle);
-    const y = 200 + radius * Math.sin(midAngle);
-
-    return { x, y };
-  };
 
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto p-16">
@@ -92,22 +81,19 @@ const MCPArchitecture = () => {
           />
 
           {/* Segment Labels */}
-          {architectureElements.map((element, index) => {
-            const pos = getLabelPosition(index);
-            return (
-              <text
-                key={element.id}
-                x={pos.x}
-                y={pos.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="white"
-                className="text-lg font-medium"
-              >
-                {element.title}
-              </text>
-            );
-          })}
+          {architectureElements.map((element) => (
+            <text
+              key={element.id}
+              x={element.labelPosition.x}
+              y={element.labelPosition.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="white"
+              className="text-xl font-semibold"
+            >
+              {element.title}
+            </text>
+          ))}
 
           {/* Center MCP Server circle - interactive */}
           <g
@@ -141,7 +127,7 @@ const MCPArchitecture = () => {
               textAnchor="middle"
               dominantBaseline="middle"
               fill="white"
-              className="text-lg font-medium"
+              className="text-xl font-semibold"
             >
               MCP Server
             </text>
