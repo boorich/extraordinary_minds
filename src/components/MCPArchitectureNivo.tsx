@@ -133,20 +133,29 @@ const MCPArchitecture = () => {
             arcLabelsRadiusOffset={0.5}
             arcLabelsTextColor="white"
             arcLabelsSkipAngle={0}
-            arcLabelsComponent={({ datum, label, style }) => (
-              <text
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 600,
-                  fill: 'white',
-                }}
-                transform={style.transform}
-              >
-                {label}
-              </text>
-            )}
+            arcLabelsComponent={({ datum, label, style }) => {
+              // Extract translate values from the transform string
+              const transformStr = String(style.transform);
+              const match = transformStr.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/);
+              const x = match ? match[1] : '0';
+              const y = match ? match[2] : '0';
+
+              return (
+                <g transform={`translate(${x}, ${y})`}>
+                  <text
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: 600,
+                      fill: 'white',
+                    }}
+                  >
+                    {label}
+                  </text>
+                </g>
+              );
+            }}
             enableArcLinkLabels={false}
             isInteractive={true}
             tooltip={() => null}
