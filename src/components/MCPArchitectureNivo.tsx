@@ -13,7 +13,6 @@ interface ArchitectureElement {
   color: string;
   value: number;
   details: string[];
-  angle?: number; // For label positioning
 }
 
 const architectureElements: ArchitectureElement[] = [
@@ -28,8 +27,7 @@ const architectureElements: ArchitectureElement[] = [
       'Language Models (LLMs)',
       'Domain-specific AI',
       'Model orchestration'
-    ],
-    angle: -Math.PI / 2 // Top
+    ]
   },
   {
     id: 'resources',
@@ -42,8 +40,7 @@ const architectureElements: ArchitectureElement[] = [
       'Enterprise data',
       'Internal systems',
       'API integrations'
-    ],
-    angle: Math.PI / 6 // Bottom right
+    ]
   },
   {
     id: 'clients',
@@ -56,13 +53,27 @@ const architectureElements: ArchitectureElement[] = [
       'Domain Level Experts',
       'Security Controls',
       'Integration Tools'
-    ],
-    angle: -5 * Math.PI / 6 // Top left
+    ]
   }
 ];
 
 const MCPArchitecture = () => {
   const [activeElement, setActiveElement] = useState<string | null>(null);
+
+  // Calculate label positions for each segment
+  const getLabelPosition = (index: number) => {
+    const totalSegments = architectureElements.length;
+    const startAngle = (index * 2 * Math.PI) / totalSegments - Math.PI / 2;
+    const endAngle = ((index + 1) * 2 * Math.PI) / totalSegments - Math.PI / 2;
+    const midAngle = (startAngle + endAngle) / 2;
+
+    // Position at 75% of the distance from center to edge
+    const radius = 130;
+    const x = 200 + radius * Math.cos(midAngle);
+    const y = 200 + radius * Math.sin(midAngle);
+
+    return { x, y };
+  };
 
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto p-16">
@@ -80,21 +91,18 @@ const MCPArchitecture = () => {
             className="opacity-20"
           />
 
-          {/* Static Text Labels */}
-          {architectureElements.map((element) => {
-            if (!element.angle) return null;
-            const radius = 140; // Adjust based on your visualization size
-            const x = 200 + radius * Math.cos(element.angle);
-            const y = 200 + radius * Math.sin(element.angle);
+          {/* Segment Labels */}
+          {architectureElements.map((element, index) => {
+            const pos = getLabelPosition(index);
             return (
               <text
                 key={element.id}
-                x={x}
-                y={y}
+                x={pos.x}
+                y={pos.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="white"
-                className="text-base font-medium"
+                className="text-lg font-medium"
               >
                 {element.title}
               </text>
@@ -133,7 +141,7 @@ const MCPArchitecture = () => {
               textAnchor="middle"
               dominantBaseline="middle"
               fill="white"
-              className="text-lg font-semibold"
+              className="text-lg font-medium"
             >
               MCP Server
             </text>
@@ -155,7 +163,7 @@ const MCPArchitecture = () => {
             enableArcLabels={false}
             enableArcLinkLabels={false}
             isInteractive={true}
-            tooltip={() => null} // Disable the tooltip completely
+            tooltip={() => null}
             onMouseEnter={(data) => {
               setActiveElement(data.id as string);
             }}
