@@ -137,7 +137,7 @@ const MCPArchitecture = () => {
           arcLabelsRadiusOffset={0.65}
           arcLabelsSkipAngle={0}
           arcLabelsComponent={({ datum, label, style }) => (
-            <g transform={`translate(${style.x}, ${style.y})`}>
+            <g style={{ transform: style.transform }}>
               <text
                 textAnchor="middle"
                 dominantBaseline="middle"
