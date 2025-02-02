@@ -13,6 +13,7 @@ interface ArchitectureElement {
   color: string;
   value: number;
   details: string[];
+  angle?: number; // For label positioning
 }
 
 const architectureElements: ArchitectureElement[] = [
@@ -27,7 +28,8 @@ const architectureElements: ArchitectureElement[] = [
       'Language Models (LLMs)',
       'Domain-specific AI',
       'Model orchestration'
-    ]
+    ],
+    angle: -Math.PI / 2 // Top
   },
   {
     id: 'resources',
@@ -40,7 +42,8 @@ const architectureElements: ArchitectureElement[] = [
       'Enterprise data',
       'Internal systems',
       'API integrations'
-    ]
+    ],
+    angle: Math.PI / 6 // Bottom right
   },
   {
     id: 'clients',
@@ -53,7 +56,8 @@ const architectureElements: ArchitectureElement[] = [
       'Domain Level Experts',
       'Security Controls',
       'Integration Tools'
-    ]
+    ],
+    angle: -5 * Math.PI / 6 // Top left
   }
 ];
 
@@ -75,6 +79,27 @@ const MCPArchitecture = () => {
             strokeDasharray="4 4"
             className="opacity-20"
           />
+
+          {/* Static Text Labels */}
+          {architectureElements.map((element) => {
+            if (!element.angle) return null;
+            const radius = 140; // Adjust based on your visualization size
+            const x = 200 + radius * Math.cos(element.angle);
+            const y = 200 + radius * Math.sin(element.angle);
+            return (
+              <text
+                key={element.id}
+                x={x}
+                y={y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="white"
+                className="text-base font-medium"
+              >
+                {element.title}
+              </text>
+            );
+          })}
 
           {/* Center MCP Server circle - interactive */}
           <g
@@ -129,6 +154,8 @@ const MCPArchitecture = () => {
             borderColor="white"
             enableArcLabels={false}
             enableArcLinkLabels={false}
+            isInteractive={true}
+            tooltip={() => null} // Disable the tooltip completely
             onMouseEnter={(data) => {
               setActiveElement(data.id as string);
             }}
