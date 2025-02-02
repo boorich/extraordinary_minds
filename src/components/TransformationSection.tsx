@@ -4,8 +4,8 @@ import React from 'react';
 
 const TransformationSection = () => {
   return (
-    <div className="max-w-4xl mx-auto space-y-12">
-      <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-12">
+    <div className="max-w-4xl mx-auto space-y-8">
+      <h2 className="text-3xl md:text-4xl font-light tracking-tight text-cyan-300 text-center mb-8">
         The Transformation
       </h2>
       
@@ -16,8 +16,8 @@ const TransformationSection = () => {
         </p>
       </div>
 
-      {/* Circular Architecture Diagram */}
-      <div className="p-8">
+      {/* Architecture Diagram */}
+      <div className="py-8">
         <svg className="w-full max-w-3xl mx-auto" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Center Circle - MCP Server */}
           <circle cx="400" cy="400" r="80" className="fill-cyan-500/20 stroke-cyan-400" strokeWidth="2" />
@@ -36,20 +36,16 @@ const TransformationSection = () => {
 
           {/* Labels */}
           <g className="text-white">
-            {/* LLM Section */}
             <text x="400" y="250" className="text-lg fill-white text-center" textAnchor="middle">LLM</text>
             <text x="420" y="280" className="text-sm fill-gray-300 text-center" textAnchor="middle">AI Capabilities</text>
             
-            {/* Company Resources Section */}
             <text x="550" y="410" className="text-lg fill-white text-center" textAnchor="middle">Company</text>
             <text x="550" y="430" className="text-lg fill-white text-center" textAnchor="middle">Resources</text>
             <text x="550" y="450" className="text-sm fill-gray-300 text-center" textAnchor="middle">Data & Systems</text>
 
-            {/* Expert Section */}
             <text x="400" y="550" className="text-lg fill-white text-center" textAnchor="middle">Experts</text>
             <text x="400" y="570" className="text-sm fill-gray-300 text-center" textAnchor="middle">Domain Knowledge</text>
 
-            {/* Tools Section */}
             <text x="250" y="410" className="text-lg fill-white text-center" textAnchor="middle">Tools</text>
             <text x="250" y="430" className="text-sm fill-gray-300 text-center" textAnchor="middle">Integration Layer</text>
           </g>
@@ -67,17 +63,17 @@ const TransformationSection = () => {
         </svg>
       </div>
 
-      {/* Feature Points */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10">
+      {/* Feature Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
           <h3 className="text-lg text-cyan-300 mb-2">Seamless Integration</h3>
           <p className="text-gray-300">Connect your existing systems and resources without disruption</p>
         </div>
-        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10">
+        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
           <h3 className="text-lg text-cyan-300 mb-2">AI Enhancement</h3>
           <p className="text-gray-300">Leverage advanced LLM capabilities with your domain expertise</p>
         </div>
-        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10">
+        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
           <h3 className="text-lg text-cyan-300 mb-2">Secure Foundation</h3>
           <p className="text-gray-300">Built with enterprise-grade security and compliance in mind</p>
         </div>
