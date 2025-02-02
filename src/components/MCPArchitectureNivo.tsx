@@ -136,21 +136,25 @@ const MCPArchitecture = () => {
           arcLabelsTextColor="white"
           arcLabelsRadiusOffset={0.65}
           arcLabelsSkipAngle={0}
-          arcLabelsComponent={({ datum, label, style }) => (
-            <g style={{ transform: style.transform }}>
-              <text
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  fontSize: '16px',
-                  fontWeight: 500,
-                  fill: 'white',
-                }}
-              >
-                {label}
-              </text>
-            </g>
-          )}
+          arcLabelsComponent={({ datum, label, style }) => {
+            // Convert the transform string to a safe value
+            const transformValue = String(style.transform);
+            return (
+              <g transform={transformValue}>
+                <text
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 500,
+                    fill: 'white',
+                  }}
+                >
+                  {label}
+                </text>
+              </g>
+            );
+          }}
           enableArcLinkLabels={false}
           layers={['arcs', 'arcLabels', CenterComponent]}
           onMouseEnter={(data) => {
