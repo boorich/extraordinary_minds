@@ -5,31 +5,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Database, Users, Bot } from 'lucide-react';
 
 interface ArchitectureElement {
-  id: 'server' | 'client' | 'resources' | 'ai';
+  id: 'client' | 'resources' | 'ai';
   title: string;
   description: string;
   icon: React.ReactNode;
   features: string[];
   color: {
-    fill: string;
-    stroke: string;
+    primary: string;
+    secondary: string;
   };
 }
 
 const architectureElements: ArchitectureElement[] = [
   {
-    id: 'client',
-    title: 'MCP Client',
-    description: 'Expert user interface and tools',
-    icon: <Users className="w-6 h-6" />,
+    id: 'ai',
+    title: 'AI Models',
+    description: 'LLMs and specialized models',
+    icon: <Bot className="w-6 h-6" />,
     features: [
-      'Interactive AI assistance',
-      'Resource access controls',
-      'Domain-specific tools'
+      'OpenRouter integration',
+      'Model selection',
+      'Context management'
     ],
     color: {
-      fill: 'from-purple-500/20 to-purple-600/20',
-      stroke: 'stroke-purple-400'
+      primary: 'fill-blue-600',
+      secondary: 'fill-blue-500'
     }
   },
   {
@@ -43,23 +43,23 @@ const architectureElements: ArchitectureElement[] = [
       'Compute resources'
     ],
     color: {
-      fill: 'from-emerald-500/20 to-emerald-600/20',
-      stroke: 'stroke-emerald-400'
+      primary: 'fill-teal-600',
+      secondary: 'fill-teal-500'
     }
   },
   {
-    id: 'ai',
-    title: 'AI Models',
-    description: 'LLMs and specialized models',
-    icon: <Bot className="w-6 h-6" />,
+    id: 'client',
+    title: 'MCP Client',
+    description: 'Expert user interface and tools',
+    icon: <Users className="w-6 h-6" />,
     features: [
-      'OpenRouter integration',
-      'Model selection',
-      'Context management'
+      'Interactive AI assistance',
+      'Resource access controls',
+      'Domain-specific tools'
     ],
     color: {
-      fill: 'from-blue-500/20 to-blue-600/20',
-      stroke: 'stroke-blue-400'
+      primary: 'fill-purple-600',
+      secondary: 'fill-purple-500'
     }
   }
 ];
@@ -67,70 +67,118 @@ const architectureElements: ArchitectureElement[] = [
 const MCPArchitecture = () => {
   const [activeElement, setActiveElement] = useState<string | null>(null);
 
-  // Framer motion variants for animations
-  const segmentVariants = {
-    initial: { scale: 1, opacity: 1 },
-    hover: { scale: 1.02, opacity: 1 },
-    inactive: { opacity: 0.5 }
+  // Helper function to create segment paths
+  const createSegmentPath = (startAngle: number, endAngle: number): string => {
+    const center = { x: 200, y: 200 };
+    const innerRadius = 80;
+    const outerRadius = 200;
+    
+    const innerStart = {
+      x: center.x + innerRadius * Math.cos(startAngle),
+      y: center.y + innerRadius * Math.sin(startAngle)
+    };
+    const innerEnd = {
+      x: center.x + innerRadius * Math.cos(endAngle),
+      y: center.y + innerRadius * Math.sin(endAngle)
+    };
+    const outerStart = {
+      x: center.x + outerRadius * Math.cos(startAngle),
+      y: center.y + outerRadius * Math.sin(startAngle)
+    };
+    const outerEnd = {
+      x: center.x + outerRadius * Math.cos(endAngle),
+      y: center.y + outerRadius * Math.sin(endAngle)
+    };
+
+    const largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
+
+    return `
+      M ${innerStart.x} ${innerStart.y}
+      A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 1 ${innerEnd.x} ${innerEnd.y}
+      L ${outerEnd.x} ${outerEnd.y}
+      A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 0 ${outerStart.x} ${outerStart.y}
+      Z
+    `;
   };
 
-  const infoVariants = {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 20 }
-  };
+  // Calculate segment angles
+  const segmentAngles = architectureElements.map((_, index) => ({
+    start: (index * 2 * Math.PI) / 3 - Math.PI / 2,
+    end: ((index + 1) * 2 * Math.PI) / 3 - Math.PI / 2
+  }));
 
   return (
     <div className="relative">
-      {/* Main visualization */}
       <motion.div className="w-full aspect-square max-w-2xl mx-auto">
         <svg viewBox="0 0 400 400" className="w-full h-full">
-          {/* Center Circle - MCP Server */}
-          <motion.circle
-            cx="200"
-            cy="200"
-            r="40"
-            className="fill-cyan-500/20 stroke-cyan-400"
-            strokeWidth="2"
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.05, 1], transition: { duration: 2, repeat: Infinity } }}
-          />
-          <text x="200" y="195" className="text-base fill-white text-center" textAnchor="middle">MCP</text>
-          <text x="200" y="215" className="text-base fill-white text-center" textAnchor="middle">Server</text>
-
-          {/* Segments for each element */}
-          {architectureElements.map((element, index) => {
-            const angle = (index * 120 - 90) * (Math.PI / 180);
-            const x = 200 + Math.cos(angle) * 120;
-            const y = 200 + Math.sin(angle) * 120;
-
-            return (
-              <g key={element.id}>
-                <motion.path
-                  d={`M 200 200 L ${x} ${y} A 120 120 0 0 1 ${x + 120} ${y + 120}`}
-                  className={`${element.color.fill} ${element.color.stroke}`}
-                  strokeWidth="2"
-                  variants={segmentVariants}
-                  initial="initial"
-                  animate={activeElement && activeElement !== element.id ? "inactive" : "initial"}
-                  whileHover="hover"
-                  onHoverStart={() => setActiveElement(element.id)}
-                  onHoverEnd={() => setActiveElement(null)}
-                />
-              </g>
-            );
-          })}
-
-          {/* Connection lines */}
+          {/* Outer dotted circle */}
           <circle
             cx="200"
             cy="200"
-            r="120"
+            r="205"
             fill="none"
-            className="stroke-white/20"
+            stroke="white"
             strokeWidth="1"
             strokeDasharray="4 4"
+            className="opacity-20"
           />
+
+          {/* Center circle - MCP Server */}
+          <circle
+            cx="200"
+            cy="200"
+            r="80"
+            className="fill-cyan-600"
+            strokeWidth="1"
+            stroke="white"
+          />
+          <circle
+            cx="200"
+            cy="200"
+            r="75"
+            className="fill-cyan-500"
+          />
+          
+          {/* Segments */}
+          {architectureElements.map((element, index) => (
+            <motion.path
+              key={element.id}
+              d={createSegmentPath(segmentAngles[index].start, segmentAngles[index].end)}
+              className={`${element.color.primary} opacity-90`}
+              initial={{ opacity: 0.9 }}
+              animate={{
+                opacity: activeElement && activeElement !== element.id ? 0.3 : 0.9
+              }}
+              whileHover={{ opacity: 1 }}
+              onHoverStart={() => setActiveElement(element.id)}
+              onHoverEnd={() => setActiveElement(null)}
+            />
+          ))}
+
+          {/* Labels */}
+          <text x="200" y="190" className="text-base fill-white text-center font-medium" textAnchor="middle">MCP</text>
+          <text x="200" y="210" className="text-base fill-white text-center" textAnchor="middle">Server</text>
+          
+          {/* Segment Labels */}
+          <text x="200" y="120" className="text-base fill-white text-center" textAnchor="middle">AI Models</text>
+          <text x="320" y="200" className="text-base fill-white text-center" textAnchor="middle">Resources</text>
+          <text x="200" y="280" className="text-base fill-white text-center" textAnchor="middle">Client</text>
+
+          {/* Connection points */}
+          {[0, 1, 2].map((_, index) => {
+            const angle = (index * 2 * Math.PI) / 3 - Math.PI / 2;
+            const x = 200 + 205 * Math.cos(angle);
+            const y = 200 + 205 * Math.sin(angle);
+            return (
+              <circle
+                key={index}
+                cx={x}
+                cy={y}
+                r="4"
+                className="fill-blue-500"
+              />
+            );
+          })}
         </svg>
       </motion.div>
 
@@ -139,10 +187,9 @@ const MCPArchitecture = () => {
         {activeElement && (
           <motion.div
             className="absolute top-0 right-0 w-80 bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/10"
-            variants={infoVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
           >
             {architectureElements.map(element => {
               if (element.id === activeElement) {
