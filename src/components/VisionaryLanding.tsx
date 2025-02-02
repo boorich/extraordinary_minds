@@ -36,25 +36,10 @@ const VisionaryLanding = () => {
               <MCPDialogue onMetricsUpdate={handleMetricsUpdate} />
             </div>
 
-            {/* Social Proof Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto mb-24">
-              {sections.credibility.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="bg-white/5 p-8 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl transform hover:scale-[1.02] transition-transform duration-300"
-                  role="presentation"
-                >
-                  <div className="text-cyan-300 mb-4 flex justify-center" aria-hidden="true">
-                    {item.icon}
-                  </div>
-                  <div className="text-3xl font-light text-white mb-2">{item.stat}</div>
-                  <div className="text-lg text-gray-300">{item.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Transformation and Pilot Program Sections */}
+            {/* Transformation Section with Diagram */}
             <TransformationSection />
+
+            {/* Pilot Program Section */}
             <div className="mt-24">
               <PilotProgramSection />
             </div>
