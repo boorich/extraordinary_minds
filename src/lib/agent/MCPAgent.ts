@@ -84,7 +84,7 @@ export class MCPAgent {
   private generateSystemPrompt(): string {
     return `${this.character.system}
 
-Your role is to engage in natural conversation about how T4E's MCP servers can enhance business operations. You should:
+Your role is to engage in natural conversation about how MCP servers can enhance business operations. You should:
 1. Keep responses brief and clear
 2. Ask relevant follow-up questions
 3. Note key points about their specific situation
@@ -118,11 +118,12 @@ ${this.character.style.all.join('\n')}`;
       
       if (round >= 5) {
         // Final round - synthesize and invite to meeting
-        prompt = `Based on our conversation, create a response that:
-1. Synthesizes 2-3 key points from their situation (${this.insights.map(i => i.topic).join(', ')})
-2. Shows how MCP servers address their specific needs
-3. Invites them to schedule a meeting with martin@mcp-servers.de
-4. Mentions this is one of only 5 pilot positions available
+        prompt = `Based on our conversation about ${this.insights.map(i => i.details).join(', ')}, create a response that:
+1. Specifically addresses how MCP servers can improve their quote turnaround time
+2. Explains how AI integration helps with language/cultural barriers
+3. Provides clear examples of efficiency gains
+4. Invites them to schedule a detailed planning session with martin@mcp-servers.de
+5. Mentions this is one of only 5 pilot positions available
 
 Keep it brief and natural. Show your understanding through specific references to their points.`;
       } else {
