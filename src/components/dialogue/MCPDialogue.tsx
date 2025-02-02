@@ -24,6 +24,15 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
   
   const containerRef = useRef<HTMLDivElement>(null);
   const conversationEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+  };
 
   const scrollToBottom = () => {
     conversationEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,11 +65,14 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
       setConversation(prev => [...prev, { 
         role: 'assistant', 
         content: response.systemResponse,
-        model: response.selectedModel // This will be added to the type definitions
+        model: response.selectedModel
       }]);
       
-      // Clear input field
+      // Clear input field and reset height
       setUserInput('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '44px';
+      }
       
     } catch (err) {
       setError('Connection error. Please try again.');
@@ -70,9 +82,17 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
     }
   }, [userInput, isTyping, agent, conversation.length]);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setUserInput(e.target.value);
+    adjustTextareaHeight();
   }, []);
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleUserInput(e);
+    }
+  }, [handleUserInput]);
 
   return (
     <div className="space-y-6" aria-label="MCP Dialogue Interface">
@@ -122,13 +142,15 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
         </div>
 
         <form onSubmit={handleUserInput} className="relative" aria-label="User Input Form">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={userInput}
             onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            rows={1}
             className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
-                    focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
-                    placeholder-slate-400"
+                     focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
+                     placeholder-slate-400 resize-none overflow-hidden min-h-[44px] max-h-[120px]"
             placeholder="Ask about MCP servers..."
             disabled={isTyping}
             aria-disabled={isTyping}
