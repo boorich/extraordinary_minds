@@ -129,23 +129,13 @@ const MCPArchitecture = () => {
             borderColor="white"
             startAngle={-90}
             endAngle={270}
-            arcLabelsComponent={({ datum, label, centerX, centerY }) => (
-              <g transform={`translate(${centerX},${centerY})`}>
-                <text
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  style={{
-                    fontSize: '1.25rem',
-                    fontWeight: 600,
-                    fill: 'white',
-                  }}
-                >
-                  {label}
-                </text>
-              </g>
-            )}
-            enableArcLinkLabels={false}
+            enableArcLabels={true}
             arcLabel={d => d.data.title}
+            arcLabelsRadiusOffset={0.5}
+            arcLabelsSkipAngle={0}
+            arcLabelsTextColor={{ theme: 'labels.text.fill' }}
+            layers={['arcs', 'arcLabels']}
+            enableArcLinkLabels={false}
             isInteractive={true}
             tooltip={() => null}
             onMouseEnter={(data) => {
