@@ -13,7 +13,6 @@ interface ArchitectureElement {
   color: string;
   value: number;
   details: string[];
-  angle: number; // Angle in radians for label positioning
 }
 
 const architectureElements: ArchitectureElement[] = [
@@ -22,57 +21,44 @@ const architectureElements: ArchitectureElement[] = [
     title: 'AI Models',
     description: 'Language and domain-specific models',
     icon: <Bot className="w-6 h-6" />,
-    color: '#2563eb55', // blue-600 with alpha
+    color: '#2563eb55',
     value: 1,
     details: [
       'Language Models (LLMs)',
       'Domain-specific AI',
       'Model orchestration'
-    ],
-    angle: -Math.PI / 6 // 30 degrees clockwise from top
+    ]
   },
   {
     id: 'resources',
     title: 'Company Resources',
     description: 'Enterprise data and systems',
     icon: <Database className="w-6 h-6" />,
-    color: '#0d948855', // teal-600 with alpha
+    color: '#0d948855',
     value: 1,
     details: [
       'Enterprise data',
       'Internal systems',
       'API integrations'
-    ],
-    angle: Math.PI / 2 // 90 degrees clockwise from top (bottom position)
+    ]
   },
   {
     id: 'clients',
     title: 'LLM Clients',
     description: 'Expert users and tools',
     icon: <Users className="w-6 h-6" />,
-    color: '#9333ea55', // purple-600 with alpha
+    color: '#9333ea55',
     value: 1,
     details: [
       'Domain Level Experts',
       'Security Controls',
       'Integration Tools'
-    ],
-    angle: -5 * Math.PI / 6 // 150 degrees counterclockwise from top
+    ]
   }
 ];
 
 const MCPArchitecture = () => {
   const [activeElement, setActiveElement] = useState<string | null>(null);
-
-  const getLabelPosition = (angle: number) => {
-    const radius = 120; // Distance from center
-    const centerX = 200;
-    const centerY = 200;
-    return {
-      x: centerX + radius * Math.cos(angle),
-      y: centerY + radius * Math.sin(angle)
-    };
-  };
 
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto p-16">
@@ -90,25 +76,7 @@ const MCPArchitecture = () => {
             className="opacity-20"
           />
 
-          {/* Segment Labels */}
-          {architectureElements.map((element) => {
-            const pos = getLabelPosition(element.angle);
-            return (
-              <text
-                key={element.id}
-                x={pos.x}
-                y={pos.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="white"
-                className="text-xl font-semibold"
-              >
-                {element.title}
-              </text>
-            );
-          })}
-
-          {/* Center MCP Server circle - interactive */}
+          {/* Center MCP Server circle */}
           <g
             onMouseEnter={() => setActiveElement('center')}
             onMouseLeave={() => setActiveElement(null)}
@@ -159,10 +127,28 @@ const MCPArchitecture = () => {
             colors={{ datum: 'data.color' }}
             borderWidth={2}
             borderColor="white"
-            enableArcLabels={false}
+            startAngle={-90}
+            endAngle={270}
+            arcLabel={d => d.data.title}
+            arcLabelsRadiusOffset={0.5}
+            arcLabelsTextColor="white"
+            arcLabelsSkipAngle={0}
+            arcLabelsComponent={({ datum, label, style }) => (
+              <text
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  fill: 'white',
+                }}
+                transform={style.transform}
+              >
+                {label}
+              </text>
+            )}
             enableArcLinkLabels={false}
             isInteractive={true}
-            startAngle={-90}
             tooltip={() => null}
             onMouseEnter={(data) => {
               setActiveElement(data.id as string);
