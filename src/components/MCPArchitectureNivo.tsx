@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ResponsivePie } from '@nivo/pie';
 import { Database, Users, Bot, Server } from 'lucide-react';
+import type { ArcLabelComponent } from '@nivo/pie';
 
 interface ArchitectureElement {
   id: 'clients' | 'resources' | 'ai';
@@ -73,6 +74,21 @@ const architectureElements: ArchitectureElement[] = [
   }
 ];
 
+// Type-safe label component
+const ArcLabel: ArcLabelComponent = ({ datum, label }) => (
+  <text
+    textAnchor="middle"
+    dominantBaseline="middle"
+    style={{
+      fontSize: '16px',
+      fontWeight: 500,
+      fill: 'white',
+    }}
+  >
+    {label}
+  </text>
+);
+
 const MCPArchitecture = () => {
   const [activeElement, setActiveElement] = useState<string | null>(null);
 
@@ -136,25 +152,7 @@ const MCPArchitecture = () => {
           arcLabelsTextColor="white"
           arcLabelsRadiusOffset={0.65}
           arcLabelsSkipAngle={0}
-          arcLabelsComponent={({ datum, label, style }) => {
-            // Convert the transform string to a safe value
-            const transformValue = String(style.transform);
-            return (
-              <g transform={transformValue}>
-                <text
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  style={{
-                    fontSize: '16px',
-                    fontWeight: 500,
-                    fill: 'white',
-                  }}
-                >
-                  {label}
-                </text>
-              </g>
-            );
-          }}
+          arcLabelsComponent={ArcLabel}
           enableArcLinkLabels={false}
           layers={['arcs', 'arcLabels', CenterComponent]}
           onMouseEnter={(data) => {
