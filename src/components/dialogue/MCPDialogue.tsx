@@ -2,14 +2,14 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DialogueMetrics } from '@/types/dialogue';
-import { NetworkData } from '@/types/network';
+import { NetworkUpdate } from '@/lib/network/parser';
 import { MCPAgent } from '@/lib/agent/MCPAgent';
 import { Character } from '@/lib/agent/types';
 import mcpConfig from '@/config/mcp.character.json';
 
 interface MCPDialogueProps {
   onMetricsUpdate?: (metrics: DialogueMetrics) => void;
-  onNetworkUpdate?: (networkData: NetworkData) => void;
+  onNetworkUpdate?: (update: NetworkUpdate) => void;
 }
 
 const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, onNetworkUpdate }) => {
