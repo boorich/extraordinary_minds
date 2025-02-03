@@ -133,7 +133,7 @@ const MCPArchitecture = () => {
             arcLabel={d => d.data.title}
             arcLabelsRadiusOffset={0.5}
             arcLabelsSkipAngle={0}
-            arcLabelsTextColor={{ theme: 'labels.text.fill' }}
+            arcLabelsTextColor="white"
             layers={['arcs', 'arcLabels']}
             enableArcLinkLabels={false}
             isInteractive={true}
