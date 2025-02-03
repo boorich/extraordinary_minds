@@ -11,7 +11,7 @@ export interface NetworkUpdate {
 
 export function extractNetworkUpdate(content: string): NetworkUpdate | null {
   try {
-    const netMatch = content.match(/<MCP_NET>(.*?)<\/MCP_NET>/s);
+    const netMatch = content.match(/<MCP_NET>([\s\S]*?)<\/MCP_NET>/);
     if (!netMatch) return null;
 
     return JSON.parse(netMatch[1]);
