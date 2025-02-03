@@ -31,7 +31,7 @@ const architectureElements: ArchitectureElement[] = [
   },
   {
     id: 'resources',
-    title: 'Company Resources',
+    title: 'Company\nResources',
     description: 'Enterprise data and systems',
     icon: <Database className="w-6 h-6" />,
     color: '#0d948855',
@@ -64,7 +64,7 @@ const MCPArchitecture = () => {
 
   return (
     <div ref={ref} className="relative w-full aspect-square max-w-3xl mx-auto p-16">
-      <div className="relative w-full h-full scale-[0.65]">
+      <div className="relative w-full h-full scale-[0.85]">
         <svg className="absolute inset-0 w-full h-full">
           {/* Outer dotted circle */}
           <circle
@@ -87,7 +87,7 @@ const MCPArchitecture = () => {
             <circle
               cx="50%"
               cy="50%"
-              r="20%"
+              r="15%"
               fill="#0891b255"
               stroke="white"
               strokeWidth="2"
@@ -98,7 +98,7 @@ const MCPArchitecture = () => {
             <circle
               cx="50%"
               cy="50%"
-              r="19%"
+              r="14%"
               fill="#06b6d455"
               className={`transition-opacity duration-200 ${
                 activeElement && activeElement !== 'center' ? 'opacity-30' : 'opacity-100'
@@ -133,7 +133,31 @@ const MCPArchitecture = () => {
             startAngle={-90}
             endAngle={270}
             enableArcLabels={true}
-            arcLabel={d => d.data.title}
+            arcLabel={d => d.data.title.split('\n')}
+arcLabelsComponent={({ datum, label, style }) => (
+              <g transform={style.transform}>
+                <text
+                  y={-8}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="white"
+                  className="text-base font-semibold"
+                >
+                  {label[0]}
+                </text>
+                {label.length > 1 && (
+                  <text
+                    y={8}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="white"
+                    className="text-base font-semibold"
+                  >
+                    {label[1]}
+                  </text>
+                )}
+              </g>
+            )}
             arcLabelsRadiusOffset={0.6}
             arcLinkLabelsSkipAngle={10}
             arcLinkLabelsTextColor="white"
