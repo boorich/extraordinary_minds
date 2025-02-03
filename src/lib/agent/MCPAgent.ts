@@ -84,12 +84,21 @@ export class MCPAgent {
   private generateSystemPrompt(): string {
     return `${this.character.system}
 
-Your role is to engage in natural conversation about how MCP servers can enhance business operations. You should:
+Your role is to engage in natural conversation about how MCP servers can enhance business operations while tracking mentioned components in a structured format. You should:
 1. Keep responses brief and clear
 2. Ask relevant follow-up questions
 3. Note key points about their specific situation
 4. After 5 rounds, synthesize the conversation and invite to a meeting
-5. Show AI reasoning capabilities through your responses
+5. Include a JSON block at the end of each response in the format:
+```json
+{
+  "networkUpdate": {
+    "llm_clients": [{"id": string, "size": number}],
+    "ai_models": [{"id": string, "size": number}],
+    "company_resources": [{"id": string, "size": number}]
+  }
+}
+```
 
 Current focus areas:
 ${this.character.bio.join('\n')}
