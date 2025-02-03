@@ -11,11 +11,10 @@ export interface NetworkUpdate {
 
 export function extractNetworkUpdate(content: string): NetworkUpdate | null {
   try {
-    const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
-    if (!jsonMatch) return null;
+    const netMatch = content.match(/<MCP_NET>(.*?)<\/MCP_NET>/s);
+    if (!netMatch) return null;
 
-    const parsed = JSON.parse(jsonMatch[1]);
-    return parsed.networkUpdate;
+    return JSON.parse(netMatch[1]);
   } catch (e) {
     console.error('Failed to parse network update:', e);
     return null;
