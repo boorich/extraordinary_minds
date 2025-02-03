@@ -79,41 +79,10 @@ const MCPArchitecture = () => {
           endAngle={270}
           enableArcLabels={true}
           arcLabel={d => d.data.title}
-          arcLabelsComponent={({ label, style }) => {
-            const lines = label.toString().split('\n');
-            const transform = typeof style.transform === 'string' ? style.transform : '';
-            return (
-              <g transform={transform}>
-                <text
-                  y={lines.length > 1 ? -8 : 0}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="white"
-                  className="text-xl font-semibold"
-                >
-                  {lines[0]}
-                </text>
-                {lines.length > 1 && (
-                  <text
-                    y={8}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="white"
-                    className="text-xl font-semibold"
-                  >
-                    {lines[1]}
-                  </text>
-                )}
-              </g>
-            );
-          }}
-          arcLabelsRadiusOffset={0.35}
-          arcLinkLabelsSkipAngle={10}
-          arcLinkLabelsTextColor="white"
-          arcLinkLabelsThickness={2}
-          arcLinkLabelsColor={{ from: 'color' }}
+          arcLabelsRadiusOffset={0.6}
           arcLabelsSkipAngle={0}
           arcLabelsTextColor="white"
+          arcLabelsTextClass="text-xl font-semibold"
           layers={[
             'arcs',
             'arcLabels',
