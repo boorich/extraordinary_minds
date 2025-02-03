@@ -132,15 +132,31 @@ ${this.character.style.all.join('\n')}`;
 4. Invites them to schedule a detailed planning session with martin@mcp-servers.de
 5. Mentions this is one of only 5 pilot positions available
 
-End your response with a network update in this format:
+      prompt += `
+
+Analyze the conversation and enhance our network graph:
+1. Core node stays "MCP Server"
+2. Branch across three categories:
+   - LLM Clients (tools, interfaces, user touchpoints)
+   - AI Models (ML capabilities, language models, specialized AI)
+   - Company Resources (systems, data, APIs being integrated)
+3. For each identified component:
+   - Place under appropriate category
+   - Set size (12-32) based on centrality 
+   - Set height (0-2) based on hierarchy:
+     0: Leaf nodes (specific instances)
+     1: Mid-level groupings
+     2: Core/category nodes
+
+Return network updates in the following format:
 <MCP_NET>
 {
-  "llm_clients": [{"id": string, "size": number}],
-  "ai_models": [{"id": string, "size": number}],
-  "company_resources": [{"id": string, "size": number}]
+  "llm_clients": [{ "id": string, "size": number, "height": number, "color": "rgb(232, 193, 160)" }],
+  "ai_models": [{ "id": string, "size": number, "height": number, "color": "rgb(232, 193, 160)" }],
+  "company_resources": [{ "id": string, "size": number, "height": number, "color": "rgb(232, 193, 160)" }]
 }
 </MCP_NET>
-
+`;
 Keep it brief and natural. Show your understanding through specific references to their points.`;
       } else {
         // Regular round - engage and steer conversation
