@@ -1,184 +1,89 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { ResponsivePie } from '@nivo/pie';
-import { Database, Users, Bot } from 'lucide-react';
+import { ResponsiveNetwork } from '@nivo/network';
 
-interface ArchitectureElement {
-  id: 'clients' | 'resources' | 'ai';
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  color: string;
-  value: number;
-  details: string[];
-}
-
-const architectureElements: ArchitectureElement[] = [
-  {
-    id: 'ai',
-    title: 'AI Models',
-    description: 'Language and domain-specific models',
-    icon: <Bot className="w-6 h-6" />,
-    color: '#2563eb55',
-    value: 1,
-    details: [
-      'Language Models (LLMs)',
-      'Domain-specific AI',
-      'Model orchestration'
-    ]
-  },
-  {
-    id: 'resources',
-    title: 'Company\nResources',
-    description: 'Enterprise data and systems',
-    icon: <Database className="w-6 h-6" />,
-    color: '#0d948855',
-    value: 1,
-    details: [
-      'Enterprise data',
-      'Internal systems',
-      'API integrations'
-    ]
-  },
-  {
-    id: 'clients',
-    title: 'LLM Clients',
-    description: 'Expert users and tools',
-    icon: <Users className="w-6 h-6" />,
-    color: '#9333ea55',
-    value: 1,
-    details: [
-      'Domain Level Experts',
-      'Security Controls',
-      'Integration Tools'
-    ]
-  }
-];
+const architectureData = {
+  nodes: [
+    // Core
+    { id: "MCP Server", height: 2, size: 32, color: "rgb(244, 117, 96)" },
+    
+    // Primary categories
+    { id: "AI Models", height: 1, size: 24, color: "rgb(97, 205, 187)" },
+    { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)" },
+    { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)" },
+    
+    // AI Models subtree
+    { id: "LLMs", height: 1, size: 20, color: "rgb(232, 193, 160)" },
+    { id: "Domain Specific Models", height: 1, size: 20, color: "rgb(232, 193, 160)" },
+    { id: "Scientific Models", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    { id: "Machine Data Models", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    
+    // Company Resources subtree
+    { id: "Directories", height: 1, size: 20, color: "rgb(232, 193, 160)" },
+    { id: "Databases", height: 1, size: 20, color: "rgb(232, 193, 160)" },
+    { id: "Functions", height: 1, size: 20, color: "rgb(232, 193, 160)" },
+    { id: "Applications", height: 1, size: 20, color: "rgb(232, 193, 160)" },
+    { id: "Files", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    { id: "Entries", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    { id: "API Routes", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    
+    // LLM Clients subtree
+    { id: "MCP Tools", height: 1, size: 20, color: "rgb(232, 193, 160)" },
+    { id: "Tool 1", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    { id: "Tool 2", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    { id: "Tool n", height: 0, size: 12, color: "rgb(232, 193, 160)" }
+  ],
+  links: [
+    // Core connections
+    { source: "MCP Server", target: "AI Models", distance: 80 },
+    { source: "MCP Server", target: "Company Resources", distance: 80 },
+    { source: "MCP Server", target: "LLM Clients", distance: 80 },
+    
+    // AI Models tree
+    { source: "AI Models", target: "LLMs", distance: 50 },
+    { source: "AI Models", target: "Domain Specific Models", distance: 50 },
+    { source: "Domain Specific Models", target: "Scientific Models", distance: 30 },
+    { source: "Domain Specific Models", target: "Machine Data Models", distance: 30 },
+    
+    // Company Resources tree
+    { source: "Company Resources", target: "Directories", distance: 50 },
+    { source: "Company Resources", target: "Databases", distance: 50 },
+    { source: "Company Resources", target: "Functions", distance: 50 },
+    { source: "Company Resources", target: "Applications", distance: 50 },
+    { source: "Directories", target: "Files", distance: 30 },
+    { source: "Databases", target: "Entries", distance: 30 },
+    { source: "Functions", target: "API Routes", distance: 30 },
+    
+    // LLM Clients tree
+    { source: "LLM Clients", target: "MCP Tools", distance: 50 },
+    { source: "MCP Tools", target: "Tool 1", distance: 30 },
+    { source: "MCP Tools", target: "Tool 2", distance: 30 },
+    { source: "MCP Tools", target: "Tool n", distance: 30 }
+  ]
+};
 
 const MCPArchitecture = () => {
-  const ref = React.useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.6 });
-  const [activeElement, setActiveElement] = useState<string | null>(null);
-
   return (
-    <div ref={ref} className="relative w-full aspect-square max-w-3xl mx-auto p-16">
-      <div className="relative w-full h-full scale-[0.85]">
-        <ResponsivePie
-          data={inView ? architectureElements : []}
-          margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-          innerRadius={0.5}
-          padAngle={0.7}
-          cornerRadius={3}
-          activeOuterRadiusOffset={8}
-          colors={{ datum: 'data.color' }}
-          borderWidth={2}
-          borderColor="white"
-          startAngle={-90}
-          endAngle={270}
-          enableArcLabels={true}
-          arcLabel={d => d.data.title}
-          arcLabelsRadiusOffset={0.4}
-          arcLabelsSkipAngle={10}
-          arcLabelsTextColor="white"
-          arcLabelsComponent={({ label, style }) => (
-            <g transform={style.transform}>
-              <text
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="text-xl font-semibold"
-                style={{ fill: 'white' }}
-              >
-                {label}
-              </text>
-            </g>
-          )}
-          layers={[
-            'arcs',
-            'arcLabels',
-            ({ centerX, centerY }) => (
-              <g transform={`translate(${centerX},${centerY})`}>
-                <circle r="15%" fill="#0891b255" />
-                <text
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="white"
-                  className="text-xl font-semibold"
-                >
-                  MCP Server
-                </text>
-              </g>
-            )
-          ]}
-          enableArcLinkLabels={false}
-          isInteractive={true}
-          tooltip={() => null}
-          onMouseEnter={(data) => {
-            setActiveElement(data.id as string);
-          }}
-          onMouseLeave={() => {
-            setActiveElement(null);
-          }}
-          animate={inView}
-        />
-      </div>
-
-      <AnimatePresence>
-        {activeElement && (
-          <motion.div
-            className="absolute top-0 right-0 w-80 bg-blue-600/20 backdrop-blur-sm rounded-lg p-4 border border-white/10 shadow-xl"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-          >
-            {activeElement === 'center' ? (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Database className="w-6 h-6 text-white" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">MCP Server</h3>
-                    <p className="text-sm text-gray-300">Central orchestration and processing</p>
-                  </div>
-                </div>
-                <ul className="space-y-2">
-                  {['Core processing', 'Resource orchestration', 'Security management'].map((detail, index) => (
-                    <li key={index} className="text-sm text-gray-300 flex items-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2" />
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              architectureElements.map(element => {
-                if (element.id === activeElement) {
-                  return (
-                    <div key={element.id} className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        {element.icon}
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{element.title}</h3>
-                          <p className="text-sm text-gray-300">{element.description}</p>
-                        </div>
-                      </div>
-                      <ul className="space-y-2">
-                        {element.details.map((detail, index) => (
-                          <li key={index} className="text-sm text-gray-300 flex items-center">
-                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mr-2" />
-                            {detail}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                }
-                return null;
-              })
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="relative w-full aspect-square max-w-3xl mx-auto">
+      <ResponsiveNetwork
+        data={architectureData}
+        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        linkDistance={e => e.distance}
+        centeringStrength={0.3}
+        repulsivity={6}
+        nodeSize={n => n.size}
+        activeNodeSize={n => 1.5 * n.size}
+        nodeColor={e => e.color}
+        nodeBorderWidth={1}
+        nodeBorderColor={{
+          from: 'color',
+          modifiers: [['darker', 0.8]]
+        }}
+        linkThickness={n => 2 + 2 * n.target.data.height}
+        linkBlendMode="multiply"
+        motionConfig="wobbly"
+      />
     </div>
   );
 };
