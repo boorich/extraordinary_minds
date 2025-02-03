@@ -7,6 +7,8 @@ import { MCPAgent } from '@/lib/agent/MCPAgent';
 import { Character } from '@/lib/agent/types';
 import mcpConfig from '@/config/mcp.character.json';
 
+import { extractNetworkUpdate } from '@/lib/network/parser';
+
 interface MCPDialogueProps {
   onMetricsUpdate?: (metrics: DialogueMetrics) => void;
   onNetworkUpdate?: (update: NetworkUpdate) => void;
@@ -70,9 +72,12 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
         model: response.selectedModel
       }]);
       
-      // Here we would update the network data based on the response
+      // Process network update from response
       if (onNetworkUpdate) {
-        // TODO: Process response and generate network update
+        const update = extractNetworkUpdate(response.systemResponse);
+        if (update) {
+          onNetworkUpdate(update);
+        }
       }
       
       // Clear input field and reset height
