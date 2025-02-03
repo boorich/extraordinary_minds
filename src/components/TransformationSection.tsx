@@ -2,11 +2,15 @@
 
 import React from 'react';
 import MCPArchitecture from './MCPArchitectureNivo';
+import { NetworkData } from '@/types/network';
 
-const TransformationSection = () => {
+interface TransformationSectionProps {
+  networkData?: NetworkData;
+}
+
+const TransformationSection = ({ networkData }: TransformationSectionProps) => {
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      {/* Text Section */}
       <div className="bg-white/5 p-6 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl">
         <p className="text-lg leading-relaxed text-gray-300">
           Every company has valuable expertise locked in their people, processes, and data. 
@@ -16,10 +20,8 @@ const TransformationSection = () => {
         </p>
       </div>
 
-      {/* Architecture Diagram */}
-      <MCPArchitecture />
+      <MCPArchitecture data={networkData} />
 
-      {/* Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
           <h3 className="text-lg text-cyan-300 mb-2">Seamless Integration</h3>
