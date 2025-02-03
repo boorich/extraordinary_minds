@@ -119,10 +119,10 @@ const MCPArchitecture = () => {
         <div className="absolute inset-0">
           <ResponsivePie
             data={architectureElements}
-            margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
-            innerRadius={0.45}
-            padAngle={0.5}
-            cornerRadius={4}
+            margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+            innerRadius={0.5}
+            padAngle={0.7}
+            cornerRadius={3}
             activeOuterRadiusOffset={8}
             colors={{ datum: 'data.color' }}
             borderWidth={2}
@@ -131,19 +131,13 @@ const MCPArchitecture = () => {
             endAngle={270}
             enableArcLabels={true}
             arcLabel={d => d.data.title}
-            arcLabelsRadiusOffset={0.5}
+            arcLabelsRadiusOffset={0.6}
+            arcLinkLabelsSkipAngle={10}
+            arcLinkLabelsTextColor="white"
+            arcLinkLabelsThickness={2}
+            arcLinkLabelsColor={{ from: 'color' }}
             arcLabelsSkipAngle={0}
             arcLabelsTextColor="white"
-            arcLabelsComponent={({ label }) => (
-              <text
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="text-lg font-semibold"
-                style={{ fill: 'white' }}
-              >
-                {label}
-              </text>
-            )}
             layers={['arcs', 'arcLabels']}
             enableArcLinkLabels={false}
             isInteractive={true}
