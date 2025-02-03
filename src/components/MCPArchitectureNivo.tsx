@@ -28,6 +28,18 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
       <ResponsiveNetwork
         data={data}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        theme={{
+          tooltip: {
+            container: {
+              background: '#1e293b',
+              color: '#e2e8f0',
+              fontSize: '14px',
+              borderRadius: '6px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              padding: '8px 12px',
+            }
+          }
+        }}
         linkDistance={e => e.distance}
         centeringStrength={0.3}
         repulsivity={6}
