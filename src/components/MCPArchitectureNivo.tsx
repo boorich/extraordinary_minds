@@ -121,8 +121,11 @@ const MCPArchitecture = () => {
         <div className="absolute inset-0">
           <ResponsivePie
             data={inView ? architectureElements : []}
-            animate={inView}
-            motionConfig="gentle"
+            motionConfig={{
+              mass: 1,
+              tension: 170,
+              friction: 26
+            }}
             margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
             innerRadius={0.5}
             padAngle={0.7}
