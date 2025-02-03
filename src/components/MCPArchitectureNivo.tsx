@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { ResponsivePie } from '@nivo/pie';
 import { Database, Users, Bot } from 'lucide-react';
 
@@ -58,10 +58,11 @@ const architectureElements: ArchitectureElement[] = [
 ];
 
 const MCPArchitecture = () => {
+  const [ref, inView] = useInView({ once: true, amount: 0.6 });
   const [activeElement, setActiveElement] = useState<string | null>(null);
 
   return (
-    <div className="relative w-full aspect-square max-w-3xl mx-auto p-16">
+    <div ref={ref} className="relative w-full aspect-square max-w-3xl mx-auto p-16">
       <div className="relative w-full h-full scale-[0.65]">
         <svg className="absolute inset-0 w-full h-full">
           {/* Outer dotted circle */}
@@ -118,7 +119,9 @@ const MCPArchitecture = () => {
         {/* Pie chart layer */}
         <div className="absolute inset-0">
           <ResponsivePie
-            data={architectureElements}
+            data={inView ? architectureElements : []}
+            animate={inView}
+            motionConfig="gentle"
             margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
             innerRadius={0.5}
             padAngle={0.7}
