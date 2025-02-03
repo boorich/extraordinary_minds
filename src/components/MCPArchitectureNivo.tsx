@@ -65,64 +65,10 @@ const MCPArchitecture = () => {
   return (
     <div ref={ref} className="relative w-full aspect-square max-w-3xl mx-auto p-16">
       <div className="relative w-full h-full scale-[0.85]">
-        <svg className="absolute inset-0 w-full h-full">
-          {/* Outer dotted circle */}
-          <circle
-            cx="50%"
-            cy="50%"
-            r="48%"
-            fill="none"
-            stroke="white"
-            strokeWidth="1"
-            strokeDasharray="4 4"
-            className="opacity-20"
-          />
-
-          {/* Center MCP Server circle */}
-          <g
-            onMouseEnter={() => setActiveElement('center')}
-            onMouseLeave={() => setActiveElement(null)}
-            style={{ cursor: 'pointer' }}
-          >
-            <circle
-              cx="50%"
-              cy="50%"
-              r="15%"
-              fill="#0891b255"
-              stroke="white"
-              strokeWidth="2"
-              className={`transition-opacity duration-200 ${
-                activeElement && activeElement !== 'center' ? 'opacity-30' : 'opacity-100'
-              }`}
-            />
-            <circle
-              cx="50%"
-              cy="50%"
-              r="14%"
-              fill="#06b6d455"
-              className={`transition-opacity duration-200 ${
-                activeElement && activeElement !== 'center' ? 'opacity-30' : 'opacity-100'
-              }`}
-            />
-            <text
-              x="50%"
-              y="50%"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="white"
-              className="text-xl font-semibold"
-            >
-              MCP Server
-            </text>
-          </g>
-        </svg>
-
-        {/* Pie chart layer */}
-        <div className="absolute inset-0">
           <ResponsivePie
             data={inView ? architectureElements : []}
 
-            margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
             innerRadius={0.5}
             padAngle={0.7}
             cornerRadius={3}
@@ -180,11 +126,18 @@ const MCPArchitecture = () => {
               setActiveElement(null);
             }}
             animate={inView}
-            motionConfig={{
-              mass: 1,
-              tension: 170,
-              friction: 26
-            }}
+            center={[
+              <text
+                key="center-title"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="white"
+                className="text-xl font-semibold"
+              >
+                MCP Server
+              </text>
+            ]}
+            centerColor="#0891b255"
           />
         </div>
 
