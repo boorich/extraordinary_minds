@@ -58,7 +58,8 @@ const architectureElements: ArchitectureElement[] = [
 ];
 
 const MCPArchitecture = () => {
-  const [ref, inView] = useInView({ once: true, amount: 0.6 });
+  const ref = React.useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
   const [activeElement, setActiveElement] = useState<string | null>(null);
 
   return (
