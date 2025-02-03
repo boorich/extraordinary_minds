@@ -134,6 +134,16 @@ const MCPArchitecture = () => {
             arcLabelsRadiusOffset={0.5}
             arcLabelsSkipAngle={0}
             arcLabelsTextColor="white"
+            arcLabelsComponent={({ label }) => (
+              <text
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="text-lg font-semibold"
+                style={{ fill: 'white' }}
+              >
+                {label}
+              </text>
+            )}
             layers={['arcs', 'arcLabels']}
             enableArcLinkLabels={false}
             isInteractive={true}
