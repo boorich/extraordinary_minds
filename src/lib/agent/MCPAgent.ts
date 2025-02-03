@@ -89,7 +89,14 @@ Your role is to engage in natural conversation about how MCP servers can enhance
 2. Ask relevant follow-up questions
 3. Note key points about their specific situation
 4. After 5 rounds, synthesize the conversation and invite to a meeting
-5. Add network updates in the format: <MCP_NET>{networkData}</MCP_NET>
+5. Always add structured updates in this exact format:
+<MCP_NET>
+{
+  "llm_clients": [{"id": string, "size": number}],
+  "ai_models": [{"id": string, "size": number}],
+  "company_resources": [{"id": string, "size": number}]
+}
+</MCP_NET>
 
 Current focus areas:
 ${this.character.bio.join('\n')}
