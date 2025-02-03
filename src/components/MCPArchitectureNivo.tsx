@@ -197,8 +197,6 @@ const MCPArchitecture = () => {
       </AnimatePresence>
     </div>
   );
-    </div>
-  );
 };
 
 export default MCPArchitecture;
