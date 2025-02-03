@@ -2,15 +2,17 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DialogueMetrics } from '@/types/dialogue';
+import { NetworkData } from '@/types/network';
 import { MCPAgent } from '@/lib/agent/MCPAgent';
 import { Character } from '@/lib/agent/types';
 import mcpConfig from '@/config/mcp.character.json';
 
 interface MCPDialogueProps {
   onMetricsUpdate?: (metrics: DialogueMetrics) => void;
+  onNetworkUpdate?: (networkData: NetworkData) => void;
 }
 
-const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate }) => {
+const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, onNetworkUpdate }) => {
   const agent = React.useMemo(() => new MCPAgent(mcpConfig as Character), []);
   
   const [conversation, setConversation] = useState<Array<{
@@ -68,6 +70,11 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
         model: response.selectedModel
       }]);
       
+      // Here we would update the network data based on the response
+      if (onNetworkUpdate) {
+        // TODO: Process response and generate network update
+      }
+      
       // Clear input field and reset height
       setUserInput('');
       if (textareaRef.current) {
@@ -80,7 +87,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate })
     } finally {
       setIsTyping(false);
     }
-  }, [userInput, isTyping, agent, conversation.length]);
+  }, [userInput, isTyping, agent, conversation.length, onNetworkUpdate]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setUserInput(e.target.value);
