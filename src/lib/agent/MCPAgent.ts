@@ -250,7 +250,9 @@ Keep it brief and conversational.`;
       };
     } catch (error) {
       console.error('Error generating response:', error);
+      console.log('Analyzing input:', input);
       const fallbackResponse = this.generateFallbackResponse(round);
+      console.log('Analyzing fallback response:', fallbackResponse);
       const networkUpdate = analyzeContent(input + ' ' + fallbackResponse);
       return {
         systemResponse: fallbackResponse,
