@@ -114,7 +114,23 @@ const MCPArchitecture = () => {
           arcLinkLabelsColor={{ from: 'color' }}
           arcLabelsSkipAngle={0}
           arcLabelsTextColor="white"
-          layers={['arcs', 'arcLabels']}
+          layers={[
+            'arcs',
+            'arcLabels',
+            ({ centerX, centerY }) => (
+              <g transform={`translate(${centerX},${centerY})`}>
+                <circle r="15%" fill="#0891b255" />
+                <text
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="white"
+                  className="text-xl font-semibold"
+                >
+                  MCP Server
+                </text>
+              </g>
+            )
+          ]}
           enableArcLinkLabels={false}
           isInteractive={true}
           tooltip={() => null}
@@ -125,18 +141,6 @@ const MCPArchitecture = () => {
             setActiveElement(null);
           }}
           animate={inView}
-          center={[
-            <text
-              key="center-title"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="white"
-              className="text-xl font-semibold"
-            >
-              MCP Server
-            </text>
-          ]}
-          centerColor="#0891b255"
         />
       </div>
 
