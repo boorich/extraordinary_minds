@@ -167,6 +167,8 @@ Keep it brief and conversational.`;
         max_tokens: 250
       });
 
+      console.log('OpenRouter response:', completion.choices[0].message.content);
+
       const response = completion.choices[0].message.content;
       this.conversationHistory.push({
         role: 'assistant',

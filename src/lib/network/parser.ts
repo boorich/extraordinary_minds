@@ -18,7 +18,8 @@ export function extractNetworkUpdate(content: string): NetworkUpdate | null {
   try {
     const netMatch = content.match(/<MCP_NET>\s*({[\s\S]*?})\s*<\/MCP_NET>/);
     if (!netMatch) {
-      console.log('No network update found in response:', content);
+      console.log('No network update found in response. Content:', content);
+      console.log('Regex match result:', netMatch);
       return null;
     }
 
