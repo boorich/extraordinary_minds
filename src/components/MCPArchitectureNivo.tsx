@@ -89,7 +89,7 @@ const MCPArchitecture = () => {
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fill="white"
-                  className="text-base font-semibold"
+                  className="text-xl font-semibold"
                 >
                   {lines[0]}
                 </text>
@@ -99,7 +99,7 @@ const MCPArchitecture = () => {
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="white"
-                    className="text-base font-semibold"
+                    className="text-xl font-semibold"
                   >
                     {lines[1]}
                   </text>
@@ -107,7 +107,7 @@ const MCPArchitecture = () => {
               </g>
             );
           }}
-          arcLabelsRadiusOffset={0.6}
+          arcLabelsRadiusOffset={0.35}
           arcLinkLabelsSkipAngle={10}
           arcLinkLabelsTextColor="white"
           arcLinkLabelsThickness={2}
