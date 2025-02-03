@@ -136,8 +136,9 @@ const MCPArchitecture = () => {
             arcLabel={d => d.data.title}
             arcLabelsComponent={({ label, style }) => {
               const lines = label.toString().split('\n');
+              const transform = typeof style.transform === 'string' ? style.transform : '';
               return (
-                <g style={{ transform: style.transform as string }}>
+                <g transform={transform}>
                   <text
                     y={lines.length > 1 ? -8 : 0}
                     textAnchor="middle"
