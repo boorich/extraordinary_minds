@@ -132,6 +132,15 @@ ${this.character.style.all.join('\n')}`;
 4. Invites them to schedule a detailed planning session with martin@mcp-servers.de
 5. Mentions this is one of only 5 pilot positions available
 
+End your response with a network update in this format:
+<MCP_NET>
+{
+  "llm_clients": [{"id": string, "size": number}],
+  "ai_models": [{"id": string, "size": number}],
+  "company_resources": [{"id": string, "size": number}]
+}
+</MCP_NET>
+
 Keep it brief and natural. Show your understanding through specific references to their points.`;
       } else {
         // Regular round - engage and steer conversation
@@ -140,6 +149,15 @@ Keep it brief and natural. Show your understanding through specific references t
 2. Asks ${CONVERSATION_FLOW[round].question}
 3. Relates to their industry/situation
 4. Keeps focus on MCP capabilities
+
+End your response with a network update in this format:
+<MCP_NET>
+{
+  "llm_clients": [{"id": string, "size": number}],
+  "ai_models": [{"id": string, "size": number}],
+  "company_resources": [{"id": string, "size": number}]
+}
+</MCP_NET>
 
 Keep it brief and conversational.`;
       }
@@ -154,6 +172,8 @@ Keep it brief and conversational.`;
       
       const selectedModel = selectModel(modelCriteria);
       
+      console.log('Sending prompt:', prompt);
+
       const completion = await this.openRouter.createCompletion({
         model: selectedModel,
         messages: [
