@@ -7,6 +7,8 @@ import { DialogueResponse, DialogueOption, DialogueState, ConversationDetails } 
 import { OpenRouterApi } from '../openrouter';
 import { selectModel, ModelSelectionCriteria } from './modelSelection';
 
+import { NetworkUpdate } from '../network/parser';
+
 const CONVERSATION_FLOW = [
   {
     round: 1,
@@ -34,6 +36,8 @@ const CONVERSATION_FLOW = [
     context: "Synthesis and meeting invitation"
   }
 ];
+
+import { analyzeContent } from '../network/analyzer';
 
 interface InsightPoint {
   topic: string;
@@ -121,6 +125,7 @@ ${this.character.style.all.join('\n')}`;
     nextTheme: string;
     dialogueState: DialogueState;
     selectedModel: string;
+    networkUpdate: NetworkUpdate;
   }> {
     // Store the input
     this.conversationHistory.push({
@@ -234,19 +239,25 @@ Keep it brief and conversational.`;
         content: response
       });
 
+      const networkUpdate = analyzeContent(response);
+
       return {
         systemResponse: response,
         nextTheme: this.determineNextTheme(round),
         dialogueState: this.calculateDialogueState(),
-        selectedModel: selectedModel
+        selectedModel: selectedModel,
+        networkUpdate
       };
     } catch (error) {
       console.error('Error generating response:', error);
+      const fallbackResponse = this.generateFallbackResponse(round);
+      const networkUpdate = analyzeContent(input + ' ' + fallbackResponse);
       return {
-        systemResponse: this.generateFallbackResponse(round),
+        systemResponse: fallbackResponse,
         nextTheme: 'error',
         dialogueState: this.calculateDialogueState(),
-        selectedModel: 'fallback'
+        selectedModel: 'fallback',
+        networkUpdate
       };
     }
   }
