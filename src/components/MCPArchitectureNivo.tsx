@@ -79,10 +79,19 @@ const MCPArchitecture = () => {
           endAngle={270}
           enableArcLabels={true}
           arcLabel={d => d.data.title}
-          arcLabelsRadiusOffset={0.6}
+          arcLabelsRadiusOffset={0.35}
           arcLabelsSkipAngle={0}
           arcLabelsTextColor="white"
-          arcLabelsTextClass="text-xl font-semibold"
+          arcLabelsComponent={({ label }) => (
+            <text
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="white"
+              className="text-xl font-semibold"
+            >
+              {label}
+            </text>
+          )}
           layers={[
             'arcs',
             'arcLabels',
