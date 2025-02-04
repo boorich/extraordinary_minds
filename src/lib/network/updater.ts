@@ -13,34 +13,38 @@ export function updateNetworkData(
   currentData: NetworkData,
   update: NetworkUpdate
 ): NetworkData {
-  const newNodes: NetworkNode[] = [
-    // Keep core node
-    currentData.nodes.find(n => n.id === "MCP Server")!,
-    
-    // Keep primary category nodes
-    ...currentData.nodes.filter(n => 
-      ["AI Models", "Company Resources", "LLM Clients"].includes(n.id)
-    )
-  ];
+  console.log('=== Network Update Start ===');
+  console.log('Current data:', currentData);
+  console.log('Update:', update);
 
-  const newLinks: NetworkLink[] = [
-    // Keep core connections
-    ...currentData.links.filter(l => 
-      l.source === "MCP Server" && 
-      ["AI Models", "Company Resources", "LLM Clients"].includes(l.target)
-    )
-  ];
+  // Start with existing nodes
+  const newNodes = [...currentData.nodes];
+  
+  // Helper to check if a node exists
+  const hasNode = (id: string) => newNodes.some(n => n.id === id);
+
+  // Start with existing links
+  const newLinks = [...currentData.links];
+  
+  // Helper to check if a link exists
+  const hasLink = (source: string, target: string) => 
+    newLinks.some(l => l.source === source && l.target === target);
 
   // Process updates for each category
   if (update.llm_clients) {
     update.llm_clients.forEach(client => {
-      newNodes.push({
+      if (!hasNode(client.id)) {
+        newNodes.push({
         id: client.id,
         size: childSize,
         height: 0,
         color: baseColors.secondary
       });
-      newLinks.push({
+      }
+      if (!hasLink("LLM Clients", client.id)) {
+        if (!hasLink("AI Models", model.id)) {
+        if (!hasLink("Company Resources", resource.id)) {
+        newLinks.push({
         source: "LLM Clients",
         target: client.id,
         distance: 50
@@ -50,7 +54,8 @@ export function updateNetworkData(
 
   if (update.ai_models) {
     update.ai_models.forEach(model => {
-      newNodes.push({
+      if (!hasNode(model.id)) {
+        newNodes.push({
         id: model.id,
         size: childSize,
         height: 0,
@@ -66,7 +71,8 @@ export function updateNetworkData(
 
   if (update.company_resources) {
     update.company_resources.forEach(resource => {
-      newNodes.push({
+      if (!hasNode(resource.id)) {
+        newNodes.push({
         id: resource.id,
         size: childSize,
         height: 0,
