@@ -74,7 +74,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
       // Process network update from the entire conversation context
       if (onNetworkUpdate) {
         const conversationText = userInput + ' ' + response.systemResponse;
-        const update = analyzeContent(conversationText);
+        const update = await analyzeContent(conversationText);
         console.log('Network update from analyzer:', update);
         if (update) {
           onNetworkUpdate(update);
