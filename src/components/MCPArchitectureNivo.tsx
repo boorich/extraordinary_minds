@@ -69,6 +69,9 @@ const defaultData: NetworkData = {
 };
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
+  console.log('=== MCPArchitecture Render ===');
+  console.log('Using data:', data);
+  console.log('Default data used:', data === defaultData);
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
       <ResponsiveNetwork

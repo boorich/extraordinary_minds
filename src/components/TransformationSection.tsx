@@ -9,6 +9,8 @@ interface TransformationSectionProps {
 }
 
 const TransformationSection = ({ networkData }: TransformationSectionProps) => {
+  console.log('=== TransformationSection Render ===');
+  console.log('Received networkData:', networkData);
   return (
     <div className="max-w-4xl mx-auto space-y-4">
       <div className="bg-white/5 p-6 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl">

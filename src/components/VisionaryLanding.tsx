@@ -31,8 +31,15 @@ const VisionaryLanding = () => {
   };
 
   const handleNetworkUpdate = useCallback((update: NetworkUpdate) => {
+    console.log('=== VisionaryLanding Network Update ===');
+    console.log('Received update:', update);
     if (update) {
-      setNetworkData(current => updateNetworkData(current, update));
+      setNetworkData(current => {
+        console.log('Current network data:', current);
+        const updated = updateNetworkData(current, update);
+        console.log('Updated network data:', updated);
+        return updated;
+      });
     }
   }, []);
 
