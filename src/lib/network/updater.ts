@@ -16,9 +16,23 @@ export function updateNetworkData(
   console.log('Current data:', currentData);
   console.log('Update:', update);
 
-  // Start with existing nodes and links
-  const newNodes = [...currentData.nodes];
-  const newLinks = [...currentData.links];
+  // Start with core and category nodes
+  const newNodes = [
+    // Core node
+    currentData.nodes.find(n => n.id === "MCP Server")!,
+    // Category nodes
+    ...currentData.nodes.filter(n => 
+      ["AI Models", "Company Resources", "LLM Clients"].includes(n.id)
+    )
+  ];
+  
+  // Start with core category links
+  const newLinks = [
+    ...currentData.links.filter(l => 
+      l.source === "MCP Server" && 
+      ["AI Models", "Company Resources", "LLM Clients"].includes(l.target)
+    )
+  ];
   
   // Helper to check if a node exists
   const hasNode = (id: string) => newNodes.some(n => n.id === id);
@@ -27,17 +41,23 @@ export function updateNetworkData(
   const hasLink = (source: string, target: string) => 
     newLinks.some(l => l.source === source && l.target === target);
 
-  // Helper to add a link with the correct distance based on node heights
-  const addLink = (source: string, target: string) => {
-    const sourceNode = newNodes.find(n => n.id === source);
-    const targetNode = newNodes.find(n => n.id === target);
-    
-    if (sourceNode && targetNode) {
-      // Shorter distances for parent-child relationships
-      const distance = Math.abs(sourceNode.height - targetNode.height) === 1 ? 30 : 50;
+  // Helper to add implementation
+  const addImplementation = (categoryId: string, impl: any) => {
+    if (!hasNode(impl.id)) {
+      newNodes.push({
+        id: impl.id,
+        size: impl.size,
+        height: impl.height,
+        color: impl.height === 0 ? baseColors.implementation : baseColors.secondary
+      });
       
-      if (!hasLink(source, target)) {
-        newLinks.push({ source, target, distance });
+      if (!hasLink(categoryId, impl.id)) {
+        // Add link from category to implementation
+        newLinks.push({
+          source: categoryId,
+          target: impl.id,
+          distance: 30 // Shorter distance for parent-child relationship
+        });
       }
     }
   };
@@ -45,60 +65,27 @@ export function updateNetworkData(
   // Process updates for each category
   if (update.llm_clients) {
     update.llm_clients.forEach(client => {
-      if (!hasNode(client.id)) {
-        newNodes.push({
-          id: client.id,
-          size: client.size,
-          height: client.height,
-          color: client.height === 0 ? baseColors.implementation : baseColors.secondary
-        });
-
-        // Connect to parent category if it's an implementation
-        if (client.height === 0) {
-          addLink("LLM Clients", client.id);
-        } else {
-          addLink("MCP Server", "LLM Clients");
-        }
+      const categoryId = client.height === 0 ? "LLM Clients" : "MCP Server";
+      if (client.height === 0) {
+        addImplementation("LLM Clients", client);
       }
     });
   }
 
   if (update.ai_models) {
     update.ai_models.forEach(model => {
-      if (!hasNode(model.id)) {
-        newNodes.push({
-          id: model.id,
-          size: model.size,
-          height: model.height,
-          color: model.height === 0 ? baseColors.implementation : baseColors.secondary
-        });
-
-        // Connect to parent category if it's an implementation
-        if (model.height === 0) {
-          addLink("AI Models", model.id);
-        } else {
-          addLink("MCP Server", "AI Models");
-        }
+      const categoryId = model.height === 0 ? "AI Models" : "MCP Server";
+      if (model.height === 0) {
+        addImplementation("AI Models", model);
       }
     });
   }
 
   if (update.company_resources) {
     update.company_resources.forEach(resource => {
-      if (!hasNode(resource.id)) {
-        newNodes.push({
-          id: resource.id,
-          size: resource.size,
-          height: resource.height,
-          color: resource.height === 0 ? baseColors.implementation : baseColors.secondary
-        });
-
-        // Connect to parent category if it's an implementation
-        if (resource.height === 0) {
-          addLink("Company Resources", resource.id);
-        } else {
-          addLink("MCP Server", "Company Resources");
-        }
+      const categoryId = resource.height === 0 ? "Company Resources" : "MCP Server";
+      if (resource.height === 0) {
+        addImplementation("Company Resources", resource);
       }
     });
   }
