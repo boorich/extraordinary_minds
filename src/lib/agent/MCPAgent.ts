@@ -239,7 +239,7 @@ Keep it brief and conversational.`;
         content: response
       });
 
-      const networkUpdate = analyzeContent(response);
+      const networkUpdate = await analyzeContent(response);
 
       return {
         systemResponse: response,
@@ -253,7 +253,7 @@ Keep it brief and conversational.`;
       console.log('Analyzing input:', input);
       const fallbackResponse = this.generateFallbackResponse(round);
       console.log('Analyzing fallback response:', fallbackResponse);
-      const networkUpdate = analyzeContent(input + ' ' + fallbackResponse);
+      const networkUpdate = await analyzeContent(input + ' ' + fallbackResponse);
       return {
         systemResponse: fallbackResponse,
         nextTheme: 'error',
