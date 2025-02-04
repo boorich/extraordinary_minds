@@ -35,20 +35,19 @@ export function updateNetworkData(
     update.llm_clients.forEach(client => {
       if (!hasNode(client.id)) {
         newNodes.push({
-        id: client.id,
-        size: childSize,
-        height: 0,
-        color: baseColors.secondary
-      });
+          id: client.id,
+          size: childSize,
+          height: 0,
+          color: baseColors.secondary
+        });
       }
       if (!hasLink("LLM Clients", client.id)) {
-        if (!hasLink("AI Models", model.id)) {
-        if (!hasLink("Company Resources", resource.id)) {
         newLinks.push({
-        source: "LLM Clients",
-        target: client.id,
-        distance: 50
-      });
+          source: "LLM Clients",
+          target: client.id,
+          distance: 50
+        });
+      }
     });
   }
 
@@ -56,16 +55,19 @@ export function updateNetworkData(
     update.ai_models.forEach(model => {
       if (!hasNode(model.id)) {
         newNodes.push({
-        id: model.id,
-        size: childSize,
-        height: 0,
-        color: baseColors.secondary
-      });
-      newLinks.push({
-        source: "AI Models",
-        target: model.id,
-        distance: 50
-      });
+          id: model.id,
+          size: childSize,
+          height: 0,
+          color: baseColors.secondary
+        });
+      }
+      if (!hasLink("AI Models", model.id)) {
+        newLinks.push({
+          source: "AI Models",
+          target: model.id,
+          distance: 50
+        });
+      }
     });
   }
 
@@ -73,19 +75,25 @@ export function updateNetworkData(
     update.company_resources.forEach(resource => {
       if (!hasNode(resource.id)) {
         newNodes.push({
-        id: resource.id,
-        size: childSize,
-        height: 0,
-        color: baseColors.secondary
-      });
-      newLinks.push({
-        source: "Company Resources",
-        target: resource.id,
-        distance: 50
-      });
+          id: resource.id,
+          size: childSize,
+          height: 0,
+          color: baseColors.secondary
+        });
+      }
+      if (!hasLink("Company Resources", resource.id)) {
+        newLinks.push({
+          source: "Company Resources",
+          target: resource.id,
+          distance: 50
+        });
+      }
     });
   }
 
+  console.log('=== Network Update End ===');
+  console.log('Updated data:', { nodes: newNodes, links: newLinks });
+  
   return {
     nodes: newNodes,
     links: newLinks
