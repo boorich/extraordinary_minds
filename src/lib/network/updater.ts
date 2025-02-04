@@ -16,23 +16,9 @@ export function updateNetworkData(
   console.log('Current data:', currentData);
   console.log('Update:', update);
 
-  // Start with core and category nodes
-  const newNodes = [
-    // Core node
-    currentData.nodes.find(n => n.id === "MCP Server")!,
-    // Category nodes
-    ...currentData.nodes.filter(n => 
-      ["AI Models", "Company Resources", "LLM Clients"].includes(n.id)
-    )
-  ];
-  
-  // Start with core category links
-  const newLinks = [
-    ...currentData.links.filter(l => 
-      l.source === "MCP Server" && 
-      ["AI Models", "Company Resources", "LLM Clients"].includes(l.target)
-    )
-  ];
+  // Deep clone current nodes and links
+  const newNodes = [...currentData.nodes];
+  const newLinks = [...currentData.links];
   
   // Helper to check if a node exists
   const hasNode = (id: string) => newNodes.some(n => n.id === id);
@@ -42,59 +28,65 @@ export function updateNetworkData(
     newLinks.some(l => l.source === source && l.target === target);
 
   // Helper to add implementation
-  const addImplementation = (categoryId: string, impl: any) => {
-    if (!hasNode(impl.id)) {
+  const addComponent = (categoryId: string, component: any) => {
+    if (!hasNode(component.id)) {
+      // Add new node
       newNodes.push({
-        id: impl.id,
-        size: impl.size,
-        height: impl.height,
-        color: impl.height === 0 ? baseColors.implementation : baseColors.secondary
+        id: component.id,
+        size: component.size,
+        height: component.height,
+        color: component.height === 0 ? baseColors.implementation : baseColors.secondary
       });
       
-      if (!hasLink(categoryId, impl.id)) {
-        // Add link from category to implementation
+      // Add link to parent category
+      if (!hasLink(categoryId, component.id)) {
         newLinks.push({
           source: categoryId,
-          target: impl.id,
-          distance: 30 // Shorter distance for parent-child relationship
+          target: component.id,
+          distance: component.height === 0 ? 30 : 50
         });
       }
     }
   };
 
   // Process updates for each category
-  if (update.llm_clients) {
+  if (update.llm_clients?.length) {
     update.llm_clients.forEach(client => {
-      const categoryId = client.height === 0 ? "LLM Clients" : "MCP Server";
-      if (client.height === 0) {
-        addImplementation("LLM Clients", client);
-      }
+      addComponent("LLM Clients", client);
     });
   }
 
-  if (update.ai_models) {
+  if (update.ai_models?.length) {
     update.ai_models.forEach(model => {
-      const categoryId = model.height === 0 ? "AI Models" : "MCP Server";
-      if (model.height === 0) {
-        addImplementation("AI Models", model);
-      }
+      addComponent("AI Models", model);
     });
   }
 
-  if (update.company_resources) {
+  if (update.company_resources?.length) {
     update.company_resources.forEach(resource => {
-      const categoryId = resource.height === 0 ? "Company Resources" : "MCP Server";
-      if (resource.height === 0) {
-        addImplementation("Company Resources", resource);
-      }
+      addComponent("Company Resources", resource);
     });
   }
+
+  // Clean up orphaned nodes and links
+  const validNodes = new Set([
+    "MCP Server", 
+    "AI Models", 
+    "Company Resources", 
+    "LLM Clients",
+    ...newNodes.map(n => n.id)
+  ]);
+
+  // Remove any links that reference non-existent nodes
+  const validLinks = newLinks.filter(link => 
+    validNodes.has(link.source) && validNodes.has(link.target)
+  );
 
   console.log('=== Network Update End ===');
-  console.log('Updated data:', { nodes: newNodes, links: newLinks });
+  console.log('Updated data:', { nodes: newNodes, links: validLinks });
   
   return {
     nodes: newNodes,
-    links: newLinks
+    links: validLinks
   };
 }
