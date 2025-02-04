@@ -6,8 +6,7 @@ import { NetworkUpdate } from '@/lib/network/parser';
 import { MCPAgent } from '@/lib/agent/MCPAgent';
 import { Character } from '@/lib/agent/types';
 import mcpConfig from '@/config/mcp.character.json';
-
-import { extractNetworkUpdate } from '@/lib/network/parser';
+import { analyzeContent } from '@/lib/network/analyzer';
 
 interface MCPDialogueProps {
   onMetricsUpdate?: (metrics: DialogueMetrics) => void;
@@ -72,9 +71,11 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
         model: response.selectedModel
       }]);
       
-      // Process network update from response
+      // Process network update from the entire conversation context
       if (onNetworkUpdate) {
-        const update = extractNetworkUpdate(response.systemResponse);
+        const conversationText = userInput + ' ' + response.systemResponse;
+        const update = analyzeContent(conversationText);
+        console.log('Network update from analyzer:', update);
         if (update) {
           onNetworkUpdate(update);
         }
