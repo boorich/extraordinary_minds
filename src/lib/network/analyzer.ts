@@ -1,29 +1,5 @@
 import { NetworkUpdate, NetworkUpdateComponent } from './parser';
-
-const PATTERNS = {
-  ai_models: {
-    patterns: [
-      { match: /translation|language|mandarin|chinese/i, id: "Translation AI", size: 24, height: 1 },
-      { match: /chat(gpt|bot)/i, id: "Chat Models", size: 20, height: 1 },
-      { match: /machine learning|ml|ai model/i, id: "ML Models", size: 20, height: 1 }
-    ]
-  },
-  company_resources: {
-    patterns: [
-      { match: /sap/i, id: "SAP System", size: 24, height: 1 },
-      { match: /database|data/i, id: "Enterprise Data", size: 20, height: 1 },
-      { match: /api|interface|integration/i, id: "APIs", size: 20, height: 1 },
-      { match: /sales engineer|quote/i, id: "Sales Tools", size: 20, height: 1 }
-    ]
-  },
-  llm_clients: {
-    patterns: [
-      { match: /tool|client|interface/i, id: "MCP Tools", size: 24, height: 1 },
-      { match: /browser|web/i, id: "Web Interface", size: 20, height: 1 },
-      { match: /mobile|app/i, id: "Mobile Client", size: 20, height: 1 }
-    ]
-  }
-};
+import { PATTERNS } from './patterns';
 
 export function analyzeContent(content: string): NetworkUpdate {
   console.log('=== Network Analysis Start ===');
@@ -35,30 +11,53 @@ export function analyzeContent(content: string): NetworkUpdate {
     llm_clients: []
   };
 
-  // For each category
-  Object.entries(PATTERNS).forEach(([category, { patterns }]) => {
-    console.log(`\nChecking ${category} patterns:`);
+  // For each major category (ai_models, company_resources, llm_clients)
+  Object.entries(PATTERNS).forEach(([categoryKey, categoryData]) => {
+    console.log(`\nChecking ${categoryKey} patterns:`);
     
-    // Check each pattern in the category
-    patterns.forEach(pattern => {
-      const matches = content.match(pattern.match);
-      console.log(`- Pattern ${pattern.match}:`, matches);
-      
-      if (matches) {
-        // Add component if not already present
-        const component: NetworkUpdateComponent = {
-          id: pattern.id,
-          size: pattern.size,
-          height: pattern.height,
+    // For each category definition (Translation AI, Chat Models, etc)
+    categoryData.categories.forEach(category => {
+      // Check if any of the category patterns match
+      const categoryMatches = category.patterns.some(pattern => {
+        const matches = content.match(pattern);
+        console.log(`- Pattern ${pattern}:`, matches);
+        return matches;
+      });
+
+      if (categoryMatches) {
+        // Add the category component if not already present
+        const categoryComponent: NetworkUpdateComponent = {
+          id: category.id,
+          size: category.size,
+          height: category.height,
           color: "rgb(232, 193, 160)"
         };
         
-        const categoryArray = result[category as keyof NetworkUpdate] || [];
-        if (!categoryArray.some(existing => existing.id === component.id)) {
-          categoryArray.push(component);
-          console.log(`  Added ${component.id} to ${category}`);
+        const categoryArray = result[categoryKey as keyof NetworkUpdate] || [];
+        if (!categoryArray.some(existing => existing.id === categoryComponent.id)) {
+          categoryArray.push(categoryComponent);
+          console.log(`  Added ${categoryComponent.id} to ${categoryKey}`);
         }
-        result[category as keyof NetworkUpdate] = categoryArray;
+        
+        // Check for implementations
+        category.implementations.forEach(impl => {
+          const implMatches = content.match(impl.match);
+          if (implMatches) {
+            const implComponent: NetworkUpdateComponent = {
+              id: impl.id,
+              size: impl.size,
+              height: impl.height,
+              color: "rgb(232, 193, 160)"
+            };
+            
+            if (!categoryArray.some(existing => existing.id === implComponent.id)) {
+              categoryArray.push(implComponent);
+              console.log(`  Added implementation ${implComponent.id} to ${categoryKey}`);
+            }
+          }
+        });
+
+        result[categoryKey as keyof NetworkUpdate] = categoryArray;
       }
     });
   });

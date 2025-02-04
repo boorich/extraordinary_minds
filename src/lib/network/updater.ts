@@ -1,12 +1,11 @@
 import { NetworkData, NetworkNode, NetworkLink } from '@/types/network';
 import { NetworkUpdate } from './parser';
 
-const baseSize = 24;
-const childSize = 16;
 const baseColors = {
   core: "rgb(244, 117, 96)",
   primary: "rgb(97, 205, 187)",
-  secondary: "rgb(232, 193, 160)"
+  secondary: "rgb(232, 193, 160)",
+  implementation: "rgb(200, 170, 140)"
 };
 
 export function updateNetworkData(
@@ -17,18 +16,31 @@ export function updateNetworkData(
   console.log('Current data:', currentData);
   console.log('Update:', update);
 
-  // Start with existing nodes
+  // Start with existing nodes and links
   const newNodes = [...currentData.nodes];
+  const newLinks = [...currentData.links];
   
   // Helper to check if a node exists
   const hasNode = (id: string) => newNodes.some(n => n.id === id);
-
-  // Start with existing links
-  const newLinks = [...currentData.links];
   
   // Helper to check if a link exists
   const hasLink = (source: string, target: string) => 
     newLinks.some(l => l.source === source && l.target === target);
+
+  // Helper to add a link with the correct distance based on node heights
+  const addLink = (source: string, target: string) => {
+    const sourceNode = newNodes.find(n => n.id === source);
+    const targetNode = newNodes.find(n => n.id === target);
+    
+    if (sourceNode && targetNode) {
+      // Shorter distances for parent-child relationships
+      const distance = Math.abs(sourceNode.height - targetNode.height) === 1 ? 30 : 50;
+      
+      if (!hasLink(source, target)) {
+        newLinks.push({ source, target, distance });
+      }
+    }
+  };
 
   // Process updates for each category
   if (update.llm_clients) {
@@ -36,17 +48,17 @@ export function updateNetworkData(
       if (!hasNode(client.id)) {
         newNodes.push({
           id: client.id,
-          size: childSize,
-          height: 0,
-          color: baseColors.secondary
+          size: client.size,
+          height: client.height,
+          color: client.height === 0 ? baseColors.implementation : baseColors.secondary
         });
-      }
-      if (!hasLink("LLM Clients", client.id)) {
-        newLinks.push({
-          source: "LLM Clients",
-          target: client.id,
-          distance: 50
-        });
+
+        // Connect to parent category if it's an implementation
+        if (client.height === 0) {
+          addLink("LLM Clients", client.id);
+        } else {
+          addLink("MCP Server", "LLM Clients");
+        }
       }
     });
   }
@@ -56,17 +68,17 @@ export function updateNetworkData(
       if (!hasNode(model.id)) {
         newNodes.push({
           id: model.id,
-          size: childSize,
-          height: 0,
-          color: baseColors.secondary
+          size: model.size,
+          height: model.height,
+          color: model.height === 0 ? baseColors.implementation : baseColors.secondary
         });
-      }
-      if (!hasLink("AI Models", model.id)) {
-        newLinks.push({
-          source: "AI Models",
-          target: model.id,
-          distance: 50
-        });
+
+        // Connect to parent category if it's an implementation
+        if (model.height === 0) {
+          addLink("AI Models", model.id);
+        } else {
+          addLink("MCP Server", "AI Models");
+        }
       }
     });
   }
@@ -76,17 +88,17 @@ export function updateNetworkData(
       if (!hasNode(resource.id)) {
         newNodes.push({
           id: resource.id,
-          size: childSize,
-          height: 0,
-          color: baseColors.secondary
+          size: resource.size,
+          height: resource.height,
+          color: resource.height === 0 ? baseColors.implementation : baseColors.secondary
         });
-      }
-      if (!hasLink("Company Resources", resource.id)) {
-        newLinks.push({
-          source: "Company Resources",
-          target: resource.id,
-          distance: 50
-        });
+
+        // Connect to parent category if it's an implementation
+        if (resource.height === 0) {
+          addLink("Company Resources", resource.id);
+        } else {
+          addLink("MCP Server", "Company Resources");
+        }
       }
     });
   }
