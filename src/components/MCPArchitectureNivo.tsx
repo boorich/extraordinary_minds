@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
-import { NetworkData, NetworkNode } from '@/types/network';
+import { NetworkData } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
 import * as Icons from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
@@ -59,34 +59,6 @@ const defaultData: NetworkData = {
   ]
 };
 
-const NodeTooltip = ({ node }: { node: NetworkNode }) => {
-  if (!node.metadata) return null;
-
-  const Icon = node.metadata.icon ? Icons[node.metadata.icon as keyof typeof Icons] as LucideIcon : null;
-
-  return (
-    <div className="bg-blue-700/30 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/10 text-white">
-      <div className="space-y-3">
-        <div className="flex items-start gap-4">
-          {Icon && <Icon className="w-8 h-8 text-white shrink-0 mt-1" />}
-          <div className="space-y-1">
-            <h3 className="text-2xl font-semibold text-white tracking-tight">{node.metadata.title}</h3>
-            <p className="text-base text-blue-100/90">{node.metadata.description}</p>
-          </div>
-        </div>
-        <ul className="space-y-2 pt-2">
-          {node.metadata.details.map((detail, index) => (
-            <li key={index} className="text-base text-blue-100/90 flex items-center gap-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0" />
-              {detail}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-};
-
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
@@ -108,7 +80,21 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
-        tooltip={({ node }) => <NodeTooltip node={node.data} />}
+        theme={{
+          tooltip: {
+            container: {
+              background: 'rgba(59, 130, 246, 0.3)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+              padding: '24px',
+              minWidth: '320px',
+              color: 'white',
+              fontSize: '16px',
+            },
+          }
+        }}
       />
     </div>
   );
