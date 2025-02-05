@@ -59,6 +59,31 @@ const defaultData: NetworkData = {
   ]
 };
 
+const CustomTooltip = ({ node }: any) => {
+  if (!node.data?.metadata) return null;
+  const Icon = node.data.metadata.icon ? Icons[node.data.metadata.icon as keyof typeof Icons] as LucideIcon : null;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start gap-4">
+        {Icon && <Icon className="w-8 h-8 text-white shrink-0 mt-1" />}
+        <div className="space-y-1">
+          <h3 className="text-2xl font-semibold tracking-tight">{node.data.metadata.title}</h3>
+          <p className="text-blue-100/90">{node.data.metadata.description}</p>
+        </div>
+      </div>
+      <ul className="space-y-2 pt-1">
+        {node.data.metadata.details.map((detail: string, index: number) => (
+          <li key={index} className="text-blue-100/90 flex items-center gap-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0" />
+            {detail}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
@@ -85,16 +110,18 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
             container: {
               background: 'rgba(59, 130, 246, 0.3)',
               backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
               borderRadius: '16px',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
               padding: '24px',
               minWidth: '320px',
-              color: 'white',
               fontSize: '16px',
-            },
+              color: '#ffffff'
+            }
           }
         }}
+        tooltip={CustomTooltip}
       />
     </div>
   );
