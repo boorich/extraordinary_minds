@@ -4,8 +4,8 @@ import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
 import { NetworkData, NetworkNode } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
-import { LucideIcon } from 'lucide-react';
 import * as Icons from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MCPArchitectureProps {
@@ -75,11 +75,12 @@ const NodeTooltip = ({ node, x, y }: TooltipProps) => {
     <motion.div
       className="fixed pointer-events-none z-50"
       style={{ left: x, top: y }}
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
     >
-      <div className="bg-blue-700/30 backdrop-blur-xl rounded-2xl p-6 shadow-2xl -translate-x-1/2 -translate-y-full mb-2 min-w-[320px] border border-white/10">
+      <div className="bg-blue-700/30 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/10 text-white -translate-x-1/2 -translate-y-full mb-2 min-w-[320px]">
         <div className="space-y-3">
           <div className="flex items-start gap-4">
             {Icon && <Icon className="w-8 h-8 text-white shrink-0 mt-1" />}
@@ -104,7 +105,7 @@ const NodeTooltip = ({ node, x, y }: TooltipProps) => {
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   const [tooltip, setTooltip] = React.useState<TooltipProps | null>(null);
-
+  
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
       <ResponsiveNetwork
@@ -125,7 +126,6 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
-
         onMouseMove={(node, event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
           setTooltip({
