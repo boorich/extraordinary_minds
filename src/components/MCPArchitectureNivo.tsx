@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
-import { NetworkData } from '@/types/network';
+import { NetworkData, NetworkNode } from '@/types/network';
+import { nodePatterns } from '@/lib/patterns';
+import * as Icons from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MCPArchitectureProps {
   data?: NetworkData;
@@ -11,33 +14,27 @@ interface MCPArchitectureProps {
 const defaultData: NetworkData = {
   nodes: [
     // Core
-    { id: "MCP Server", height: 2, size: 32, color: "rgb(244, 117, 96)" },
+    { id: "MCP Server", height: 2, size: 32, color: "rgb(244, 117, 96)", metadata: nodePatterns["MCP Server"] },
     
     // Primary categories
-    { id: "AI Models", height: 1, size: 24, color: "rgb(97, 205, 187)" },
-    { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)" },
-    { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)" },
+    { id: "AI Models", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: nodePatterns["AI Models"] },
+    { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: nodePatterns["Company Resources"] },
+    { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: nodePatterns["LLM Clients"] },
     
     // AI Models subtree
-    { id: "LLMs", height: 1, size: 20, color: "rgb(232, 193, 160)" },
-    { id: "Domain Specific Models", height: 1, size: 20, color: "rgb(232, 193, 160)" },
-    { id: "Scientific Models", height: 0, size: 12, color: "rgb(232, 193, 160)" },
-    { id: "Machine Data Models", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    { id: "LLMs", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["LLMs"] },
+    { id: "Domain Specific Models", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Domain Specific Models"] },
+    { id: "Scientific Models", height: 0, size: 12, color: "rgb(232, 193, 160)", metadata: nodePatterns["Scientific Models"] },
+    { id: "Machine Data Models", height: 0, size: 12, color: "rgb(232, 193, 160)", metadata: nodePatterns["Machine Data Models"] },
     
     // Company Resources subtree
-    { id: "Directories", height: 1, size: 20, color: "rgb(232, 193, 160)" },
-    { id: "Databases", height: 1, size: 20, color: "rgb(232, 193, 160)" },
-    { id: "Functions", height: 1, size: 20, color: "rgb(232, 193, 160)" },
-    { id: "Applications", height: 1, size: 20, color: "rgb(232, 193, 160)" },
-    { id: "Files", height: 0, size: 12, color: "rgb(232, 193, 160)" },
-    { id: "Entries", height: 0, size: 12, color: "rgb(232, 193, 160)" },
-    { id: "API Routes", height: 0, size: 12, color: "rgb(232, 193, 160)" },
+    { id: "Directories", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Directories"] },
+    { id: "Databases", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Databases"] },
+    { id: "Functions", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Functions"] },
+    { id: "Applications", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Applications"] },
     
     // LLM Clients subtree
-    { id: "MCP Tools", height: 1, size: 20, color: "rgb(232, 193, 160)" },
-    { id: "Tool 1", height: 0, size: 12, color: "rgb(232, 193, 160)" },
-    { id: "Tool 2", height: 0, size: 12, color: "rgb(232, 193, 160)" },
-    { id: "Tool n", height: 0, size: 12, color: "rgb(232, 193, 160)" }
+    { id: "MCP Tools", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["MCP Tools"] },
   ],
   links: [
     // Core connections
@@ -56,45 +53,68 @@ const defaultData: NetworkData = {
     { source: "Company Resources", target: "Databases", distance: 50 },
     { source: "Company Resources", target: "Functions", distance: 50 },
     { source: "Company Resources", target: "Applications", distance: 50 },
-    { source: "Directories", target: "Files", distance: 30 },
-    { source: "Databases", target: "Entries", distance: 30 },
-    { source: "Functions", target: "API Routes", distance: 30 },
     
     // LLM Clients tree
     { source: "LLM Clients", target: "MCP Tools", distance: 50 },
-    { source: "MCP Tools", target: "Tool 1", distance: 30 },
-    { source: "MCP Tools", target: "Tool 2", distance: 30 },
-    { source: "MCP Tools", target: "Tool n", distance: 30 }
   ]
 };
 
+interface TooltipProps {
+  node: NetworkNode;
+  x: number;
+  y: number;
+}
+
+const NodeTooltip = ({ node, x, y }: TooltipProps) => {
+  if (!node.metadata) return null;
+
+  const Icon = node.metadata.icon ? Icons[node.metadata.icon as keyof typeof Icons] : null;
+
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
+      style={{ left: x, top: y }}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="bg-blue-950/90 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-blue-500/20 text-white -translate-x-1/2 -translate-y-full mb-2">
+        <div className="space-y-4 max-w-xs">
+          <div className="flex items-center gap-3">
+            {Icon && <Icon className="w-6 h-6 text-blue-400" />}
+            <div>
+              <h3 className="text-lg font-semibold text-white">{node.metadata.title}</h3>
+              <p className="text-sm text-blue-200">{node.metadata.description}</p>
+            </div>
+          </div>
+          <ul className="space-y-2">
+            {node.metadata.details.map((detail, index) => (
+              <li key={index} className="text-sm text-blue-200 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                {detail}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
-  console.log('=== MCPArchitecture Render ===');
-  console.log('Using data:', data);
-  console.log('Default data used:', data === defaultData);
+  const [tooltip, setTooltip] = React.useState<TooltipProps | null>(null);
+
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
       <ResponsiveNetwork
         data={data}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        theme={{
-          tooltip: {
-            container: {
-              background: '#1e293b',
-              color: '#e2e8f0',
-              fontSize: '14px',
-              borderRadius: '6px',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-              padding: '8px 12px',
-            }
-          }
-        }}
         linkDistance={e => e.distance}
         centeringStrength={0.3}
         repulsivity={6}
         nodeSize={n => n.size}
         activeNodeSize={n => 1.5 * n.size}
-        nodeColor={e => e.color}
+        nodeColor={n => n.color}
         nodeBorderWidth={1}
         nodeBorderColor={{
           from: 'color',
@@ -102,8 +122,21 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         }}
         linkThickness={n => 2 + 2 * n.target.data.height}
         linkBlendMode="multiply"
-        motionConfig="wobbly"
+        motionConfig="gentle"
+        isInteractive={true}
+        onMouseMove={(node, event) => {
+          const bounds = event.currentTarget.getBoundingClientRect();
+          setTooltip({
+            node: node.data,
+            x: event.clientX - bounds.left,
+            y: event.clientY - bounds.top,
+          });
+        }}
+        onMouseLeave={() => setTooltip(null)}
       />
+      <AnimatePresence>
+        {tooltip && <NodeTooltip {...tooltip} />}
+      </AnimatePresence>
     </div>
   );
 };
