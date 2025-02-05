@@ -6,7 +6,6 @@ import { NetworkData, NetworkNode } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
 import * as Icons from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface MCPArchitectureProps {
   data?: NetworkData;
@@ -60,72 +59,37 @@ const defaultData: NetworkData = {
   ]
 };
 
-interface TooltipProps {
-  node: NetworkNode;
-  x: number;
-  y: number;
-}
-
-const NodeTooltip = ({ node, x, y }: TooltipProps) => {
+const NodeTooltip = ({ node }: { node: NetworkNode }) => {
   if (!node.metadata) return null;
 
   const Icon = node.metadata.icon ? Icons[node.metadata.icon as keyof typeof Icons] as LucideIcon : null;
 
   return (
-    <motion.div
-      className="absolute pointer-events-none"
-      style={{ 
-        left: x, 
-        top: y,
-      }}
-      initial={{ opacity: 0, scale: 0.95, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: 10 }}
-      transition={{ duration: 0.15, ease: "easeOut" }}
-    >
-      <div className="bg-blue-700/30 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/10 text-white -translate-x-1/2 -translate-y-full mb-2 min-w-[320px]">
-        <div className="space-y-3">
-          <div className="flex items-start gap-4">
-            {Icon && <Icon className="w-8 h-8 text-white shrink-0 mt-1" />}
-            <div className="space-y-1">
-              <h3 className="text-2xl font-semibold text-white tracking-tight">{node.metadata.title}</h3>
-              <p className="text-base text-blue-100/90">{node.metadata.description}</p>
-            </div>
+    <div className="bg-blue-700/30 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/10 text-white">
+      <div className="space-y-3">
+        <div className="flex items-start gap-4">
+          {Icon && <Icon className="w-8 h-8 text-white shrink-0 mt-1" />}
+          <div className="space-y-1">
+            <h3 className="text-2xl font-semibold text-white tracking-tight">{node.metadata.title}</h3>
+            <p className="text-base text-blue-100/90">{node.metadata.description}</p>
           </div>
-          <ul className="space-y-2 pt-2">
-            {node.metadata.details.map((detail, index) => (
-              <li key={index} className="text-base text-blue-100/90 flex items-center gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0" />
-                {detail}
-              </li>
-            ))}
-          </ul>
         </div>
+        <ul className="space-y-2 pt-2">
+          {node.metadata.details.map((detail, index) => (
+            <li key={index} className="text-base text-blue-100/90 flex items-center gap-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0" />
+              {detail}
+            </li>
+          ))}
+        </ul>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [tooltip, setTooltip] = React.useState<TooltipProps | null>(null);
-
-  const handleMouseMove = React.useCallback((node: any, event: MouseEvent) => {
-    if (!containerRef.current) return;
-    
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    setTooltip({
-      node: node.data,
-      x,
-      y
-    });
-  }, []);
-  
   return (
-    <div ref={containerRef} className="relative w-full aspect-square max-w-3xl mx-auto">
+    <div className="relative w-full aspect-square max-w-3xl mx-auto">
       <ResponsiveNetwork
         data={data}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
@@ -144,12 +108,8 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setTooltip(null)}
+        tooltip={({ node }) => <NodeTooltip node={node.data} />}
       />
-      <AnimatePresence>
-        {tooltip && <NodeTooltip {...tooltip} />}
-      </AnimatePresence>
     </div>
   );
 };
