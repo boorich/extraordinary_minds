@@ -4,44 +4,10 @@ import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
 import { NetworkData } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
-import { Info } from 'lucide-react';
 
 interface MCPArchitectureProps {
   data?: NetworkData;
 }
-
-const NetworkTooltip = ({ node }: any) => {
-  const metadata = node.metadata || {};
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start gap-3">
-        {metadata.icon && <Info className="w-5 h-5 mt-1" />}
-        <div>
-          <h3 className="text-lg font-semibold">{metadata.title || node.id}</h3>
-          {metadata.description && (
-            <p className="text-sm opacity-80">{metadata.description}</p>
-          )}
-        </div>
-      </div>
-
-      {metadata.details && Object.keys(metadata.details).length > 0 && (
-        <div className="border-t border-white/10 pt-3 mt-3">
-          {Object.entries(metadata.details).map(([key, value]) => (
-            <div key={key} className="flex justify-between text-sm">
-              <span className="opacity-70">{key}</span>
-              <span>{value}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="text-xs opacity-50">
-        {metadata.type && <span>Type: {metadata.type} • </span>}
-        Level: {node.height} • Size: {node.size}
-      </div>
-    </div>
-  );
-};
 
 const defaultData: NetworkData = {
   nodes: [
@@ -127,7 +93,6 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
             }
           }
         }}
-        tooltip={NetworkTooltip}
       />
     </div>
   );
