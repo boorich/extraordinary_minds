@@ -73,8 +73,11 @@ const NodeTooltip = ({ node, x, y }: TooltipProps) => {
 
   return (
     <motion.div
-      className="fixed pointer-events-none z-50"
-      style={{ left: x, top: y }}
+      className="absolute pointer-events-none"
+      style={{ 
+        left: x, 
+        top: y,
+      }}
       initial={{ opacity: 0, scale: 0.95, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -104,10 +107,25 @@ const NodeTooltip = ({ node, x, y }: TooltipProps) => {
 };
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = React.useState<TooltipProps | null>(null);
+
+  const handleMouseMove = React.useCallback((node: any, event: MouseEvent) => {
+    if (!containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    setTooltip({
+      node: node.data,
+      x,
+      y
+    });
+  }, []);
   
   return (
-    <div className="relative w-full aspect-square max-w-3xl mx-auto">
+    <div ref={containerRef} className="relative w-full aspect-square max-w-3xl mx-auto">
       <ResponsiveNetwork
         data={data}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
@@ -126,14 +144,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
-        onMouseMove={(node, event) => {
-          const bounds = event.currentTarget.getBoundingClientRect();
-          setTooltip({
-            node: node.data,
-            x: event.clientX - bounds.left,
-            y: event.clientY - bounds.top,
-          });
-        }}
+        onMouseMove={handleMouseMove}
         onMouseLeave={() => setTooltip(null)}
       />
       <AnimatePresence>
