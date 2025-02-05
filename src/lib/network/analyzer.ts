@@ -38,7 +38,7 @@ Return strictly in this format:
   }],
   "ai_models": [...],
   "company_resources": [...]
-}``;
+}`;
 
 export async function analyzeContent(content: string): Promise<NetworkUpdate> {
   console.log('=== Network Analysis Start ===');
