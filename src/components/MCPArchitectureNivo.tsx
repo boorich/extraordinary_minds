@@ -79,19 +79,19 @@ const NodeTooltip = ({ node, x, y }: TooltipProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="bg-blue-950/95 backdrop-blur rounded-lg p-4 shadow-xl border border-blue-500/30 text-white -translate-x-1/2 -translate-y-full mb-2 min-w-[280px]">
-        <div className="space-y-4 max-w-xs">
-          <div className="flex items-center gap-3">
-            {Icon && <Icon className="w-6 h-6 text-blue-400" />}
-            <div>
-              <h3 className="text-lg font-semibold text-white">{node.metadata.title}</h3>
-              <p className="text-sm text-blue-200">{node.metadata.description}</p>
+      <div className="bg-blue-700/30 backdrop-blur-xl rounded-2xl p-6 shadow-2xl -translate-x-1/2 -translate-y-full mb-2 min-w-[320px] border border-white/10">
+        <div className="space-y-3">
+          <div className="flex items-start gap-4">
+            {Icon && <Icon className="w-8 h-8 text-white shrink-0 mt-1" />}
+            <div className="space-y-1">
+              <h3 className="text-2xl font-semibold text-white tracking-tight">{node.metadata.title}</h3>
+              <p className="text-base text-blue-100/90">{node.metadata.description}</p>
             </div>
           </div>
-          <ul className="space-y-2">
+          <ul className="space-y-2 pt-2">
             {node.metadata.details.map((detail, index) => (
-              <li key={index} className="text-sm text-blue-200 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+              <li key={index} className="text-base text-blue-100/90 flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0" />
                 {detail}
               </li>
             ))}
