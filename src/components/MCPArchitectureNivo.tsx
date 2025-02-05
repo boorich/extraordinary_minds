@@ -4,6 +4,7 @@ import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
 import { NetworkData, NetworkNode } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
+import { LucideIcon } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -68,7 +69,7 @@ interface TooltipProps {
 const NodeTooltip = ({ node, x, y }: TooltipProps) => {
   if (!node.metadata) return null;
 
-  const Icon = node.metadata.icon ? Icons[node.metadata.icon as keyof typeof Icons] : null;
+  const Icon = node.metadata.icon ? Icons[node.metadata.icon as keyof typeof Icons] as LucideIcon : null;
 
   return (
     <motion.div
