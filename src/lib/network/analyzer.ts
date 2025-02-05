@@ -10,16 +10,35 @@ const EXTRACTION_PROMPT = `Analyze the following text and extract technical comp
 3. Company Resources: systems, data, APIs being integrated
 
 For each component, specify:
+Required:
 - id: kebab-case identifier
 - size (12-32): importance/centrality score
 - height (0-2): hierarchy level (0: specific instance, 1: group, 2: category)
 
+Optional metadata:
+- title: human-readable name
+- description: short explanation
+- icon: suggested icon name
+- type: component classification
+- parent: id of parent component
+- details: key-value pairs of additional info
+
 Return strictly in this format:
 {
-  "llm_clients": [{"id": "component-id", "size": 24, "height": 1}],
-  "ai_models": [{"id": "component-id", "size": 24, "height": 1}],
-  "company_resources": [{"id": "component-id", "size": 24, "height": 1}]
-}`;
+  "llm_clients": [{
+    "id": "component-id",
+    "size": 24,
+    "height": 1,
+    "title": "Component Name",
+    "description": "What it does",
+    "icon": "icon-name",
+    "type": "classification",
+    "parent": "parent-id",
+    "details": {"key": "value"}
+  }],
+  "ai_models": [...],
+  "company_resources": [...]
+}``;
 
 export async function analyzeContent(content: string): Promise<NetworkUpdate> {
   console.log('=== Network Analysis Start ===');
