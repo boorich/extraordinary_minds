@@ -73,13 +73,13 @@ const NodeTooltip = ({ node, x, y }: TooltipProps) => {
 
   return (
     <motion.div
-      className="absolute pointer-events-none"
+      className="fixed pointer-events-none z-50"
       style={{ left: x, top: y }}
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="bg-blue-950/90 backdrop-blur-sm rounded-lg p-4 shadow-xl border border-blue-500/20 text-white -translate-x-1/2 -translate-y-full mb-2">
+      <div className="bg-blue-950/95 backdrop-blur rounded-lg p-4 shadow-xl border border-blue-500/30 text-white -translate-x-1/2 -translate-y-full mb-2 min-w-[280px]">
         <div className="space-y-4 max-w-xs">
           <div className="flex items-center gap-3">
             {Icon && <Icon className="w-6 h-6 text-blue-400" />}
@@ -125,6 +125,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
+        tooltip={({ node }) => null} // Disable default tooltip
         onMouseMove={(node, event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
           setTooltip({
