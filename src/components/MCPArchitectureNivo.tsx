@@ -125,7 +125,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
-        enableNodeTooltip={false}
+
         onMouseMove={(node, event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
           setTooltip({
