@@ -100,6 +100,10 @@ export async function analyzeContent(content: string): Promise<NetworkUpdate> {
 }
 
 function patternAnalysis(content: string): NetworkUpdate {
+  // Helper to check if text matches any implementation
+  function matchesAnyImplementation(text: string, implementations: PatternImplementation[]): boolean {
+    return implementations.some(impl => text.match(impl.match));
+  }
   const result: NetworkUpdate = {
     ai_models: [],
     company_resources: [],
@@ -108,9 +112,13 @@ function patternAnalysis(content: string): NetworkUpdate {
 
   Object.entries(PATTERNS).forEach(([categoryKey, categoryData]) => {
     categoryData.categories.forEach(category => {
-      if (category.patterns.some(pattern => content.match(pattern))) {
+      const matchesPattern = category.patterns.some(pattern => content.match(pattern));
+      const hasSpecificMatch = matchesAnyImplementation(content, category.implementations);
+      
+      if (matchesPattern) {
         const categoryArray = result[categoryKey as keyof NetworkUpdate] || [];
-        if (!categoryArray.some(existing => existing.id === category.id)) {
+        // Only add the category if there are no specific implementation matches
+        if (!hasSpecificMatch && !categoryArray.some(existing => existing.id === category.id)) {
           // Copy all metadata fields from the category pattern
           const component = {
             ...category,
