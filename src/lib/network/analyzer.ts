@@ -72,18 +72,33 @@ export async function analyzeContent(content: string): Promise<NetworkUpdate> {
     Object.entries(extractedComponents).forEach(([category, components]) => {
       const categoryArray = result[category as keyof NetworkUpdate] || [];
       (components as NetworkUpdateComponent[]).forEach(component => {
-        // Validate component exists in patterns
-        const isValid = Object.values(PATTERNS).some(categoryData =>
-          categoryData.categories.some(cat =>
-            cat.id === component.id || cat.implementations.some(impl => impl.id === component.id)
-          )
-        );
-
-        if (isValid) {
-          categoryArray.push({
-            ...component,
-            color: "rgb(232, 193, 160)"
+        // Validate component exists in patterns and get metadata
+        let validComponent: NetworkUpdateComponent | null = null;
+        
+        // Check all categories and implementations
+        Object.values(PATTERNS).forEach(categoryData => {
+          categoryData.categories.forEach(cat => {
+            if (cat.id === component.id) {
+              validComponent = {
+                ...cat,
+                ...component,
+                color: "rgb(232, 193, 160)"
+              };
+            }
+            cat.implementations.forEach(impl => {
+              if (impl.id === component.id) {
+                validComponent = {
+                  ...impl,
+                  ...component,
+                  color: "rgb(232, 193, 160)"
+                };
+              }
+            });
           });
+        });
+
+        if (validComponent) {
+          categoryArray.push(validComponent);
         }
       });
       result[category as keyof NetworkUpdate] = categoryArray;
