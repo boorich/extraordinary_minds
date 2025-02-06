@@ -110,12 +110,16 @@ function patternAnalysis(content: string): NetworkUpdate {
     llm_clients: []
   };
 
+  console.log('=== Pattern Analysis Debug ===');
   Object.entries(PATTERNS).forEach(([categoryKey, categoryData]) => {
     categoryData.categories.forEach(category => {
       const matchesPattern = category.patterns.some(pattern => content.match(pattern));
       const hasSpecificMatch = matchesAnyImplementation(content, category.implementations);
       
       if (matchesPattern) {
+        console.log(`Category match: ${category.id}`);
+        console.log('Metadata:', JSON.stringify(category, null, 2));
+        
         const categoryArray = result[categoryKey as keyof NetworkUpdate] || [];
         // Only add the category if there are no specific implementation matches
         if (!hasSpecificMatch && !categoryArray.some(existing => existing.id === category.id)) {
@@ -128,11 +132,13 @@ function patternAnalysis(content: string): NetworkUpdate {
         }
         category.implementations.forEach(impl => {
           if (content.match(impl.match) && !categoryArray.some(existing => existing.id === impl.id)) {
+            console.log(`Implementation match: ${impl.id}`);
+            console.log('Implementation metadata:', JSON.stringify(impl, null, 2));
             // Copy all metadata fields from the implementation pattern
             const component = {
               ...impl,
-              color: "rgb(232, 193, 160)"
-            };
+                  color: "rgb(232, 193, 160)"
+                };
             categoryArray.push(component);
           }
         });
