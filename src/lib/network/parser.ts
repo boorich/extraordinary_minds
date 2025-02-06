@@ -1,4 +1,6 @@
-export interface NetworkUpdateComponent {
+import { ComponentMetadata } from './types';
+
+export interface NetworkUpdateComponent extends ComponentMetadata {
   id: string;
   size: number;
   height: number;
@@ -57,14 +59,27 @@ function isValidNetworkUpdate(obj: any): obj is NetworkUpdate {
 }
 
 function isValidComponent(obj: any): obj is NetworkUpdateComponent {
-  return (
-    typeof obj === 'object' &&
+  if (!obj || typeof obj !== 'object') return false;
+
+  // Required fields
+  const hasRequiredFields = 
     typeof obj.id === 'string' &&
     typeof obj.size === 'number' &&
     typeof obj.height === 'number' &&
     obj.size >= 12 && obj.size <= 32 &&
-    obj.height >= 0 && obj.height <= 2
-  );
+    obj.height >= 0 && obj.height <= 2;
+
+  if (!hasRequiredFields) return false;
+
+  // Optional metadata fields
+  if (obj.title !== undefined && typeof obj.title !== 'string') return false;
+  if (obj.description !== undefined && typeof obj.description !== 'string') return false;
+  if (obj.icon !== undefined && typeof obj.icon !== 'string') return false;
+  if (obj.type !== undefined && typeof obj.type !== 'string') return false;
+  if (obj.parent !== undefined && typeof obj.parent !== 'string') return false;
+  if (obj.details !== undefined && (typeof obj.details !== 'object' || Array.isArray(obj.details))) return false;
+
+  return true;
 }
 
 function addColors(update: NetworkUpdate): NetworkUpdate {

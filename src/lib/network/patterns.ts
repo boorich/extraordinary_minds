@@ -1,11 +1,13 @@
-interface PatternImplementation {
+import { ComponentMetadata } from './types';
+
+interface PatternImplementation extends ComponentMetadata {
   match: RegExp;
   id: string;
   size: number;
   height: number;
 }
 
-interface CategoryPattern {
+interface CategoryPattern extends ComponentMetadata {
   id: string;
   patterns: RegExp[];
   implementations: PatternImplementation[];
@@ -59,10 +61,52 @@ export const PATTERNS = {
         patterns: [/sap/i],
         size: 24,
         height: 1,
+        type: "Enterprise System",
+        icon: "database",
+        description: "Core SAP enterprise systems and modules",
         implementations: [
-          { match: /s4|s\/4/i, id: "S/4HANA", size: 16, height: 0 },
-          { match: /bw|warehouse/i, id: "BW", size: 16, height: 0 },
-          { match: /erp/i, id: "ERP", size: 16, height: 0 }
+          { 
+            match: /s4|s\/4/i, 
+            id: "S/4HANA", 
+            size: 16, 
+            height: 0,
+            type: "ERP System",
+            icon: "server",
+            description: "Next-generation ERP suite",
+            details: {
+              "vendor": "SAP",
+              "category": "ERP",
+              "technology": "HANA"
+            }
+          },
+          { 
+            match: /bw|warehouse/i, 
+            id: "BW", 
+            size: 16, 
+            height: 0,
+            type: "Data Warehouse",
+            icon: "database",
+            description: "Business Warehouse for analytics",
+            details: {
+              "vendor": "SAP",
+              "category": "Analytics",
+              "technology": "HANA"
+            }
+          },
+          { 
+            match: /erp/i, 
+            id: "ERP", 
+            size: 16, 
+            height: 0,
+            type: "ERP System",
+            icon: "layout",
+            description: "Core enterprise resource planning",
+            details: {
+              "vendor": "SAP",
+              "category": "ERP",
+              "technology": "NetWeaver"
+            }
+          }
         ]
       },
       {
