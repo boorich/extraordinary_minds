@@ -111,21 +111,21 @@ function patternAnalysis(content: string): NetworkUpdate {
       if (category.patterns.some(pattern => content.match(pattern))) {
         const categoryArray = result[categoryKey as keyof NetworkUpdate] || [];
         if (!categoryArray.some(existing => existing.id === category.id)) {
-          categoryArray.push({
-            id: category.id,
-            size: category.size,
-            height: category.height,
+          // Copy all metadata fields from the category pattern
+          const component = {
+            ...category,
             color: "rgb(232, 193, 160)"
-          });
+          };
+          categoryArray.push(component);
         }
         category.implementations.forEach(impl => {
           if (content.match(impl.match) && !categoryArray.some(existing => existing.id === impl.id)) {
-            categoryArray.push({
-              id: impl.id,
-              size: impl.size,
-              height: impl.height,
+            // Copy all metadata fields from the implementation pattern
+            const component = {
+              ...impl,
               color: "rgb(232, 193, 160)"
-            });
+            };
+            categoryArray.push(component);
           }
         });
         result[categoryKey as keyof NetworkUpdate] = categoryArray;
