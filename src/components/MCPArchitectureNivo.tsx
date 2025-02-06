@@ -58,6 +58,8 @@ const defaultData: NetworkData = {
 };
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
+  const [debugNode, setDebugNode] = React.useState<any>(null);
+
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
       <ResponsiveNetwork
@@ -78,6 +80,8 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
+        onMouseEnter={(node) => setDebugNode(node)}
+        onMouseLeave={() => setDebugNode(null)}
         theme={{
           tooltip: {
             container: {
@@ -94,6 +98,11 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
           }
         }}
       />
+      {debugNode && (
+        <div className="fixed top-4 right-4 bg-gray-900/90 p-4 rounded-lg border border-blue-500/50 backdrop-blur-sm text-xs whitespace-pre text-white">
+          {JSON.stringify(debugNode, null, 2)}
+        </div>
+      )}
     </div>
   );
 };
