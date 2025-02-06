@@ -1,5 +1,5 @@
 import { NetworkUpdate, NetworkUpdateComponent } from './parser';
-import { PATTERNS } from './patterns';
+import { PATTERNS, PatternImplementation } from './patterns';
 import { OpenRouterApi } from '../openrouter';
 
 const openRouter = new OpenRouterApi('');

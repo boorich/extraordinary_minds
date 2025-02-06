@@ -1,6 +1,6 @@
 import { ComponentMetadata } from './types';
 
-interface PatternImplementation extends ComponentMetadata {
+export interface PatternImplementation extends ComponentMetadata {
   match: RegExp;
   id: string;
   size: number;
