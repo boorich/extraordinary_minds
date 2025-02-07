@@ -131,25 +131,41 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
               </p>
             </div>
           ) : (
-            conversation.map((msg, index) => (
-              <div 
-                key={index}
-                className={`mb-4 p-4 rounded-lg ${
-                  msg.role === 'user' 
-                    ? 'bg-cyan-900/30 border border-cyan-400/30 ml-12' 
-                    : 'bg-slate-700/50 border border-cyan-400/30 mr-12'
-                }`}
-              >
-                {msg.role === 'assistant' && msg.model && (
-                  <div className="text-xs text-cyan-400/70 mb-2">
-                    Using model: {msg.model}
+            <div>
+              {conversation.map((msg, index) => (
+                <div key={index}>
+                  <div 
+                    className={`mb-4 p-4 rounded-lg ${
+                      msg.role === 'user' 
+                        ? 'bg-cyan-900/30 border border-cyan-400/30 ml-12' 
+                        : 'bg-slate-700/50 border border-cyan-400/30 mr-12'
+                    }`}
+                  >
+                    {msg.role === 'assistant' && msg.model && (
+                      <div className="text-xs text-cyan-400/70 mb-2">
+                        Using model: {msg.model}
+                      </div>
+                    )}
+                    <p className="text-slate-200 text-lg break-words whitespace-pre-wrap">
+                      {msg.content}
+                    </p>
                   </div>
-                )}
-                <p className="text-slate-200 text-lg break-words whitespace-pre-wrap">
-                  {msg.content}
-                </p>
-              </div>
-            ))
+                  {isTyping && index === conversation.length - 1 && msg.role === 'user' && (
+                    <div 
+                      className="mb-4 p-4 ml-12" 
+                      aria-live="polite" 
+                      aria-label="Processing response"
+                    >
+                      <div className="flex space-x-2">
+                        <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce"></div>
+                        <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce delay-100"></div>
+                        <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce delay-200"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
           <div ref={conversationEndRef} />
         </div>
@@ -179,20 +195,6 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
           >
             Send
           </button>
-
-          {isTyping && (
-            <div 
-              className="absolute left-3 top-1/2 -translate-y-1/2" 
-              aria-live="polite" 
-              aria-label="Processing response"
-            >
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-75"></div>
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping delay-150"></div>
-              </div>
-            </div>
-          )}
         </form>
       </div>
     </div>
