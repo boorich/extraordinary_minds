@@ -14,6 +14,7 @@ const NetworkMetadataListener: React.FC = () => {
   useEffect(() => {
     const handleNodeHover = (event: Event) => {
       const customEvent = event as CustomEvent;
+      console.log('MetadataListener received hover event:', customEvent.detail);
       setHoverState({
         nodeId: customEvent.detail.nodeId,
         position: customEvent.detail.position

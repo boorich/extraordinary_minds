@@ -130,8 +130,10 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   // Register all metadata when the component mounts or data changes
   React.useEffect(() => {
     clear();
+    console.log('Registering metadata for nodes:', data.nodes);
     data.nodes.forEach(node => {
       if (node.metadata) {
+        console.log('Registering metadata for:', node.id, node.metadata);
         registerMetadata(node.id, node.metadata);
       }
     });
