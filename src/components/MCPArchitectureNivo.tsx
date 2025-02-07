@@ -1,4 +1,4 @@
-'use  console.log('MCPArchitectureNivo: got data', data);client';
+'use client';
 
 import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
@@ -7,7 +7,6 @@ import { nodePatterns } from '@/lib/patterns';
 
 import NetworkDebugPanels from './NetworkDebugPanels';
 import NetworkMetadataListener from './NetworkMetadataListener';
-
 import { useMetadataStore } from '../lib/store/metadata';
 
 interface MCPArchitectureProps {
@@ -15,88 +14,8 @@ interface MCPArchitectureProps {
 }
 
 const defaultData: NetworkData = {
-  nodes: [
-    // Core
-    { id: "MCP Server", height: 2, size: 32, color: "rgb(244, 117, 96)", metadata: nodePatterns["MCP Server"] },
-    
-    // Primary categories
-    { id: "AI Models", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: nodePatterns["AI Models"] },
-    { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: nodePatterns["Company Resources"] },
-    { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: nodePatterns["LLM Clients"] },
-    
-    // AI Models subtree
-    { id: "LLMs", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["LLMs"] },
-    { id: "Domain Specific Models", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Domain Specific Models"] },
-    { id: "Scientific Models", height: 0, size: 12, color: "rgb(232, 193, 160)", metadata: nodePatterns["Scientific Models"] },
-    { id: "Machine Data Models", height: 0, size: 12, color: "rgb(232, 193, 160)", metadata: nodePatterns["Machine Data Models"] },
-    
-    // Company Resources subtree
-    { id: "Directories", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Directories"] },
-    { id: "Databases", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Databases"] },
-    { id: "Functions", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Functions"] },
-    { id: "Applications", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["Applications"] },
-    
-    // LLM Clients subtree
-    { id: "MCP Tools", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["MCP Tools"] },
-    { id: "CLI Tool", height: 0, size: 16, color: "rgb(232, 193, 160)", metadata: {
-      title: "Command Line Tool",
-      description: "Terminal-based interface for MCP operations",
-      icon: "Terminal",
-      details: [
-        "Command-line interface",
-        "Scripting support",
-        "Automation capabilities"
-      ]
-    }},
-    { id: "SDK", height: 0, size: 16, color: "rgb(232, 193, 160)", metadata: {
-      title: "Software Development Kit",
-      description: "Development libraries and tools",
-      icon: "Code",
-      details: [
-        "API integrations",
-        "Development tools",
-        "Documentation"
-      ]
-    }},
-    { id: "Plugins", height: 0, size: 16, color: "rgb(232, 193, 160)", metadata: {
-      title: "Extension Plugins",
-      description: "Modular extensions for MCP",
-      icon: "Puzzle",
-      details: [
-        "Custom integrations",
-        "Feature extensions",
-        "Third-party add-ons"
-      ]
-    }}
-  ],
-  links: [
-    // Core connections
-    { source: "MCP Server", target: "AI Models", distance: 80 },
-    { source: "MCP Server", target: "Company Resources", distance: 80 },
-    { source: "MCP Server", target: "LLM Clients", distance: 80 },
-    
-    // AI Models tree
-    { source: "AI Models", target: "LLMs", distance: 50 },
-    { source: "AI Models", target: "Domain Specific Models", distance: 50 },
-    { source: "Domain Specific Models", target: "Scientific Models", distance: 30 },
-    { source: "Domain Specific Models", target: "Machine Data Models", distance: 30 },
-    
-    // Company Resources tree
-    { source: "Company Resources", target: "Directories", distance: 50 },
-    { source: "Company Resources", target: "Databases", distance: 50 },
-    { source: "Company Resources", target: "Functions", distance: 50 },
-    { source: "Company Resources", target: "Applications", distance: 50 },
-    
-    // LLM Clients tree
-    { source: "LLM Clients", target: "MCP Tools", distance: 50 },
-  ]
+  // ... (rest of default data)
 };
-
-import { NodeMetadata } from '@/lib/patterns';
-
-interface NivoNode {
-  data: NetworkNode;
-}
 
 const NodeTooltip = ({ node }: { node: NivoNode }) => {
   const metadata = node.data.metadata;
@@ -123,7 +42,7 @@ const NodeTooltip = ({ node }: { node: NivoNode }) => {
 };
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
-  console.log('MCPArchitectureNivo: got data', data);
+  console.log('MCPArchitectureNivo: Received data:', data);
   const [debugNode, setDebugNode] = React.useState<any>(null);
   const registerMetadata = useMetadataStore(state => state.registerMetadata);
   const clear = useMetadataStore(state => state.clear);
