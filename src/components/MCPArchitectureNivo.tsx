@@ -122,6 +122,17 @@ const NodeTooltip = ({ node }: { node: NivoNode }) => {
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   const [debugNode, setDebugNode] = React.useState<any>(null);
+  
+  // Create a lookup for metadata
+  const metadataMap = React.useMemo(() => {
+    const map = new Map();
+    data.nodes.forEach(node => {
+      if (node.metadata) {
+        map.set(node.id, node.metadata);
+      }
+    });
+    return map;
+  }, [data]);
 
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
@@ -151,7 +162,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
           window.dispatchEvent(new CustomEvent('network-node-hover', {
             detail: {
               nodeId: node.id,
-              metadata: node.data?.metadata,
+              metadata: metadataMap.get(node.id),
               position: { x: event.clientX, y: event.clientY }
             }
           }));
