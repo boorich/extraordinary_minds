@@ -5,7 +5,6 @@ import { ResponsiveNetwork } from '@nivo/network';
 import { NetworkData, NetworkNode, ComponentMetadata } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
 
-import NetworkDebugPanels from './NetworkDebugPanels';
 import NetworkMetadataListener from './NetworkMetadataListener';
 import { useMetadataStore } from '../lib/store/metadata';
 
@@ -69,40 +68,6 @@ const defaultData: NetworkData = {
   ]
 };
 
-const NodeTooltip = ({ node }: { node: NivoNode }) => {
-  const metadata = node.data.metadata;
-  if (!metadata) return null;
-
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="font-semibold text-lg">{metadata.title}</span>
-      </div>
-      <p className="text-sm opacity-90">{metadata.description}</p>
-      <div className="pt-2">
-        <div className="space-y-1">
-          {Array.isArray(metadata.details) ? (
-            metadata.details.map((detail, i) => (
-              <div key={i} className="text-sm flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-blue-400"></span>
-                <span>{detail}</span>
-              </div>
-            ))
-          ) : metadata.details && (
-            Object.entries(metadata.details).map(([key, value]) => (
-              <div key={key} className="text-sm flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-blue-400"></span>
-                <span className="font-medium">{key}:</span>
-                <span>{value}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   console.log('MCPArchitectureNivo: Received data:', data);
   const [debugNode, setDebugNode] = React.useState<any>(null);
@@ -156,24 +121,12 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
           setDebugNode(null);
           window.dispatchEvent(new CustomEvent('network-node-leave'));
         }}
-        nodeTooltip={NodeTooltip}
-        theme={{
-          tooltip: {
-            container: {
-              background: 'rgba(59, 130, 246, 0.3)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-              padding: '24px',
-              minWidth: '320px',
-              color: '#ffffff'
-            }
-          }
-        }}
+        // Disable Nivo's built-in tooltip
+        nodeTooltip={null}
+        theme={{}}
       />
-      <NetworkDebugPanels node={debugNode} />
+      {/* Disable debug panels */}
+      {/* <NetworkDebugPanels node={debugNode} /> */}
     </div>
   );
 };
