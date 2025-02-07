@@ -1,4 +1,4 @@
-'use client';
+'use  console.log('MCPArchitectureNivo: got data', data);client';
 
 import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
@@ -123,6 +123,7 @@ const NodeTooltip = ({ node }: { node: NivoNode }) => {
 };
 
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
+  console.log('MCPArchitectureNivo: got data', data);
   const [debugNode, setDebugNode] = React.useState<any>(null);
   const registerMetadata = useMetadataStore(state => state.registerMetadata);
   const clear = useMetadataStore(state => state.clear);
