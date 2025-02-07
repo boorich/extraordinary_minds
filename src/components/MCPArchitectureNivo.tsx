@@ -121,11 +121,9 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
           setDebugNode(null);
           window.dispatchEvent(new CustomEvent('network-node-leave'));
         }}
-        // Disable Nivo's built-in tooltip
+        nodeTooltip={() => null}
         theme={{}}
       />
-      {/* Disable debug panels */}
-      {/* <NetworkDebugPanels node={debugNode} /> */}
     </div>
   );
 };
