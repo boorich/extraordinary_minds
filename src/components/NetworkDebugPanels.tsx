@@ -30,13 +30,13 @@ const NetworkDebugPanels = ({ node }: { node: any }) => {
 
   return (
     <>
-      {/* Our metadata panel - top right */}
-      <div className="fixed top-4 right-4">
+      {/* Our metadata panel - upper center-right */}
+      <div className="fixed top-4 right-[20%]">
         <DebugPanel title="Our Metadata" data={ourMetadata} />
       </div>
       
-      {/* Nivo's node data panel - top left */}
-      <div className="fixed top-4 left-4">
+      {/* Nivo's node data panel - upper center-left */}
+      <div className="fixed top-4 left-[20%]">
         <DebugPanel title="Nivo Node Data" data={nivoData} />
       </div>
     </>
