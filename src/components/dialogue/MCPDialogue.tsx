@@ -150,19 +150,6 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
                       {msg.content}
                     </p>
                   </div>
-                  {isTyping && index === conversation.length - 1 && msg.role === 'user' && (
-                    <div 
-                      className="mb-4 p-4 ml-12" 
-                      aria-live="polite" 
-                      aria-label="Processing response"
-                    >
-                      <div className="flex space-x-2">
-                        <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce"></div>
-                        <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce delay-100"></div>
-                        <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce delay-200"></div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
