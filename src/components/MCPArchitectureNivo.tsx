@@ -57,9 +57,20 @@ const defaultData: NetworkData = {
   ]
 };
 
-const NodeTooltip = ({ node }: { node: any }) => {
+import { NodeMetadata } from '@/lib/patterns';
+
+interface NetworkNode {
+  data: {
+    metadata: NodeMetadata;
+    id: string;
+    height: number;
+    size: number;
+    color: string;
+  };
+}
+
+const NodeTooltip = ({ node }: { node: NetworkNode }) => {
   const metadata = node.data.metadata;
-  if (!metadata) return null;
 
   return (
     <div className="space-y-2">
@@ -69,7 +80,7 @@ const NodeTooltip = ({ node }: { node: any }) => {
       <p className="text-sm opacity-90">{metadata.description}</p>
       <div className="pt-2">
         <div className="space-y-1">
-          {metadata.details.map((detail, i) => (
+          {metadata.details.map((detail: string, i: number) => (
             <div key={i} className="text-sm flex items-center gap-2">
               <span className="w-1 h-1 rounded-full bg-blue-400"></span>
               <span>{detail}</span>
