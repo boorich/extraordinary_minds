@@ -149,7 +149,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
           window.dispatchEvent(new CustomEvent('network-node-hover', {
             detail: {
               nodeId: node.id,
-              metadata: node.data.metadata,
+              metadata: node.metadata,
               position: { x: event.clientX, y: event.clientY }
             }
           }));
