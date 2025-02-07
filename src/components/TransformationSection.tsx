@@ -13,6 +13,7 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
   console.log('Received networkData:', networkData);
   return (
     <div className="max-w-4xl mx-auto space-y-4">
+      {/* Disable description box
       <div className="bg-white/5 p-6 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl">
         <p className="text-lg leading-relaxed text-gray-300">
           Every company has valuable expertise locked in their people, processes, and data. 
@@ -21,6 +22,7 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
           powerful synergy that enhances productivity and unlocks new possibilities.
         </p>
       </div>
+      */}
 
       <MCPArchitecture data={networkData} />
 
