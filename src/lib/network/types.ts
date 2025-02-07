@@ -4,5 +4,13 @@ export interface ComponentMetadata {
   icon?: string;
   type?: string;
   parent?: string;
-  details?: Record<string, string> | string[];  // Allow both formats
+  details?: Record<string, string> | string[];  // Accept both formats
+}
+
+export interface NetworkNode {
+  id: string;
+  height: number;
+  size: number;
+  color: string;
+  metadata?: ComponentMetadata;
 }

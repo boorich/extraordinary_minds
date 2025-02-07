@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
-import { NetworkData, NetworkNode } from '@/types/network';
+import { NetworkData, NetworkNode, ComponentMetadata } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
 
 import NetworkDebugPanels from './NetworkDebugPanels';
@@ -13,6 +13,12 @@ interface MCPArchitectureProps {
   data?: NetworkData;
 }
 
+interface NivoNode {
+  data: NetworkNode;
+  id: string;
+  metadata?: ComponentMetadata;
+}
+
 const defaultData: NetworkData = {
   nodes: [
     // Core
@@ -20,10 +26,10 @@ const defaultData: NetworkData = {
       title: "MCP Server",
       description: "Central Model Context Protocol Server",
       type: "Core System",
-      details: {
-        "Role": "Central Orchestrator",
-        "Purpose": "Enterprise AI Integration"
-      }
+      details: [
+        "Central Orchestrator",
+        "Enterprise AI Integration"
+      ]
     }},
     
     // Primary categories
@@ -31,28 +37,28 @@ const defaultData: NetworkData = {
       title: "AI Models",
       description: "Machine Learning and AI Model Integrations",
       type: "Category",
-      details: {
-        "Type": "Model Hub",
-        "Scope": "AI Capabilities"
-      }
+      details: [
+        "Model Hub",
+        "AI Capabilities"
+      ]
     }},
     { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
       title: "Company Resources",
       description: "Enterprise Systems and Data Integration",
       type: "Category",
-      details: {
-        "Type": "Integration Hub",
-        "Scope": "Enterprise Systems"
-      }
+      details: [
+        "Integration Hub",
+        "Enterprise Systems"
+      ]
     }},
     { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
       title: "LLM Clients",
       description: "User-Facing Tools and Interfaces",
       type: "Category",
-      details: {
-        "Type": "Client Layer",
-        "Scope": "User Interaction"
-      }
+      details: [
+        "Client Layer",
+        "User Interaction"
+      ]
     }}
   ],
   links: [
@@ -75,12 +81,22 @@ const NodeTooltip = ({ node }: { node: NivoNode }) => {
       <p className="text-sm opacity-90">{metadata.description}</p>
       <div className="pt-2">
         <div className="space-y-1">
-          {metadata.details.map((detail: string, i: number) => (
-            <div key={i} className="text-sm flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-blue-400"></span>
-              <span>{detail}</span>
-            </div>
-          ))}
+          {Array.isArray(metadata.details) ? (
+            metadata.details.map((detail, i) => (
+              <div key={i} className="text-sm flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-blue-400"></span>
+                <span>{detail}</span>
+              </div>
+            ))
+          ) : metadata.details && (
+            Object.entries(metadata.details).map(([key, value]) => (
+              <div key={key} className="text-sm flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-blue-400"></span>
+                <span className="font-medium">{key}:</span>
+                <span>{value}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
