@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ResponsiveNetwork } from '@nivo/network';
-import { NetworkData } from '@/types/network';
+import { NetworkData, NetworkNode } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
 
 interface MCPArchitectureProps {
@@ -59,18 +59,13 @@ const defaultData: NetworkData = {
 
 import { NodeMetadata } from '@/lib/patterns';
 
-interface NetworkNode {
-  data: {
-    metadata: NodeMetadata;
-    id: string;
-    height: number;
-    size: number;
-    color: string;
-  };
+interface NivoNode {
+  data: NetworkNode;
 }
 
-const NodeTooltip = ({ node }: { node: NetworkNode }) => {
+const NodeTooltip = ({ node }: { node: NivoNode }) => {
   const metadata = node.data.metadata;
+  if (!metadata) return null;
 
   return (
     <div className="space-y-2">
