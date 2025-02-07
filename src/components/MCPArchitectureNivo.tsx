@@ -6,6 +6,7 @@ import { NetworkData, NetworkNode } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
 
 import NetworkDebugPanels from './NetworkDebugPanels';
+import NetworkMetadataListener from './NetworkMetadataListener';
 
 interface MCPArchitectureProps {
   data?: NetworkData;
@@ -124,6 +125,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
 
   return (
     <div className="relative w-full aspect-square max-w-3xl mx-auto">
+      <NetworkMetadataListener />
       <ResponsiveNetwork
         data={data}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
