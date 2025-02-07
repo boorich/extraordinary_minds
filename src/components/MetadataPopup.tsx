@@ -81,13 +81,24 @@ const MetadataPopup: React.FC<MetadataPopupProps> = ({
               Additional Details
             </h4>
             <div className="space-y-1">
-              {Object.entries(metadata.details).map(([key, value]) => (
-                <div key={key} className="text-sm flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-blue-400"></span>
-                  <span className="font-medium">{key}:</span>
-                  <span className="text-gray-300">{value}</span>
-                </div>
-              ))}
+              {Array.isArray(metadata.details) ? (
+                // Handle array format
+                metadata.details.map((detail, index) => (
+                  <div key={index} className="text-sm flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-blue-400"></span>
+                    <span className="text-gray-300">{detail}</span>
+                  </div>
+                ))
+              ) : (
+                // Handle object format
+                Object.entries(metadata.details).map(([key, value]) => (
+                  <div key={key} className="text-sm flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-blue-400"></span>
+                    <span className="font-medium">{key}:</span>
+                    <span className="text-gray-300">{value}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
