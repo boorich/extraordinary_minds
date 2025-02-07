@@ -170,7 +170,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
           <div ref={conversationEndRef} />
         </div>
 
-        <form onSubmit={handleUserInput} className="relative" aria-label="User Input Form">
+        <form onSubmit={handleUserInput} className="relative mb-4" aria-label="User Input Form">
           <textarea
             ref={textareaRef}
             value={userInput}
@@ -196,6 +196,20 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
             Send
           </button>
         </form>
+
+        {isTyping && (
+          <div 
+            className="p-4" 
+            aria-live="polite" 
+            aria-label="Processing response"
+          >
+            <div className="flex space-x-2">
+              <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce"></div>
+              <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce delay-100"></div>
+              <div className="w-3 h-3 rounded-full bg-[rgb(97,205,187)] animate-bounce delay-200"></div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
