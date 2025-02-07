@@ -147,10 +147,11 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         onMouseEnter={(node, event) => {
           setDebugNode(node);
           console.log('Node hover:', node);
+          console.log('Node data:', node.data);
           window.dispatchEvent(new CustomEvent('network-node-hover', {
             detail: {
               nodeId: node.id,
-              metadata: node.metadata,
+              metadata: node.data?.metadata,
               position: { x: event.clientX, y: event.clientY }
             }
           }));
