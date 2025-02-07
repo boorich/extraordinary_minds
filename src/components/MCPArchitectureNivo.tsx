@@ -57,6 +57,30 @@ const defaultData: NetworkData = {
   ]
 };
 
+const NodeTooltip = ({ node }: { node: any }) => {
+  const metadata = node.data.metadata;
+  if (!metadata) return null;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="font-semibold text-lg">{metadata.title}</span>
+      </div>
+      <p className="text-sm opacity-90">{metadata.description}</p>
+      <div className="pt-2">
+        <div className="space-y-1">
+          {metadata.details.map((detail, i) => (
+            <div key={i} className="text-sm flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-blue-400"></span>
+              <span>{detail}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   const [debugNode, setDebugNode] = React.useState<any>(null);
 
@@ -82,6 +106,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         isInteractive={true}
         onMouseEnter={(node) => setDebugNode(node)}
         onMouseLeave={() => setDebugNode(null)}
+        nodeTooltip={NodeTooltip}
         theme={{
           tooltip: {
             container: {
