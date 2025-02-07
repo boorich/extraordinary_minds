@@ -33,6 +33,36 @@ const defaultData: NetworkData = {
     
     // LLM Clients subtree
     { id: "MCP Tools", height: 1, size: 20, color: "rgb(232, 193, 160)", metadata: nodePatterns["MCP Tools"] },
+    { id: "CLI Tool", height: 0, size: 16, color: "rgb(232, 193, 160)", metadata: {
+      title: "Command Line Tool",
+      description: "Terminal-based interface for MCP operations",
+      icon: "Terminal",
+      details: [
+        "Command-line interface",
+        "Scripting support",
+        "Automation capabilities"
+      ]
+    }},
+    { id: "SDK", height: 0, size: 16, color: "rgb(232, 193, 160)", metadata: {
+      title: "Software Development Kit",
+      description: "Development libraries and tools",
+      icon: "Code",
+      details: [
+        "API integrations",
+        "Development tools",
+        "Documentation"
+      ]
+    }},
+    { id: "Plugins", height: 0, size: 16, color: "rgb(232, 193, 160)", metadata: {
+      title: "Extension Plugins",
+      description: "Modular extensions for MCP",
+      icon: "Puzzle",
+      details: [
+        "Custom integrations",
+        "Feature extensions",
+        "Third-party add-ons"
+      ]
+    }}
   ],
   links: [
     // Core connections
