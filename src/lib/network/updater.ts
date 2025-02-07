@@ -35,7 +35,13 @@ export function updateNetworkData(
         id: component.id,
         size: component.size,
         height: component.height,
-        color: component.height === 0 ? baseColors.implementation : baseColors.secondary
+        color: component.height === 0 ? baseColors.implementation : baseColors.secondary,
+        metadata: {
+          title: component.id,
+          description: `${component.id} component`,
+          type: component.height === 0 ? 'Implementation' : 'Category',
+          details: component.details || {}
+        }
       });
       
       // Add link to parent category

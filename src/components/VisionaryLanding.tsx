@@ -14,10 +14,42 @@ const VisionaryLanding = () => {
   const [dialogueMetrics, setDialogueMetrics] = useState<DialogueMetrics | null>(null);
   const [networkData, setNetworkData] = useState<NetworkData>({
     nodes: [
-      { id: "MCP Server", height: 2, size: 32, color: "rgb(244, 117, 96)" },
-      { id: "AI Models", height: 1, size: 24, color: "rgb(97, 205, 187)" },
-      { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)" },
-      { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)" }
+      { id: "MCP Server", height: 2, size: 32, color: "rgb(244, 117, 96)", metadata: {
+        title: "MCP Server",
+        description: "Core Model Context Protocol Server",
+        type: "Core System",
+        details: {
+          role: "Central Hub",
+          purpose: "AI and Resource Integration"
+        }
+      }},
+      { id: "AI Models", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
+        title: "AI Models",
+        description: "AI and Machine Learning Models",
+        type: "Category",
+        details: {
+          category: "AI",
+          capabilities: "ML & LLM Integration"
+        }
+      }},
+      { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
+        title: "Company Resources",
+        description: "Enterprise Systems and Data",
+        type: "Category",
+        details: {
+          category: "Infrastructure",
+          scope: "Enterprise Systems"
+        }
+      }},
+      { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
+        title: "LLM Clients",
+        description: "Client Applications and Tools",
+        type: "Category",
+        details: {
+          category: "Clients",
+          focus: "User Interaction"
+        }
+      }}
     ],
     links: [
       { source: "MCP Server", target: "AI Models", distance: 80 },
