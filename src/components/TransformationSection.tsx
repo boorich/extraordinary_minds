@@ -24,7 +24,7 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
       </div>
       */}
 
-      <div className="bg-slate-900/40 rounded-2xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
+      <div className="bg-slate-900/40 rounded-2xl p-4 backdrop-blur-sm border border-white/10 shadow-2xl">
         <MCPArchitecture data={networkData} />
       </div>
 

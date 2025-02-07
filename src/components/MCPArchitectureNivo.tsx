@@ -87,7 +87,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
   }, [data, registerMetadata, clear]);
 
   return (
-    <div className="relative w-full aspect-square max-w-3xl mx-auto">
+    <div className="relative w-full aspect-[16/9] max-w-3xl mx-auto">
       <ResponsiveNetwork
         data={data}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
