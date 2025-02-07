@@ -142,8 +142,20 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         linkBlendMode="multiply"
         motionConfig="gentle"
         isInteractive={true}
-        onMouseEnter={(node) => setDebugNode(node)}
-        onMouseLeave={() => setDebugNode(null)}
+        onMouseEnter={(node, event) => {
+          setDebugNode(node);
+          window.dispatchEvent(new CustomEvent('network-node-hover', {
+            detail: {
+              nodeId: node.id,
+              metadata: node.data.metadata,
+              position: { x: event.clientX, y: event.clientY }
+            }
+          }));
+        }}
+        onMouseLeave={() => {
+          setDebugNode(null);
+          window.dispatchEvent(new CustomEvent('network-node-leave'));
+        }}
         nodeTooltip={NodeTooltip}
         theme={{
           tooltip: {
