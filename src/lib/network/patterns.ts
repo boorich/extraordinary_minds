@@ -125,6 +125,14 @@ export const PATTERNS = {
         patterns: [/api|interface|integration/i],
         size: 24,
         height: 1,
+        type: "Integration Layer",
+        icon: "Network",
+        description: "Service integration and communication layer",
+        details: {
+          "category": "Integration",
+          "type": "Communication",
+          "technology": "Web Services"
+        },
         implementations: [
           { match: /rest/i, id: "REST APIs", size: 16, height: 0 },
           { match: /graphql/i, id: "GraphQL", size: 16, height: 0 },
