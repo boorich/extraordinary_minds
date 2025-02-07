@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ComponentMetadata } from '../lib/network/types';
+import { ComponentMetadata } from '@/types/network';
 import { AlertCircle, Info, Tag, Type } from 'lucide-react';
 
 interface MetadataPopupProps {

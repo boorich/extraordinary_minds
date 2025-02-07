@@ -1,11 +1,18 @@
-import { NodeMetadata } from '@/lib/patterns';
+export interface ComponentMetadata {
+  title?: string;
+  description?: string;
+  icon?: string;
+  type?: string;
+  parent?: string;
+  details?: Record<string, string> | string[];
+}
 
 export interface NetworkNode {
   id: string;
   height: number;
   size: number;
   color: string;
-  metadata?: NodeMetadata;
+  metadata?: ComponentMetadata;
 }
 
 export interface NetworkLink {
