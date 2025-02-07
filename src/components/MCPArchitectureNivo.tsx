@@ -95,12 +95,12 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
       <ResponsiveNetwork
         data={data}
         margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        linkDistance={e => e.distance}
+        linkDistance={e => e.distance || 50}
         centeringStrength={0.3}
         repulsivity={6}
-        nodeSize={n => n.size}
-        activeNodeSize={n => 1.5 * n.size}
-        nodeColor={n => n.color}
+        nodeSize={n => n.data.size}
+        activeNodeSize={n => 1.5 * n.data.size}
+        nodeColor={n => n.data.color}
         nodeBorderWidth={1}
         nodeBorderColor={{
           from: 'color',
@@ -133,13 +133,12 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         <div className="fixed top-4 right-4 bg-gray-900/90 p-4 rounded-lg border border-blue-500/50 backdrop-blur-sm text-sm text-white max-w-sm">
           <h3 className="font-semibold mb-2">{debugNode.id}</h3>
           <div className="space-y-2">
-            <pre className="text-xs mb-2">{JSON.stringify(debugNode, null, 2)}</pre>
-            {(debugNode.type || debugNode.implementations?.[0]?.type) ? (
+            {(debugNode.data.type || debugNode.data.details) ? (
               <>
-                <p className="text-blue-300 mb-1">Type: {debugNode.type || debugNode.implementations?.[0]?.type}</p>
-                <p className="opacity-80 text-xs">{debugNode.description || debugNode.implementations?.[0]?.description}</p>
+                <p className="text-blue-300 mb-1">Type: {debugNode.data.type}</p>
+                <p className="opacity-80 text-xs">{debugNode.data.description}</p>
                 <div className="mt-2 space-y-1">
-                  {Object.entries(debugNode.details || debugNode.implementations?.[0]?.details || {}).map(([key, value], i) => (
+                  {debugNode.data.details && Object.entries(debugNode.data.details).map(([key, value], i) => (
                     <p key={i} className="text-xs flex items-start gap-2">
                       <span className="text-blue-400 mt-1">{key}:</span>
                       <span className="opacity-70">{value as string}</span>
