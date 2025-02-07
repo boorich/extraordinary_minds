@@ -5,6 +5,8 @@ import { ResponsiveNetwork } from '@nivo/network';
 import { NetworkData, NetworkNode } from '@/types/network';
 import { nodePatterns } from '@/lib/patterns';
 
+import NetworkDebugPanels from './NetworkDebugPanels';
+
 interface MCPArchitectureProps {
   data?: NetworkData;
 }
@@ -159,29 +161,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
           }
         }}
       />
-      {debugNode && (
-        <div className="fixed top-4 right-4 bg-gray-900/90 p-4 rounded-lg border border-blue-500/50 backdrop-blur-sm text-sm text-white max-w-sm">
-          <h3 className="font-semibold mb-2">{debugNode.id}</h3>
-          <div className="space-y-2">
-            {debugNode.metadata ? (
-              <>
-                <p className="text-blue-300 mb-1">Type: {debugNode.metadata.type}</p>
-                <p className="opacity-80 text-xs">{debugNode.metadata.description}</p>
-                <div className="mt-2 space-y-1">
-                  {debugNode.metadata.details && Object.entries(debugNode.metadata.details).map(([key, value], i) => (
-                    <p key={i} className="text-xs flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">{key}:</span>
-                      <span className="opacity-70">{value as string}</span>
-                    </p>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="text-gray-400">No metadata available</p>
-            )}
-          </div>
-        </div>
-      )}
+      <NetworkDebugPanels node={debugNode} />
     </div>
   );
 };
