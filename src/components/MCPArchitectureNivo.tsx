@@ -133,15 +133,15 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         <div className="fixed top-4 right-4 bg-gray-900/90 p-4 rounded-lg border border-blue-500/50 backdrop-blur-sm text-sm text-white max-w-sm">
           <h3 className="font-semibold mb-2">{debugNode.id}</h3>
           <div className="space-y-2">
-            {debugNode.data.metadata ? (
+            {debugNode.data.type ? (
               <>
-                <p className="text-blue-300 mb-1">Type: {debugNode.data.metadata.title}</p>
-                <p className="opacity-80 text-xs">{debugNode.data.metadata.description}</p>
+                <p className="text-blue-300 mb-1">Type: {debugNode.data.type}</p>
+                <p className="opacity-80 text-xs">{debugNode.data.description}</p>
                 <div className="mt-2 space-y-1">
-                  {debugNode.data.metadata.details.map((detail: string, i: number) => (
+                  {Object.entries(debugNode.data.details || {}).map(([key, value], i) => (
                     <p key={i} className="text-xs flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span className="opacity-70">{detail}</span>
+                      <span className="text-blue-400 mt-1">{key}:</span>
+                      <span className="opacity-70">{value as string}</span>
                     </p>
                   ))}
                 </div>
