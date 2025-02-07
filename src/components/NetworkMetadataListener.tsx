@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useMetadataStore } from '../lib/store/metadata';
 import MetadataPopup from './MetadataPopup';

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { ComponentMetadata } from '../lib/network/types';
 import { AlertCircle, Info, Tag, Type } from 'lucide-react';

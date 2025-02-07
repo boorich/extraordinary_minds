@@ -1,3 +1,5 @@
+'use client';
+
 import NetworkMetadataListener from './NetworkMetadataListener';
 
 const MetadataPortal = () => {
