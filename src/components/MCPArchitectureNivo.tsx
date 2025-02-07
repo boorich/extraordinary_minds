@@ -146,6 +146,7 @@ const MCPArchitecture = ({ data = defaultData }: MCPArchitectureProps) => {
         isInteractive={true}
         onMouseEnter={(node, event) => {
           setDebugNode(node);
+          console.log('Node hover:', node);
           window.dispatchEvent(new CustomEvent('network-node-hover', {
             detail: {
               nodeId: node.id,
