@@ -10,10 +10,12 @@ interface MetadataStore {
 
 export const useMetadataStore = create<MetadataStore>((set, get) => ({
   nodeMetadata: {},
-  registerMetadata: (id, metadata) => 
+  registerMetadata: (id, metadata) => {
+    console.log('Store: Registering metadata for:', id, metadata);
     set(state => ({ 
       nodeMetadata: { ...state.nodeMetadata, [id]: metadata }
-    })),
+    }));
+  },
   getMetadata: (id) => get().nodeMetadata[id],
   clear: () => set({ nodeMetadata: {} })
 }))

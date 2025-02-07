@@ -39,6 +39,7 @@ const NetworkMetadataListener: React.FC = () => {
   if (!hoverState) return null;
 
   const metadata = getMetadata(hoverState.nodeId);
+  console.log('Listener: Got metadata for', hoverState.nodeId, ':', metadata);
   if (!metadata) return null;
 
   return (
