@@ -14,7 +14,53 @@ interface MCPArchitectureProps {
 }
 
 const defaultData: NetworkData = {
-  // ... (rest of default data)
+  nodes: [
+    // Core
+    { id: "MCP Server", height: 2, size: 32, color: "rgb(244, 117, 96)", metadata: {
+      title: "MCP Server",
+      description: "Central Model Context Protocol Server",
+      type: "Core System",
+      details: {
+        "Role": "Central Orchestrator",
+        "Purpose": "Enterprise AI Integration"
+      }
+    }},
+    
+    // Primary categories
+    { id: "AI Models", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
+      title: "AI Models",
+      description: "Machine Learning and AI Model Integrations",
+      type: "Category",
+      details: {
+        "Type": "Model Hub",
+        "Scope": "AI Capabilities"
+      }
+    }},
+    { id: "Company Resources", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
+      title: "Company Resources",
+      description: "Enterprise Systems and Data Integration",
+      type: "Category",
+      details: {
+        "Type": "Integration Hub",
+        "Scope": "Enterprise Systems"
+      }
+    }},
+    { id: "LLM Clients", height: 1, size: 24, color: "rgb(97, 205, 187)", metadata: {
+      title: "LLM Clients",
+      description: "User-Facing Tools and Interfaces",
+      type: "Category",
+      details: {
+        "Type": "Client Layer",
+        "Scope": "User Interaction"
+      }
+    }}
+  ],
+  links: [
+    // Core connections
+    { source: "MCP Server", target: "AI Models", distance: 80 },
+    { source: "MCP Server", target: "Company Resources", distance: 80 },
+    { source: "MCP Server", target: "LLM Clients", distance: 80 }
+  ]
 };
 
 const NodeTooltip = ({ node }: { node: NivoNode }) => {
