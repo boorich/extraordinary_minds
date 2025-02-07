@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { useMetadataStore } from '../lib/store/metadata';
 import MetadataPopup from './MetadataPopup';
-import { ComponentMetadata } from '../lib/network/types';
 
-// Custom event for node hover
-interface NodeHoverEvent extends CustomEvent {
-  detail: {
-    nodeId: string;
-    metadata: ComponentMetadata;
-    position: { x: number; y: number };
-  };
+interface HoverState {
+  nodeId: string;
+  position: { x: number; y: number };
 }
 
 const NetworkMetadataListener: React.FC = () => {
-  const [hoverData, setHoverData] = useState<NodeHoverEvent['detail'] | null>(null);
+  const [hoverState, setHoverState] = useState<HoverState | null>(null);
+  const getMetadata = useMetadataStore(state => state.getMetadata);
 
   useEffect(() => {
     const handleNodeHover = (event: Event) => {
-      const customEvent = event as NodeHoverEvent;
-      setHoverData(customEvent.detail);
+      const customEvent = event as CustomEvent;
+      setHoverState({
+        nodeId: customEvent.detail.nodeId,
+        position: customEvent.detail.position
+      });
     };
 
     const handleNodeLeave = () => {
-      setHoverData(null);
+      setHoverState(null);
     };
 
-    // Listen for custom events that will be dispatched from the graph
     window.addEventListener('network-node-hover', handleNodeHover);
     window.addEventListener('network-node-leave', handleNodeLeave);
 
@@ -34,14 +33,17 @@ const NetworkMetadataListener: React.FC = () => {
     };
   }, []);
 
-  if (!hoverData) return null;
+  if (!hoverState) return null;
+
+  const metadata = getMetadata(hoverState.nodeId);
+  if (!metadata) return null;
 
   return (
     <MetadataPopup
-      nodeId={hoverData.nodeId}
-      metadata={hoverData.metadata}
-      position={hoverData.position}
-      onClose={() => setHoverData(null)}
+      nodeId={hoverState.nodeId}
+      metadata={metadata}
+      position={hoverState.position}
+      onClose={() => setHoverState(null)}
     />
   );
 };
