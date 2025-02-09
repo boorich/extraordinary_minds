@@ -3,23 +3,21 @@ export interface CardItem {
   description: string;
 }
 
-export interface CredibilityItem {
-  icon: React.ReactNode;
-  stat: string;
-  label: string;
-}
-
 export interface CardSectionProps {
-  title: string;
-  items: CardItem[] | string[];
-  variant?: "default" | "crew";
+  title?: string;
+  items: Array<CardItem | string>;
+  variant?: 'default' | 'crew';
 }
 
-export type CardSectionItem = CardItem | string;
+export interface NetworkData {
+  nodes: any[];
+  edges: any[];
+  // Add other network-specific properties as needed
+}
 
-export interface SectionsData {
-  traits: CardItem[];
-  manifesto: CardItem[];
-  crew: string[];
-  credibility: CredibilityItem[];
+export interface MCPTool {
+  name: string;
+  description: string;
+  category: 'rag' | 'functions' | 'applications';
+  isCustom: boolean;
 }

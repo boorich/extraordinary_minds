@@ -27,7 +27,7 @@ export const CardSection: React.FC<CardSectionProps> = ({ title, items, variant 
                 className="bg-slate-800/80 p-4 md:p-6 rounded-lg border border-cyan-400 hover:border-cyan-300 transition-colors backdrop-blur-sm"
               >
                 <h4 className="font-bold text-base md:text-lg mb-2 title-font text-cyan-200">{cardItem.title}</h4>
-                <p className="text-sm md:text-base text-slate-300">{cardItem.description}</p>
+                <div className="text-sm md:text-base text-slate-300 whitespace-pre-line">{cardItem.description}</div>
               </div>
             );
           })
