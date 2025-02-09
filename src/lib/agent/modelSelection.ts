@@ -1,7 +1,8 @@
 export const MODELS = {
-  PRIMARY: "anthropic/claude-2",           // Complex reasoning & profiling
-  STANDARD: "openai/gpt-3.5-turbo",        // General conversation
-  EFFICIENT: "anthropic/claude-instant-v1", // Quick follow-ups
+  ADVANCED: "anthropic/claude-3-opus-20240229",  // High-end profiling & complex analysis
+  PRIMARY: "openai/gpt-4-turbo-preview",         // Complex reasoning & technical tasks
+  STANDARD: "anthropic/claude-3-sonnet-20240229", // General conversation
+  EFFICIENT: "openai/gpt-3.5-turbo",              // Quick follow-ups
 } as const;
 
 export interface ModelSelectionCriteria {
@@ -12,21 +13,29 @@ export interface ModelSelectionCriteria {
 }
 
 export function selectModel(criteria: ModelSelectionCriteria): string {
-  // Use Claude-2 for complex tasks
+  // Use Claude-3 Opus for initial profiling and complex analysis
   if (
-    criteria.conversationStage === 'initial' || 
     criteria.conversationStage === 'profiling' ||
-    (criteria.inputComplexity > 0.7 && criteria.requiresContext)
+    (criteria.inputComplexity > 0.8 && criteria.insightCount > 7)
+  ) {
+    return MODELS.ADVANCED;
+  }
+
+  // Use GPT-4 Turbo for complex technical reasoning
+  if (
+    criteria.conversationStage === 'initial' ||
+    (criteria.inputComplexity > 0.6 && criteria.requiresContext) ||
+    criteria.conversationStage === 'analysis'
   ) {
     return MODELS.PRIMARY;
   }
   
-  // Use GPT-3.5 for standard conversation
+  // Use Claude-3 Sonnet for standard conversation
   if (criteria.insightCount < 5 || criteria.requiresContext) {
     return MODELS.STANDARD;
   }
   
-  // Use Claude Instant for quick responses
+  // Use GPT-3.5 for quick responses
   return MODELS.EFFICIENT;
 }
 
@@ -37,22 +46,28 @@ export function getModelConfig(model: string) {
   };
 
   switch (model) {
+    case MODELS.ADVANCED:
+      return {
+        ...baseConfig,
+        temperature: 0.9,  // More creative for complex profiling
+        max_tokens: 400,   // Longer context for detailed analysis
+      };
     case MODELS.PRIMARY:
       return {
         ...baseConfig,
-        temperature: 0.8,
-        max_tokens: 250,
+        temperature: 0.8,  // Balance creativity and precision
+        max_tokens: 300,   // Extended for technical details
       };
     case MODELS.STANDARD:
       return {
         ...baseConfig,
         temperature: 0.7,
-        max_tokens: 150,
+        max_tokens: 200,   // Increased slightly for better context
       };
     case MODELS.EFFICIENT:
       return {
         ...baseConfig,
-        temperature: 0.6,
+        temperature: 0.6,  // More deterministic for quick responses
         max_tokens: 100,
       };
     default:
