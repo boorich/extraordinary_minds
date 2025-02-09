@@ -54,13 +54,5 @@ export class OpenRouterApi {
     } finally {
       this.pendingRequest = null;
     }
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('API error:', errorData);
-      throw new Error(errorData.details || 'Failed to generate completion');
-    }
-
-    return response.json();
   }
 }
