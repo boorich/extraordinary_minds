@@ -1,8 +1,8 @@
 export const MODELS = {
-  ADVANCED: "anthropic/claude-3-opus-20240229",  // High-end profiling & complex analysis
-  PRIMARY: "openai/gpt-4-turbo-preview",         // Complex reasoning & technical tasks
-  STANDARD: "anthropic/claude-3-sonnet-20240229", // General conversation
-  EFFICIENT: "openai/gpt-3.5-turbo",              // Quick follow-ups
+  ADVANCED: "openai/gpt-4-0125-preview",           // Most capable, especially for long context
+  PRIMARY: "anthropic/claude-3-sonnet-20240229",   // High quality, cost-effective
+  STANDARD: "openai/gpt-4-turbo-preview",          // Good balance for technical tasks
+  EFFICIENT: "openai/gpt-3.5-turbo",               // Quick follow-ups
 } as const;
 
 export interface ModelSelectionCriteria {
