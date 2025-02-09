@@ -4,6 +4,8 @@ import React from 'react';
 import MCPArchitecture from './MCPArchitectureNivo';
 import { NetworkData } from '@/types/network';
 
+import { analyzeNetworkForTooling, generateCardContent } from '@/lib/mcp/toolRecommendations';
+
 interface TransformationSectionProps {
   networkData?: NetworkData;
 }
@@ -29,18 +31,21 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
-          <h3 className="text-lg text-cyan-300 mb-2">Seamless Integration</h3>
-          <p className="text-gray-300">Connect your existing systems and resources without disruption</p>
-        </div>
-        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
-          <h3 className="text-lg text-cyan-300 mb-2">AI Enhancement</h3>
-          <p className="text-gray-300">Leverage advanced LLM capabilities with your domain expertise</p>
-        </div>
-        <div className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
-          <h3 className="text-lg text-cyan-300 mb-2">Secure Foundation</h3>
-          <p className="text-gray-300">Built with enterprise-grade security and compliance in mind</p>
-        </div>
+        {(() => {
+          const recommendations = analyzeNetworkForTooling(networkData || {});
+          const cardContent = generateCardContent(recommendations);
+          
+          return [
+            { title: cardContent.rag.title, description: cardContent.rag.description },
+            { title: cardContent.functions.title, description: cardContent.functions.description },
+            { title: cardContent.applications.title, description: cardContent.applications.description }
+          ].map((card, index) => (
+            <div key={index} className="bg-white/5 p-6 rounded-xl backdrop-blur-sm border border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10">
+              <h3 className="text-lg text-cyan-300 mb-2">{card.title}</h3>
+              <div className="text-gray-300 whitespace-pre-line">{card.description}</div>
+            </div>
+          ));
+        })()}
       </div>
     </div>
   );
