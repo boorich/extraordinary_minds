@@ -13,30 +13,30 @@ export interface ModelSelectionCriteria {
 }
 
 export function selectModel(criteria: ModelSelectionCriteria): string {
-  // Use Claude-3 Opus for initial profiling and complex analysis
-  if (
-    criteria.conversationStage === 'profiling' ||
-    (criteria.inputComplexity > 0.8 && criteria.insightCount > 7)
-  ) {
-    return MODELS.ADVANCED;
+  // Final synthesis (Round 5) - Using Opus for complex synthesis
+  if (criteria.conversationStage === 'profiling') {
+    return MODELS.PRIMARY;  // Claude-3 Opus
   }
 
-  // Use GPT-4 Turbo for complex technical reasoning
-  if (
-    criteria.conversationStage === 'initial' ||
-    (criteria.inputComplexity > 0.6 && criteria.requiresContext) ||
-    criteria.conversationStage === 'analysis'
-  ) {
-    return MODELS.PRIMARY;
+  // High complexity messages need most capable model regardless of stage
+  if (criteria.inputComplexity > 0.8) {
+    return MODELS.ADVANCED;  // Claude 3.5 Sonnet
   }
-  
-  // Use Claude-3 Sonnet for standard conversation
-  if (criteria.insightCount < 5 || criteria.requiresContext) {
-    return MODELS.STANDARD;
+
+  // Initial interaction (Round 1)
+  if (criteria.conversationStage === 'initial') {
+    return criteria.inputComplexity > 0.4
+      ? MODELS.STANDARD    // GPT-4 Turbo for technical queries
+      : MODELS.EFFICIENT;  // GPT-3.5 Turbo for simple queries
   }
-  
-  // Use GPT-3.5 for quick responses
-  return MODELS.EFFICIENT;
+
+  // Rounds 2-4: Progressive discovery needs context
+  if (criteria.requiresContext) {
+    return MODELS.STANDARD;  // GPT-4 Turbo for technical understanding
+  }
+
+  // Default to efficient model for simple follow-ups
+  return MODELS.EFFICIENT;  // GPT-3.5 Turbo
 }
 
 export function getModelConfig(model: string) {
