@@ -46,7 +46,7 @@ export async function analyzeContent(content: string): Promise<NetworkUpdate> {
   try {
     // First pass: Extract components using LLM
     const completion = await openRouter.createCompletion({
-      model: 'claude-3-haiku-20240307',
+      model: 'anthropic/claude-3-sonnet-20240229',
       messages: [
         { role: 'system', content: EXTRACTION_PROMPT },
         { role: 'user', content }

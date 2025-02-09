@@ -253,7 +253,12 @@ Keep it brief and conversational.`;
       console.log('Analyzing input:', input);
       const fallbackResponse = this.generateFallbackResponse(round);
       console.log('Analyzing fallback response:', fallbackResponse);
-      const networkUpdate = await analyzeContent(input + ' ' + fallbackResponse);
+      // Use pattern-only analysis for fallback to avoid additional API calls
+      const networkUpdate = {
+        ai_models: [],
+        company_resources: [],
+        llm_clients: [],
+      };
       return {
         systemResponse: fallbackResponse,
         nextTheme: 'error',
