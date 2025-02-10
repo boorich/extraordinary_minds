@@ -11,9 +11,9 @@ export default function ToolsPage() {
   const cardContent = generateCardContent(recommendations);
 
   const cards = [
-    { title: cardContent.rag.title, description: cardContent.rag.description },
-    { title: cardContent.functions.title, description: cardContent.functions.description },
-    { title: cardContent.applications.title, description: cardContent.applications.description },
+    { title: cardContent.data.title, description: cardContent.data.description },
+    { title: cardContent.cloud.title, description: cardContent.cloud.description },
+    { title: cardContent.client.title, description: cardContent.client.description },
   ];
 
   return (
