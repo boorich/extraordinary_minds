@@ -26,9 +26,17 @@ export function analyzeNetworkForTooling(networkData: NetworkData): ToolRecommen
   );
   
   if (dataNodes.length > 0) {
+    const dataSourceTypes = new Set(dataNodes.map(n => {
+      if (n.id.includes('DB') || n.id.includes('SQL')) return 'database';
+      if (n.id.includes('Notion')) return 'knowledge base';
+      if (n.id.includes('Document')) return 'document store';
+      if (n.id.includes('Wiki')) return 'wiki';
+      return 'data source';
+    }));
+
     recommendations.push({
       title: "Data Integration",
-      description: `Connect to ${dataNodes.length} data sources: ${dataNodes.map(n => n.id).join(', ')}`,
+      description: `Enable AI-driven access to your ${Array.from(dataSourceTypes).join(', ')} systems. Natural language interface to ${dataNodes.length} connected data sources.`,
       requiresDevelopment: false,
       category: 'data',
       existingTool: "Enterprise Data Hub"
@@ -45,9 +53,17 @@ export function analyzeNetworkForTooling(networkData: NetworkData): ToolRecommen
   );
 
   if (cloudNodes.length > 0) {
+    const cloudTypes = new Set(cloudNodes.map(n => {
+      if (n.id.includes('API')) return 'API service';
+      if (n.id.includes('AWS')) return 'AWS resource';
+      if (n.id.includes('Azure')) return 'Azure service';
+      if (n.id.includes('Cloud')) return 'cloud platform';
+      return 'service';
+    }));
+
     recommendations.push({
       title: "Cloud Automation",
-      description: `Integrate with ${cloudNodes.length} cloud services: ${cloudNodes.map(n => n.id).join(', ')}`,
+      description: `Natural language control for your ${Array.from(cloudTypes).join(', ')}s. Automate ${cloudNodes.length} services through chat.`,
       requiresDevelopment: true,
       category: 'cloud'
     });
@@ -62,9 +78,16 @@ export function analyzeNetworkForTooling(networkData: NetworkData): ToolRecommen
   );
 
   if (clientNodes.length > 0) {
+    const clientTypes = new Set(clientNodes.map(n => {
+      if (n.id.includes('Desktop')) return 'desktop app';
+      if (n.id.includes('IDE')) return 'development tool';
+      if (n.id.includes('Browser')) return 'browser';
+      return 'application';
+    }));
+
     recommendations.push({
       title: "Client Integration",
-      description: `Enable automation for ${clientNodes.length} client applications: ${clientNodes.map(n => n.id).join(', ')}`,
+      description: `Control your ${Array.from(clientTypes).join(', ')}s through chat. Enable AI assistance for ${clientNodes.length} local tools.`,
       requiresDevelopment: false,
       category: 'client',
       existingTool: "Desktop Integration Hub"
