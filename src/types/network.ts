@@ -5,9 +5,9 @@ export interface ComponentMetadata {
   type?: string;
   parent?: string;
   details?: Record<string, string> | string[];
+  category?: ComponentCategory;  // New optional field
 }
 
-// Just adding the type, no usage yet
 export type ComponentCategory = 
   | 'data-source'     // Databases, document systems, etc.
   | 'cloud-service'   // APIs, cloud resources
