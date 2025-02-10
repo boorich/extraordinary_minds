@@ -26,6 +26,7 @@ export const useCardStore = create<CardState>((set) => ({
       console.log('No valid network data, skipping update');
       return;
     }
+    console.log('Processing update in store...');
     const recommendations = analyzeNetworkForTooling(networkData);
     const cardContent = generateCardContent(recommendations);
     set({ recommendations, cardContent });
