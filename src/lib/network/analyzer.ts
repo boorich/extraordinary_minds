@@ -1,8 +1,23 @@
 import { NetworkUpdate, NetworkUpdateComponent } from './parser';
 import { PATTERNS, PatternImplementation } from './patterns';
 import { OpenRouterApi } from '../openrouter';
+import { ComponentCategory, ComponentMetadata } from '@/types/network';
 
 const openRouter = new OpenRouterApi('');
+
+// Add helper function but don't use it yet
+function inferCategory(metadata: ComponentMetadata): ComponentCategory {
+  const attrs = [
+    metadata.type?.toLowerCase() || '',
+    metadata.description?.toLowerCase() || '',
+    ...Object.values(metadata.details || {}).map(v => v?.toString().toLowerCase() || '')
+  ].join(' ');
+
+  if (attrs.match(/database|document|data|storage|warehouse/)) return 'data-source';
+  if (attrs.match(/api|cloud|service|workflow/)) return 'cloud-service';
+  if (attrs.match(/app|tool|interface|client/)) return 'client-tool';
+  return 'other';
+}
 
 const EXTRACTION_PROMPT = `Analyze the following text and extract technical components in these categories:
 1. LLM Clients: tools, interfaces, user touchpoints
