@@ -51,7 +51,7 @@ export async function analyzeContent(content: string): Promise<NetworkUpdate> {
         { role: 'system', content: EXTRACTION_PROMPT },
         { role: 'user', content }
       ],
-      temperature: 0.2,
+      temperature: 0, // Set to 0 for deterministic output
       max_tokens: 500
     });
 
@@ -66,6 +66,16 @@ export async function analyzeContent(content: string): Promise<NetworkUpdate> {
       ai_models: [],
       company_resources: [],
       llm_clients: []
+    };
+
+    // Sort function for components
+    const sortComponents = (a: NetworkUpdateComponent, b: NetworkUpdateComponent) => {
+      // First sort by height (descending)
+      if (b.height !== a.height) return b.height - a.height;
+      // Then by size (descending)
+      if (b.size !== a.size) return b.size - a.size;
+      // Finally by id (ascending) for consistent ordering
+      return a.id.localeCompare(b.id);
     };
 
     // Process each category
@@ -101,7 +111,8 @@ export async function analyzeContent(content: string): Promise<NetworkUpdate> {
           categoryArray.push(validComponent);
         }
       });
-      result[category as keyof NetworkUpdate] = categoryArray;
+      // Sort components before assigning to result
+      result[category as keyof NetworkUpdate] = categoryArray.sort(sortComponents);
     });
 
     console.log('Final network update:', JSON.stringify(result, null, 2));
@@ -123,6 +134,16 @@ function patternAnalysis(content: string): NetworkUpdate {
     ai_models: [],
     company_resources: [],
     llm_clients: []
+  };
+
+  // Sort function for components
+  const sortComponents = (a: NetworkUpdateComponent, b: NetworkUpdateComponent) => {
+    // First sort by height (descending)
+    if (b.height !== a.height) return b.height - a.height;
+    // Then by size (descending)
+    if (b.size !== a.size) return b.size - a.size;
+    // Finally by id (ascending) for consistent ordering
+    return a.id.localeCompare(b.id);
   };
 
   console.log('=== Pattern Analysis Debug ===');
@@ -152,12 +173,13 @@ function patternAnalysis(content: string): NetworkUpdate {
             // Copy all metadata fields from the implementation pattern
             const component = {
               ...impl,
-                  color: "rgb(232, 193, 160)"
-                };
+              color: "rgb(232, 193, 160)"
+            };
             categoryArray.push(component);
           }
         });
-        result[categoryKey as keyof NetworkUpdate] = categoryArray;
+        // Sort components before assigning to result
+        result[categoryKey as keyof NetworkUpdate] = categoryArray.sort(sortComponents);
       }
     });
   });
