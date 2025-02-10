@@ -4,7 +4,7 @@ export interface ToolRecommendation {
   title: string;
   description: string;
   requiresDevelopment: boolean;
-  category: 'rag' | 'functions' | 'applications';
+  category: 'data' | 'cloud' | 'client';
   existingTool?: string;
 }
 
@@ -15,120 +15,97 @@ function countNodesByType(networkData: NetworkData, type: string): number {
 export function analyzeNetworkForTooling(networkData: NetworkData): ToolRecommendation[] {
   const recommendations: ToolRecommendation[] = [];
   
-  // Check database components
-  const dbNodes = networkData.nodes.filter(node => 
+  // Data Layer Analysis
+  const dataNodes = networkData.nodes.filter(node => 
     node.id.includes('DB') || 
-    node.id.includes('SQL') || 
+    node.id.includes('SQL') ||
     node.id.includes('PostgreSQL') ||
-    node.id.includes('HANA')
+    node.id.includes('HANA') ||
+    node.id.includes('Notion') ||
+    node.id.includes('Document')
   );
   
-  if (dbNodes.length > 0) {
+  if (dataNodes.length > 0) {
     recommendations.push({
-      title: "Database Integration",
-      description: `Unified access layer for ${dbNodes.length} database systems: ${dbNodes.map(n => n.id).join(', ')}`,
+      title: "Data Integration",
+      description: `Connect to ${dataNodes.length} data sources: ${dataNodes.map(n => n.id).join(', ')}`,
       requiresDevelopment: false,
-      category: 'rag',
-      existingTool: "Enterprise DB Connector"
-    });
-  } else {
-    recommendations.push({
-      title: "Vector Database Integration",
-      description: `Network storage for ${networkData.nodes.length} components`,
-      requiresDevelopment: false,
-      category: 'rag',
-      existingTool: "Pinecone MCP Server"
+      category: 'data',
+      existingTool: "Enterprise Data Hub"
     });
   }
 
-  // API Gateway requirements
-  const apiNodes = networkData.nodes.filter(node => 
+  // Cloud Service Analysis
+  const cloudNodes = networkData.nodes.filter(node => 
     node.id.includes('API') || 
     node.id.includes('REST') || 
-    node.id.includes('GraphQL')
+    node.id.includes('Cloud') ||
+    node.id.includes('AWS') ||
+    node.id.includes('Azure')
   );
 
-  if (apiNodes.length > 0) {
+  if (cloudNodes.length > 0) {
     recommendations.push({
-      title: "API Gateway",
-      description: `Integration hub for ${apiNodes.length} API endpoints: ${apiNodes.map(n => n.id).join(', ')}`,
+      title: "Cloud Automation",
+      description: `Integrate with ${cloudNodes.length} cloud services: ${cloudNodes.map(n => n.id).join(', ')}`,
       requiresDevelopment: true,
-      category: 'functions'
-    });
-  } else {
-    recommendations.push({
-      title: "API Gateway",
-      description: `Managing ${networkData.links.length} connections`,
-      requiresDevelopment: true,
-      category: 'functions'
+      category: 'cloud'
     });
   }
 
-  // Process automation needs
-  const erpNodes = networkData.nodes.filter(node => 
-    node.id.includes('ERP') || 
-    node.id.includes('SAP') || 
-    node.id.includes('S/4')
+  // Client Tool Analysis
+  const clientNodes = networkData.nodes.filter(node => 
+    node.id.includes('Desktop') || 
+    node.id.includes('Local') || 
+    node.id.includes('Client') ||
+    node.id.includes('IDE')
   );
 
-  if (erpNodes.length > 0) {
+  if (clientNodes.length > 0) {
     recommendations.push({
-      title: "Process Automation",
-      description: `Enterprise workflow automation for ${erpNodes.length} systems: ${erpNodes.map(n => n.id).join(', ')}`,
+      title: "Client Integration",
+      description: `Enable automation for ${clientNodes.length} client applications: ${clientNodes.map(n => n.id).join(', ')}`,
       requiresDevelopment: false,
-      category: 'applications',
-      existingTool: "JetBrains MCP Server"
-    });
-  } else {
-    recommendations.push({
-      title: "Process Automation",
-      description: "Execute and monitor enterprise workflows",
-      requiresDevelopment: false,
-      category: 'applications',
-      existingTool: "JetBrains MCP Server"
+      category: 'client',
+      existingTool: "Desktop Integration Hub"
     });
   }
 
   return recommendations;
 }
 
-export function getToolsByCategory(recommendations: ToolRecommendation[], category: string) {
-  return recommendations.filter(tool => tool.category === category);
-}
-
 export function generateCardContent(recommendations: ToolRecommendation[]) {
-  const cardContent = {
-    rag: {
-      title: "Data Integration",
-      description: getToolsByCategory(recommendations, 'rag')
-        .map(tool => {
-          const toolName = tool.existingTool ? ` (${tool.existingTool})` : '';
-          const status = tool.requiresDevelopment ? '[To Build]' : '[Available]';
-          return `${status} ${tool.title}${toolName}: ${tool.description}`;
-        })
-        .join('\n\n')
+  // Initial state with category explanations
+  const content = {
+    data: {
+      title: "Data Access",
+      description: "Access company data through secure MCP servers that connect to various data sources like databases, knowledge bases, and document management systems."
     },
-    functions: {
-      title: "AI Enhancement",
-      description: getToolsByCategory(recommendations, 'functions')
-        .map(tool => {
-          const toolName = tool.existingTool ? ` (${tool.existingTool})` : '';
-          const status = tool.requiresDevelopment ? '[To Build]' : '[Available]';
-          return `${status} ${tool.title}${toolName}: ${tool.description}`;
-        })
-        .join('\n\n')
+    cloud: {
+      title: "Cloud Automation",
+      description: "Integrate with cloud services and APIs to automate workflows and manage cloud resources across your infrastructure."
     },
-    applications: {
-      title: "System Integration",
-      description: getToolsByCategory(recommendations, 'applications')
-        .map(tool => {
-          const toolName = tool.existingTool ? ` (${tool.existingTool})` : '';
-          const status = tool.requiresDevelopment ? '[To Build]' : '[Available]';
-          return `${status} ${tool.title}${toolName}: ${tool.description}`;
-        })
-        .join('\n\n')
+    client: {
+      title: "Client Automation",
+      description: "Enable direct integration with desktop applications and local tools through secure MCP servers running on user systems."
     }
   };
 
-  return cardContent;
+  // If we have recommendations, update the descriptions
+  if (recommendations.length > 0) {
+    recommendations.forEach(rec => {
+      const category = rec.category;
+      const toolName = rec.existingTool ? ` (${rec.existingTool})` : '';
+      const status = rec.requiresDevelopment ? '[To Build]' : '[Available]';
+      const currentDesc = content[category].description;
+      
+      if (currentDesc.includes('[')) {
+        content[category].description += `\n\n${status} ${rec.title}${toolName}: ${rec.description}`;
+      } else {
+        content[category].description = `${status} ${rec.title}${toolName}: ${rec.description}`;
+      }
+    });
+  }
+
+  return content;
 }
