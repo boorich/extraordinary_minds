@@ -1,79 +1,34 @@
-import { MCPTool } from '@/types';
+import { NetworkData } from '@/types/network';
 
 export interface ToolRecommendation {
   title: string;
   description: string;
   requiresDevelopment: boolean;
   category: 'rag' | 'functions' | 'applications';
-  existingTool?: string;  // If we can use an existing MCP tool
+  existingTool?: string;
 }
 
-export function analyzeNetworkForTooling(networkData: any): ToolRecommendation[] {
-  console.log('=== analyzeNetworkForTooling ===');
-  console.log('Analyzing network data:', networkData);
+export function analyzeNetworkForTooling(networkData: NetworkData): ToolRecommendation[] {
   const recommendations: ToolRecommendation[] = [
-    // RAG Tools
     {
       title: "Vector Database Integration",
-      description: "Semantic search and retrieval for conversation history and contextual data",
+      description: `Network storage for ${networkData.nodes.length} components`,
       requiresDevelopment: false,
       category: 'rag',
       existingTool: "Pinecone MCP Server"
     },
     {
-      title: "Document Processing",
-      description: "Parse and process various document formats for knowledge extraction",
-      requiresDevelopment: false,
-      category: 'rag',
-      existingTool: "Markdownify MCP Server"
-    },
-    {
-      title: "Network Graph Memory",
-      description: "Specialized graph database for storing and querying conversation flows",
-      requiresDevelopment: true,
-      category: 'rag'
-    },
-
-    // Function Tools
-    {
       title: "API Gateway",
-      description: "Secure gateway for enterprise API access with rate limiting and monitoring",
+      description: `Managing ${networkData.links.length} connections`,
       requiresDevelopment: true,
       category: 'functions'
     },
-    {
-      title: "Model Selection API",
-      description: "Dynamic model selection based on conversation complexity",
-      requiresDevelopment: false,
-      category: 'functions',
-      existingTool: "Any Chat Completions MCP Server"
-    },
-    {
-      title: "Authentication Bridge",
-      description: "Enterprise SSO integration for secure model access",
-      requiresDevelopment: true,
-      category: 'functions'
-    },
-
-    // Application Tools
     {
       title: "Process Automation",
       description: "Execute and monitor enterprise workflows",
       requiresDevelopment: false,
       category: 'applications',
       existingTool: "JetBrains MCP Server"
-    },
-    {
-      title: "Compliance Logger",
-      description: "Audit logging for all model interactions and tool usage",
-      requiresDevelopment: true,
-      category: 'applications'
-    },
-    {
-      title: "Resource Monitor",
-      description: "Track and optimize resource usage across the network",
-      requiresDevelopment: true,
-      category: 'applications'
     }
   ];
 
@@ -88,26 +43,35 @@ export function generateCardContent(recommendations: ToolRecommendation[]) {
   const cardContent = {
     rag: {
       title: "Seamless Integration",
-      description: formatToolsDescription(getToolsByCategory(recommendations, 'rag'))
+      description: getToolsByCategory(recommendations, 'rag')
+        .map(tool => {
+          const toolName = tool.existingTool ? ` (${tool.existingTool})` : '';
+          const status = tool.requiresDevelopment ? '[To Build]' : '[Available]';
+          return `${status} ${tool.title}${toolName}: ${tool.description}`;
+        })
+        .join('\n\n')
     },
     functions: {
       title: "AI Enhancement",
-      description: formatToolsDescription(getToolsByCategory(recommendations, 'functions'))
+      description: getToolsByCategory(recommendations, 'functions')
+        .map(tool => {
+          const toolName = tool.existingTool ? ` (${tool.existingTool})` : '';
+          const status = tool.requiresDevelopment ? '[To Build]' : '[Available]';
+          return `${status} ${tool.title}${toolName}: ${tool.description}`;
+        })
+        .join('\n\n')
     },
     applications: {
       title: "Secure Foundation",
-      description: formatToolsDescription(getToolsByCategory(recommendations, 'applications'))
+      description: getToolsByCategory(recommendations, 'applications')
+        .map(tool => {
+          const toolName = tool.existingTool ? ` (${tool.existingTool})` : '';
+          const status = tool.requiresDevelopment ? '[To Build]' : '[Available]';
+          return `${status} ${tool.title}${toolName}: ${tool.description}`;
+        })
+        .join('\n\n')
     }
   };
 
   return cardContent;
-}
-
-function formatToolsDescription(tools: ToolRecommendation[]): string {
-  return tools.map(tool => {
-    if (tool.requiresDevelopment) {
-      return `[To Build] ${tool.title}: ${tool.description}`;
-    }
-    return `[Available] ${tool.title} (${tool.existingTool}): ${tool.description}`;
-  }).join('\n\n');
 }

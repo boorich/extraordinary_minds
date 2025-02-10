@@ -16,14 +16,12 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
   console.log('Current card content:', cardContent);
 
   useEffect(() => {
-    console.log('=== TransformationSection: useEffect triggered ===');
-    console.log('Network data:', networkData);
     if (networkData?.nodes?.length) {
-      console.log('Calling updateFromNetwork');
+      console.log('TransformationSection: Updating cards with network data:', {
+        nodeCount: networkData.nodes.length,
+        linkCount: networkData.links.length
+      });
       updateFromNetwork(networkData);
-      console.log('Card content after update:', cardContent);
-    } else {
-      console.log('No network data available');
     }
   }, [networkData?.nodes?.length, networkData?.links?.length, updateFromNetwork]);
 

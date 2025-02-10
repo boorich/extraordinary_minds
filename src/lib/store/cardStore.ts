@@ -20,13 +20,10 @@ export const useCardStore = create<CardState>((set, get) => ({
     applications: { title: '', description: '' }
   },
   updateFromNetwork: (networkData: NetworkData) => {
-    console.log('=== Card Store: updateFromNetwork ===');
-    console.log('Received network data:', networkData);
-    if (!networkData?.nodes?.length) {
-      console.log('No valid network data, skipping update');
-      return;
-    }
-    console.log('Processing update in store...');
+    console.log('Store: Processing update with network data:', {
+      nodeCount: networkData.nodes.length,
+      linkCount: networkData.links.length
+    });
     const recommendations = analyzeNetworkForTooling(networkData);
     const cardContent = generateCardContent(recommendations);
     const prevState = get();
