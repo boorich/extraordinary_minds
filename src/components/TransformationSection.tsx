@@ -11,10 +11,18 @@ interface TransformationSectionProps {
 
 const TransformationSection = ({ networkData }: TransformationSectionProps) => {
   const { cardContent, updateFromNetwork } = useCardStore();
+  
+  console.log('=== TransformationSection: render ===');
+  console.log('Current card content:', cardContent);
 
   useEffect(() => {
+    console.log('=== TransformationSection: useEffect triggered ===');
+    console.log('Network data:', networkData);
     if (networkData) {
+      console.log('Calling updateFromNetwork');
       updateFromNetwork(networkData);
+    } else {
+      console.log('No network data available');
     }
   }, [networkData?.nodes?.length, networkData?.links?.length, updateFromNetwork]);
 

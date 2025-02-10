@@ -9,6 +9,8 @@ export interface ToolRecommendation {
 }
 
 export function analyzeNetworkForTooling(networkData: any): ToolRecommendation[] {
+  console.log('=== analyzeNetworkForTooling ===');
+  console.log('Analyzing network data:', networkData);
   const recommendations: ToolRecommendation[] = [
     // RAG Tools
     {
