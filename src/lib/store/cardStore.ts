@@ -20,6 +20,7 @@ export const useCardStore = create<CardState>((set) => ({
     applications: { title: '', description: '' }
   },
   updateFromNetwork: (networkData: NetworkData) => {
+    if (!networkData?.nodes?.length) return; // Don't update if no valid network data
     const recommendations = analyzeNetworkForTooling(networkData);
     const cardContent = generateCardContent(recommendations);
     set({ recommendations, cardContent });

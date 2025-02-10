@@ -16,7 +16,7 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
     if (networkData) {
       updateFromNetwork(networkData);
     }
-  }, [networkData, updateFromNetwork]);
+  }, [networkData?.nodes?.length, networkData?.links?.length, updateFromNetwork]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
