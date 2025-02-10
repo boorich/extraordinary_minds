@@ -15,27 +15,27 @@ export const useCardStore = create<CardState>((set, get) => ({
   cardContent: {
     data: { 
       title: 'Data Access',
-      description: 'Transform your existing data sources into AI-ready interfaces:
+      description: `Transform your existing data sources into AI-ready interfaces:
 • Connect to Notion workspaces for knowledge sharing
 • Query databases (PostgreSQL, MongoDB) with natural language
 • Access document management systems securely
-• Extract insights from company wikis and knowledge bases'
+• Extract insights from company wikis and knowledge bases`
     },
     cloud: {
       title: 'Cloud Automation',
-      description: 'Automate your cloud infrastructure through natural language:
+      description: `Automate your cloud infrastructure through natural language:
 • Deploy and manage GitHub repositories and pull requests
 • Control AWS services and resources
 • Manage Kubernetes clusters and deployments
-• Integrate with cloud APIs and services'
+• Integrate with cloud APIs and services`
     },
     client: {
       title: 'Client Automation',
-      description: 'Control desktop tools and applications via chat:
+      description: `Control desktop tools and applications via chat:
 • Access local files and directories securely
 • Automate browser-based testing and workflows
 • Manage local Git repositories
-• Control desktop applications like CAD, IDEs, and design tools'
+• Control desktop applications like CAD, IDEs, and design tools`
     }
   },
   updateFromNetwork: (networkData: NetworkData) => {
