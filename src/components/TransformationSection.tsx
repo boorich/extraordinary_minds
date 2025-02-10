@@ -34,9 +34,9 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { title: cardContent.rag.title, description: cardContent.rag.description },
-          { title: cardContent.functions.title, description: cardContent.functions.description },
-          { title: cardContent.applications.title, description: cardContent.applications.description }
+          { title: cardContent.data.title, description: cardContent.data.description },
+          { title: cardContent.cloud.title, description: cardContent.cloud.description },
+          { title: cardContent.client.title, description: cardContent.client.description }
         ].map((card, index) => (
           <TransformationCard
             key={index}

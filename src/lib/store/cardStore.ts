@@ -1,43 +1,38 @@
 import { create } from 'zustand';
 import { NetworkData } from '@/types/network';
-import { ToolRecommendation, analyzeNetworkForTooling, generateCardContent } from '@/lib/mcp/toolRecommendations';
+import { generateCardContent } from '@/lib/mcp/mcpCategories';
 
 interface CardState {
-  recommendations: ToolRecommendation[];
   cardContent: {
-    rag: { title: string; description: string };
-    functions: { title: string; description: string };
-    applications: { title: string; description: string };
+    data: { title: string; description: string };
+    cloud: { title: string; description: string };
+    client: { title: string; description: string };
   };
   updateFromNetwork: (networkData: NetworkData) => void;
 }
 
 export const useCardStore = create<CardState>((set, get) => ({
-  recommendations: [],
   cardContent: {
-    rag: { title: '', description: '' },
-    functions: { title: '', description: '' },
-    applications: { title: '', description: '' }
+    data: { title: '', description: '' },
+    cloud: { title: '', description: '' },
+    client: { title: '', description: '' }
   },
   updateFromNetwork: (networkData: NetworkData) => {
     console.log('Store: Processing update with network data:', {
       nodeCount: networkData.nodes.length,
       linkCount: networkData.links.length
     });
-    const recommendations = analyzeNetworkForTooling(networkData);
-    const cardContent = generateCardContent(recommendations);
+    
+    const cardContent = generateCardContent();
     const prevState = get();
     console.log('Previous state:', prevState);
-    console.log('New recommendations:', recommendations);
     console.log('New card content:', cardContent);
     
     set({
-      recommendations,
       cardContent: {
-        ...cardContent,
-        rag: { ...cardContent.rag },
-        functions: { ...cardContent.functions },
-        applications: { ...cardContent.applications }
+        data: { ...cardContent.data },
+        cloud: { ...cardContent.cloud },
+        client: { ...cardContent.client }
       }
     });
     
