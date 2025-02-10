@@ -12,7 +12,7 @@ interface CardState {
   updateFromNetwork: (networkData: NetworkData) => void;
 }
 
-export const useCardStore = create<CardState>((set) => ({
+export const useCardStore = create<CardState>((set, get) => ({
   recommendations: [],
   cardContent: {
     rag: { title: '', description: '' },
@@ -29,6 +29,21 @@ export const useCardStore = create<CardState>((set) => ({
     console.log('Processing update in store...');
     const recommendations = analyzeNetworkForTooling(networkData);
     const cardContent = generateCardContent(recommendations);
-    set({ recommendations, cardContent });
+    const prevState = get();
+    console.log('Previous state:', prevState);
+    console.log('New recommendations:', recommendations);
+    console.log('New card content:', cardContent);
+    
+    set({
+      recommendations,
+      cardContent: {
+        ...cardContent,
+        rag: { ...cardContent.rag },
+        functions: { ...cardContent.functions },
+        applications: { ...cardContent.applications }
+      }
+    });
+    
+    console.log('State after update:', get());
   }
 }));
