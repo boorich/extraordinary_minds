@@ -2,9 +2,12 @@ import { CardSection } from '@/components/CardSection';
 import { analyzeNetworkForTooling, generateCardContent } from '@/lib/mcp/toolRecommendations';
 
 export default function ToolsPage() {
-  // For now, we pass an empty object as network data
-  // In production, this would come from your network graph state
-  const recommendations = analyzeNetworkForTooling({});
+  // Create empty NetworkData to satisfy type requirements
+  const emptyNetworkData = {
+    nodes: [],
+    links: []
+  };
+  const recommendations = analyzeNetworkForTooling(emptyNetworkData);
   const cardContent = generateCardContent(recommendations);
 
   const cards = [
