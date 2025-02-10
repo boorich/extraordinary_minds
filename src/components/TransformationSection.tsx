@@ -18,9 +18,10 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
   useEffect(() => {
     console.log('=== TransformationSection: useEffect triggered ===');
     console.log('Network data:', networkData);
-    if (networkData) {
+    if (networkData?.nodes?.length) {
       console.log('Calling updateFromNetwork');
       updateFromNetwork(networkData);
+      console.log('Card content after update:', cardContent);
     } else {
       console.log('No network data available');
     }
