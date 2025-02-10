@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface TransformationCardProps {
   title: string;
@@ -11,8 +10,8 @@ const TransformationCard = ({ title, description }: TransformationCardProps) => 
   const recommendations = description.split('\n\n');
 
   return (
-    <Card className="group bg-white/5 border-white/10 shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10 backdrop-blur-sm">
-      <CardContent className="p-6">
+    <div className="group bg-white/5 border border-white/10 rounded-xl shadow-xl hover:scale-[1.02] transition-all duration-300 hover:bg-white/10 backdrop-blur-sm">
+      <div className="p-6">
         <h3 className="text-lg font-semibold text-cyan-300 mb-4">{title}</h3>
         <div className="space-y-4">
           {recommendations.map((recommendation, index) => {
@@ -43,8 +42,8 @@ const TransformationCard = ({ title, description }: TransformationCardProps) => 
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
