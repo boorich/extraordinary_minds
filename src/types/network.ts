@@ -7,6 +7,13 @@ export interface ComponentMetadata {
   details?: Record<string, string> | string[];
 }
 
+// Just adding the type, no usage yet
+export type ComponentCategory = 
+  | 'data-source'     // Databases, document systems, etc.
+  | 'cloud-service'   // APIs, cloud resources
+  | 'client-tool'     // Applications, interfaces
+  | 'other';          // Fallback
+
 export interface NetworkNode {
   id: string;
   height: number;
