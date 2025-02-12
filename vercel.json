@@ -1,4 +1,11 @@
 {
-  "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm run build"
+  "buildCommand": "npm run check-unused && next build",
+  "checks": {
+    "unusedFiles": {
+      "name": "Check for unused files",
+      "command": "npx depcheck .",
+      "logging": "error",
+      "onFailure": "warn"
+    }
+  }
 }

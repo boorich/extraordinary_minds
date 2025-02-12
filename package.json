@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "find-unused": "next-unused"
+    "check-unused": "npx depcheck ."
   },
   "dependencies": {
     "@vercel/blob": "^0.18.0",
