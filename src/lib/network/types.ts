@@ -14,3 +14,10 @@ export interface NetworkNode {
   color: string;
   metadata?: ComponentMetadata;
 }
+
+export interface NetworkMetadata {
+  /* Base Network metadata */
+  components?: Record<string, ComponentMetadata>;
+  /* Feature-specific metadata */
+  [key: string]: any;
+}

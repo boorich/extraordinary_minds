@@ -6,12 +6,7 @@ import { RFQAgent } from '@/lib/agent/RFQAgent';
 import rfqConfig from '@/config/rfq.character.json';
 import { DialogueMetrics } from '@/types/dialogue';
 import { NetworkUpdate } from '@/lib/network/parser';
-
-interface RFQInsight {
-  type: 'warning' | 'info' | 'success';
-  message: string;
-  details?: string;
-}
+import { RFQInsight } from '@/types/rfq';
 
 export default function RFQDialogue() {
   const [metrics, setMetrics] = useState<DialogueMetrics | null>(null);
@@ -21,7 +16,7 @@ export default function RFQDialogue() {
     setMetrics(newMetrics);
   };
 
-  const handleNetworkUpdate = (update: NetworkUpdate) => {
+  const handleNetworkUpdate = (update: NetworkUpdate & { metadata?: { rfq_components?: { insights: RFQInsight[] } } }) => {
     if (update.metadata?.rfq_components?.insights) {
       setInsights(update.metadata.rfq_components.insights);
     }
