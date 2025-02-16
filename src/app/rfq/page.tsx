@@ -1,6 +1,6 @@
 import React from 'react';
 import RFQChat from '@/components/rfq/RFQChat';
-import { useCardStore } from '@/lib/store/cardStore';
+import RFQFeatureCard from '@/components/rfq/RFQFeatureCard';
 
 export const metadata = {
   title: 'RFQ Template Generator | Vision Landing',
@@ -26,6 +26,8 @@ export default function RFQPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          <RFQFeatureCard />
+          
           <div className="bg-slate-800/80 rounded-2xl p-8 backdrop-blur-sm border border-cyan-400/10 shadow-2xl">
             <RFQChat />
           </div>
