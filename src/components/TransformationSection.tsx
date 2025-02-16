@@ -37,6 +37,7 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
           <TransformationCard
             title={cardContent.rfq.title}
             description={cardContent.rfq.description}
+            href="/rfq"
           />
         </div>
         {[
