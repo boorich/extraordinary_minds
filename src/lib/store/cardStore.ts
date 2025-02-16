@@ -4,7 +4,6 @@ import { analyzeNetworkForTooling, generateCardContent } from '@/lib/mcp/toolRec
 
 interface CardState {
   cardContent: {
-    rfq: { title: string; description: string };
     data: { title: string; description: string };
     cloud: { title: string; description: string };
     client: { title: string; description: string };
@@ -14,14 +13,6 @@ interface CardState {
 
 export const useCardStore = create<CardState>((set, get) => ({
   cardContent: {
-    rfq: {
-      title: 'RFQ Generator',
-      description: `[Available] Free RFQ Template Generator: Create professional RFQ documents through a guided conversation.
-
-[Beta] Smart Validation: Get instant feedback and improvement suggestions based on industry best practices.
-
-[Coming Soon] Enterprise Enhancement: Connect your company data to create more accurate and detailed RFQs.`
-    },
     data: { 
       title: 'Data Access',
       description: `Transform your existing data sources into AI-ready interfaces:
@@ -55,21 +46,13 @@ export const useCardStore = create<CardState>((set, get) => ({
     
     const recommendations = analyzeNetworkForTooling(networkData);
     const cardContent = generateCardContent(recommendations);
-    const prevState = get();
-    console.log('Previous state:', prevState);
-    console.log('New card content:', cardContent);
-    
-    const currentRfq = get().cardContent.rfq;
     
     set({
       cardContent: {
-        rfq: currentRfq, // Preserve RFQ content during updates
         data: { ...cardContent.data },
         cloud: { ...cardContent.cloud },
         client: { ...cardContent.client }
       }
     });
-    
-    console.log('State after update:', get());
   }
 }));
