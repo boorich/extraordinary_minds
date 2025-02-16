@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRFQStore } from '@/lib/rfq/store';
 import { RFQResponse } from '@/lib/rfq/types';
-import { AlertTriangle, ChevronRight } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Send } from 'lucide-react';
 
 export default function RFQChat() {
   const [userInput, setUserInput] = useState('');
@@ -45,37 +45,42 @@ export default function RFQChat() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6">
       {/* Progress */}
-      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-        <div 
-          className="bg-blue-500 h-full transition-all"
-          style={{ width: `${((sectionIndex + 1) / 5) * 100}%` }}
-        />
+      <div>
+        <div className="text-cyan-400 mb-2">Progress: {sectionIndex + 1}/5</div>
+        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-cyan-400 transition-all duration-500"
+            style={{ width: `${((sectionIndex + 1) / 5) * 100}%` }}
+          />
+        </div>
       </div>
 
       {/* Current Section */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">{currentSection.name}</h2>
+      <div className="rounded-lg border border-cyan-400/30 bg-slate-900/50 p-6">
+        <h2 className="text-xl text-white mb-4">{currentSection.name}</h2>
         
         {currentSection.prompts.map((prompt, index) => (
-          <p key={index} className="mb-2 text-gray-700">{prompt}</p>
+          <p key={index} className="mb-2 text-gray-300">{prompt}</p>
         ))}
 
-        <form onSubmit={handleSubmit} className="mt-4">
+        <form onSubmit={handleSubmit} className="mt-6">
           <textarea
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            rows={4}
+            className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 text-white 
+                     focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
+                     placeholder-slate-400 resize-none min-h-[100px]"
             placeholder="Your response..."
+            rows={4}
           />
           
           <div className="mt-4 flex justify-between">
             <button
               type="button"
               onClick={previousSection}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-cyan-300 hover:text-cyan-200 disabled:text-slate-600"
               disabled={sectionIndex === 0}
             >
               Back
@@ -84,31 +89,39 @@ export default function RFQChat() {
             <button
               type="submit"
               disabled={isProcessing || !userInput.trim()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center"
+              className="flex items-center px-4 py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30
+                       hover:bg-cyan-500/30 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isProcessing ? 'Processing...' : 'Next'}
-              <ChevronRight className="ml-2 h-4 w-4" />
+              {isProcessing ? (
+                <>Processing...</>
+              ) : (
+                <>
+                  Next
+                  <Send className="ml-2 h-4 w-4" />
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
 
       {/* Data Enhancement Hints */}
-      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-medium mb-4 flex items-center">
-          <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
+      <div className="rounded-lg border border-cyan-400/30 bg-slate-900/50 p-6">
+        <h3 className="text-lg text-cyan-300 mb-4 flex items-center">
+          <AlertTriangle className="h-5 w-5 mr-2" />
           Data Enhancement Opportunities
         </h3>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {currentSection.dataHints.map((hint, index) => (
             <div key={index} className="flex items-start">
-              <div className="h-6 w-6 rounded-full bg-yellow-100 flex items-center justify-center mr-3 mt-0.5">
-                <span className="text-yellow-700 text-sm">{index + 1}</span>
+              <div className="h-6 w-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 
+                            flex items-center justify-center mr-3 mt-0.5">
+                <span className="text-cyan-300 text-sm">{index + 1}</span>
               </div>
               <div>
-                <p className="text-gray-700">{hint}</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-gray-300">{hint}</p>
+                <p className="text-sm text-cyan-300/70 mt-1">
                   Connect your systems via MCP to enhance this section with real data
                 </p>
               </div>

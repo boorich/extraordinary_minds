@@ -14,7 +14,7 @@ const TransformationCard = ({ title, description, href }: TransformationCardProp
   const CardContent = () => (
     <div className="p-6">
       <h3 className="text-lg font-semibold text-cyan-300 mb-4">{title}</h3>
-      <div className="space-y-4">
+      <div className="space-y-6">
         {recommendations.map((recommendation, index) => {
           const [status, ...contentParts] = recommendation.split('] ');
           const content = contentParts.join('] '); // Rejoin in case there are other brackets
@@ -29,14 +29,14 @@ const TransformationCard = ({ title, description, href }: TransformationCardProp
                       ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
                       : status.includes('[Beta]')
                       ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
-                      : 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                      : 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
                   }`}
                 >
                   {status.replace('[', '').replace(']', '')}
                 </span>
                 <div className="flex-1">
-                  <div className="text-gray-200 font-medium">{content.split(':')[0]}</div>
-                  <p className="text-gray-400 text-sm mt-1 leading-relaxed">
+                  <div className="text-white font-medium">{content.split(':')[0]}</div>
+                  <p className="text-gray-400 text-sm mt-2 leading-relaxed">
                     {content.split(':')[1]?.trim()}
                   </p>
                 </div>
@@ -48,8 +48,8 @@ const TransformationCard = ({ title, description, href }: TransformationCardProp
     </div>
   );
 
-  const baseClasses = "group bg-white/5 border border-white/10 rounded-xl shadow-xl transition-all duration-300 backdrop-blur-sm";
-  const interactiveClasses = href ? "hover:scale-[1.02] hover:bg-white/10 cursor-pointer" : "";
+  const baseClasses = "group bg-slate-800/90 border border-cyan-400/10 rounded-xl shadow-xl transition-all duration-300 backdrop-blur-sm";
+  const interactiveClasses = href ? "hover:scale-[1.02] hover:bg-slate-700/90 hover:border-cyan-400/30 cursor-pointer" : "";
 
   if (href) {
     return (

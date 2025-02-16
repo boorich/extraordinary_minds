@@ -2,29 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Inter font for clean, professional look */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+:root {
+  --background: #020817;
+  --foreground: rgb(255 255 255 / 0.87);
+}
 
-/* Apply Inter font globally */
 body {
-  font-family: 'Inter', sans-serif;
+  color: var(--foreground);
+  background: var(--background);
 }
 
-/* Refined gradient background */
 .professional-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #0369a1 75%, #0284c7 100%);
-  background-size: 400% 400%;
-  animation: gradient 15s ease infinite;
+  background: 
+    radial-gradient(circle at top left, rgb(29, 78, 216) 0%, transparent 80%),
+    radial-gradient(circle at 80% 20%, rgb(23, 37, 84) 0%, transparent 50%),
+    radial-gradient(at bottom left, rgb(17, 24, 39), transparent),
+    rgb(2, 6, 23);
 }
 
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+.professional-gradient-light {
+  background: 
+    radial-gradient(circle at top left, rgb(37, 99, 235) 0%, transparent 80%),
+    radial-gradient(circle at 80% 20%, rgb(30, 58, 138) 0%, transparent 50%),
+    radial-gradient(at bottom left, rgb(30, 41, 59), transparent),
+    rgb(15, 23, 42);
+}
+
+.water-effect {
+  background: linear-gradient(
+    45deg,
+    rgb(97, 205, 187) 0%,
+    rgb(97, 205, 187, 0.8) 100%
+  );
+}
+
+/* Add a shine effect on hover */
+.water-effect:hover {
+  background: linear-gradient(
+    45deg,
+    rgb(97, 205, 187, 0.9) 0%,
+    rgb(97, 205, 187) 50%,
+    rgb(97, 205, 187, 0.9) 100%
+  );
+}
+
+.pirate-font {
+  font-family: 'Georgia', serif;
+  font-style: italic;
 }
