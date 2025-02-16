@@ -1,21 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-const LanguageSwitcher = () => {
-  const [currentLang, setCurrentLang] = useState('DE');
-  
-  return (
-    <button 
-      onClick={() => setCurrentLang(currentLang === 'DE' ? 'EN' : 'DE')}
-      className="flex items-center px-3 py-1 text-sm font-medium text-gray-100 hover:text-white transition-colors"
-    >
-      <span>{currentLang}</span>
-    </button>
-  );
-};
 
 const MCPHeader = () => {
   const pathname = usePathname();
@@ -34,20 +21,17 @@ const MCPHeader = () => {
             </Link>
           </div>
 
-          {/* Navigation Links & Language Switcher */}
-          <div className="flex items-center space-x-8">
-            <Link
-              href="/rfq"
-              className={`text-sm ${
-                pathname === '/rfq'
-                  ? 'text-cyan-300'
-                  : 'text-gray-300 hover:text-cyan-300'
-              } transition-colors`}
-            >
-              RFQ Generator
-            </Link>
-            <LanguageSwitcher />
-          </div>
+          {/* RFQ Link */}
+          <Link
+            href="/rfq"
+            className={`text-sm ${
+              pathname === '/rfq'
+                ? 'text-cyan-300'
+                : 'text-gray-300 hover:text-cyan-300'
+            } transition-colors`}
+          >
+            RFQ Generator
+          </Link>
         </div>
       </div>
     </header>

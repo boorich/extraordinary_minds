@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import MCPHeader from './MCPHeader';
 import MCPDialogue from './dialogue/MCPDialogue';
 import TransformationSection from './TransformationSection';
 import PilotProgramSection from './PilotProgramSection';
@@ -77,7 +76,6 @@ const VisionaryLanding = () => {
 
   return (
     <div className="text-slate-100">
-      <MCPHeader />
       <div className="professional-gradient">
         <main id="main-content" className="max-w-6xl mx-auto px-4 sm:px-6 py-8 relative" role="main">
           <div className="relative z-10">
