@@ -9,12 +9,13 @@ import mcpConfig from '@/config/mcp.character.json';
 import { analyzeContent } from '@/lib/network/analyzer';
 
 interface MCPDialogueProps {
+  agent?: MCPAgent;
   onMetricsUpdate?: (metrics: DialogueMetrics) => void;
   onNetworkUpdate?: (update: NetworkUpdate) => void;
 }
 
-const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, onNetworkUpdate }) => {
-  const agent = React.useMemo(() => new MCPAgent(mcpConfig as Character), []);
+const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ agent: customAgent, onMetricsUpdate, onNetworkUpdate }) => {
+  const agent = React.useMemo(() => customAgent || new MCPAgent(mcpConfig as Character), [customAgent]);
   
   const [conversation, setConversation] = useState<Array<{
     role: 'user' | 'assistant';
@@ -75,7 +76,6 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
       if (onNetworkUpdate) {
         const conversationText = userInput + ' ' + response.systemResponse;
         const update = await analyzeContent(conversationText);
-        console.log('Network update from analyzer:', update);
         if (update) {
           onNetworkUpdate(update);
         }
@@ -126,8 +126,10 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
           {conversation.length === 0 ? (
             <div className="bg-slate-700/50 p-4 rounded-lg border border-cyan-400/30 mb-4">
               <p className="text-slate-200 text-lg break-words whitespace-pre-wrap">
-                Welcome! I'm your guide to understanding how MCP servers can transform your business. 
-                How can I help you explore the potential of connecting your experts with AI and company resources?
+                {customAgent ? 
+                  "Welcome! I'll help you create a professional RFQ template through our conversation. What kind of RFQ are you looking to generate?" :
+                  "Welcome! I'm your guide to understanding how MCP servers can transform your business. How can I help you explore the potential of connecting your experts with AI and company resources?"
+                }
               </p>
             </div>
           ) : (
@@ -167,7 +169,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
             className="w-full bg-slate-700/50 border border-cyan-400/30 rounded p-3 pr-20 text-white 
                      focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400
                      placeholder-slate-400 resize-none overflow-hidden min-h-[44px] max-h-[120px]"
-            placeholder="Ask about MCP servers..."
+            placeholder={customAgent ? "Describe your RFQ requirements..." : "Ask about MCP servers..."}
             disabled={isTyping}
             aria-disabled={isTyping}
           />
@@ -201,5 +203,7 @@ const MCPDialogue: React.FC<MCPDialogueProps> = React.memo(({ onMetricsUpdate, o
     </div>
   );
 });
+
+MCPDialogue.displayName = 'MCPDialogue';
 
 export default MCPDialogue;

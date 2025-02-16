@@ -1,6 +1,6 @@
 import React from 'react';
 import RFQDialogue from '@/components/rfq/RFQDialogue';
-import { NetworkMetadataListener } from '@/components/NetworkMetadataListener';
+import NetworkMetadataListener from '@/components/NetworkMetadataListener';
 
 export const metadata = {
   title: 'RFQ Template Generator | Vision Landing',

@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MCPDialogue } from '@/components/dialogue/MCPDialogue';
+import MCPDialogue from '@/components/dialogue/MCPDialogue';
 import { RFQAgent } from '@/lib/agent/RFQAgent';
 import rfqConfig from '@/config/rfq.character.json';
 import { DialogueMetrics } from '@/types/dialogue';
 import { NetworkUpdate } from '@/lib/network/parser';
 
+interface RFQInsight {
+  type: 'warning' | 'info' | 'success';
+  message: string;
+  details?: string;
+}
+
 export default function RFQDialogue() {
   const [metrics, setMetrics] = useState<DialogueMetrics | null>(null);
-  const [insights, setInsights] = useState<Array<{
-    type: 'warning' | 'info' | 'success';
-    message: string;
-    details?: string;
-  }>>([]);
+  const [insights, setInsights] = useState<RFQInsight[]>([]);
 
   const handleMetricsUpdate = (newMetrics: DialogueMetrics) => {
     setMetrics(newMetrics);
@@ -28,7 +30,6 @@ export default function RFQDialogue() {
   return (
     <div className="space-y-6">
       <MCPDialogue
-        agent={new RFQAgent(rfqConfig)}
         onMetricsUpdate={handleMetricsUpdate}
         onNetworkUpdate={handleNetworkUpdate}
       />
