@@ -32,7 +32,13 @@ const TransformationSection = ({ networkData }: TransformationSectionProps) => {
         <MCPArchitecture data={networkData} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="md:col-span-2">
+          <TransformationCard
+            title={cardContent.rfq.title}
+            description={cardContent.rfq.description}
+          />
+        </div>
         {[
           { title: cardContent.data.title, description: cardContent.data.description },
           { title: cardContent.cloud.title, description: cardContent.cloud.description },
