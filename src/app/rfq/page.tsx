@@ -1,8 +1,8 @@
-import React from 'react';
+import type { Metadata } from 'next';
 import RFQChat from '@/components/rfq/RFQChat';
 import RFQFeatureCard from '@/components/rfq/RFQFeatureCard';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'RFQ Template Generator | Vision Landing',
   description: 'Generate professional RFQ templates through an intelligent chat interface'
 };
