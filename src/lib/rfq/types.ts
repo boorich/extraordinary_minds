@@ -24,7 +24,21 @@ export interface Message {
   content: string;
 }
 
+export interface RFQInsight {
+  type: 'warning' | 'info' | 'success';
+  message: string;
+  details?: string;
+}
+
 export interface RFQState {
   currentSection: number;
+  messages: Message[];
+  requirements: Array<{
+    category: string;
+    details: string;
+    isValid: boolean;
+    suggestions?: string[];
+  }>;
+  insights: RFQInsight[];
   responses: Partial<Record<SectionId, RFQResponse>>;
 }

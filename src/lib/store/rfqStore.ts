@@ -2,21 +2,36 @@
 
 import { create } from 'zustand';
 import { RFQ_SECTIONS } from '../rfq/prompts';
-import { RFQSection, SectionId, RFQResponse } from '../rfq/types';
+import { 
+  RFQSection, 
+  SectionId, 
+  RFQResponse, 
+  Message, 
+  RFQInsight, 
+  RFQState 
+} from '../rfq/types';
 
-interface RFQStore {
-  currentSection: number;
-  responses: Partial<Record<SectionId, RFQResponse>>;
+interface RFQStore extends RFQState {
+  addMessage: (message: Message) => void;
   addResponse: (sectionId: SectionId, response: RFQResponse) => void;
   nextSection: () => void;
   previousSection: () => void;
   getCurrentSection: () => RFQSection;
   isComplete: () => boolean;
+  addInsight: (insight: RFQInsight) => void;
+  updateRequirements: (reqs: RFQState['requirements']) => void;
 }
 
 export const useRFQStore = create<RFQStore>((set, get) => ({
   currentSection: 0,
+  messages: [],
+  requirements: [],
+  insights: [],
   responses: {},
+
+  addMessage: (message) => set((state) => ({
+    messages: [...state.messages, message]
+  })),
 
   addResponse: (sectionId, response) => {
     set((state) => ({
@@ -26,6 +41,14 @@ export const useRFQStore = create<RFQStore>((set, get) => ({
       }
     }));
   },
+
+  updateRequirements: (requirements) => set(() => ({
+    requirements
+  })),
+
+  addInsight: (insight) => set((state) => ({
+    insights: [...state.insights, insight]
+  })),
 
   nextSection: () => {
     set((state) => ({
