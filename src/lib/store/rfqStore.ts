@@ -1,58 +1,52 @@
+'use client';
+
 import { create } from 'zustand';
-
-export interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-export interface RFQRequirement {
-  category: string;
-  details: string;
-  isValid: boolean;
-  suggestions?: string[];
-}
-
-export interface Insight {
-  type: 'warning' | 'info' | 'success';
-  message: string;
-  details?: string;
-}
+import { RFQ_SECTIONS } from '../rfq/prompts';
+import { RFQSection, SectionId, RFQResponse } from '../rfq/types';
 
 interface RFQStore {
-  messages: Message[];
-  requirements: RFQRequirement[];
-  insights: Insight[];
-  addMessage: (message: Message) => void;
-  updateRequirements: (requirements: RFQRequirement[]) => void;
-  addInsight: (insight: Insight) => void;
-  clearInsights: () => void;
-  reset: () => void;
+  currentSection: number;
+  responses: Partial<Record<SectionId, RFQResponse>>;
+  addResponse: (sectionId: SectionId, response: RFQResponse) => void;
+  nextSection: () => void;
+  previousSection: () => void;
+  getCurrentSection: () => RFQSection;
+  isComplete: () => boolean;
 }
 
-export const useRFQStore = create<RFQStore>((set) => ({
-  messages: [],
-  requirements: [],
-  insights: [],
-  
-  addMessage: (message) => set((state) => ({
-    messages: [...state.messages, message]
-  })),
-  
-  updateRequirements: (requirements) => set(() => ({
-    requirements
-  })),
-  
-  addInsight: (insight) => set((state) => ({
-    insights: [...state.insights, insight]
-  })),
-  
-  clearInsights: () => set(() => ({
-    insights: []
-  })),
-  
-  reset: () => set(() => ({
-    messages: [],
-    requirements: [],
-    insights: []
-  }))
+export const useRFQStore = create<RFQStore>((set, get) => ({
+  currentSection: 0,
+  responses: {},
+
+  addResponse: (sectionId, response) => {
+    set((state) => ({
+      responses: {
+        ...state.responses,
+        [sectionId]: response
+      }
+    }));
+  },
+
+  nextSection: () => {
+    set((state) => ({
+      currentSection: Math.min(state.currentSection + 1, RFQ_SECTIONS.length - 1)
+    }));
+  },
+
+  previousSection: () => {
+    set((state) => ({
+      currentSection: Math.max(state.currentSection - 1, 0)
+    }));
+  },
+
+  getCurrentSection: () => {
+    return RFQ_SECTIONS[get().currentSection];
+  },
+
+  isComplete: () => {
+    const { responses } = get();
+    return RFQ_SECTIONS.every(section => 
+      !section.required || responses[section.id]
+    );
+  }
 }));
