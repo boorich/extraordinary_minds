@@ -1,6 +1,7 @@
 import { MCPAgent } from './MCPAgent';
 import { Character } from './types';
 import { NetworkUpdate } from '../network/parser';
+import { RFQInsight } from '@/types/rfq';
 
 export class RFQAgent extends MCPAgent {
   private requirements: Map<string, any> = new Map();
@@ -17,11 +18,7 @@ export class RFQAgent extends MCPAgent {
     systemResponse: string;
     selectedModel: string;
     requirements?: Map<string, any>;
-    insights?: Array<{
-      type: 'warning' | 'info' | 'success';
-      message: string;
-      details?: string;
-    }>;
+    insights?: RFQInsight[];
   }> {
     // Enhance the context with RFQ-specific guidance
     const enhancedContext = `${context}
@@ -35,7 +32,6 @@ Consider the following for RFQ template generation:
     const response = await super.generateResponse(userInput, enhancedContext, turnCount);
 
     // Extract requirements and generate insights
-    // This would be enhanced with actual NLP in production
     const extractedInfo = this.extractRequirementsAndInsights(userInput + ' ' + response.systemResponse);
 
     return {
@@ -47,22 +43,19 @@ Consider the following for RFQ template generation:
 
   private extractRequirementsAndInsights(text: string): {
     requirements: Map<string, any>;
-    insights: Array<{
-      type: 'warning' | 'info' | 'success';
-      message: string;
-      details?: string;
-    }>;
+    insights: RFQInsight[];
   } {
-    // Mock implementation - would be replaced with actual NLP
-    const insights = [];
+    const insights: RFQInsight[] = [];
+    const requirements = this.requirements;
     
-    // Example insight generation
+    // Example insight generation (would be replaced with actual NLP)
     if (text.toLowerCase().includes('deadline')) {
       insights.push({
         type: 'info',
         message: 'Timeline Requirements Detected',
         details: 'Consider adding specific milestone dates to strengthen the RFQ'
       });
+      requirements.set('timeline', { hasDeadlines: true });
     }
 
     if (text.toLowerCase().includes('quality')) {
@@ -71,27 +64,66 @@ Consider the following for RFQ template generation:
         message: 'Quality Standards Specified',
         details: 'MCP integration could automate quality control tracking'
       });
+      requirements.set('quality', { hasStandards: true });
     }
 
     return {
-      requirements: this.requirements,
+      requirements,
       insights
     };
   }
 
   async generateNetworkUpdate(text: string): Promise<NetworkUpdate | null> {
-    // Enhance network updates with RFQ-specific patterns
     const baseUpdate = await super.generateNetworkUpdate(text);
+    const extractedInfo = this.extractRequirementsAndInsights(text);
     
-    if (!baseUpdate) return null;
+    // Create network nodes based on RFQ content
+    const rfqNodes = {
+      company_resources: [
+        {
+          id: 'rfq_template',
+          size: 24,
+          height: 1,
+          color: 'rgb(232, 193, 160)',
+          title: 'RFQ Template',
+          description: 'Dynamic RFQ generation system'
+        }
+      ],
+      ai_models: [
+        {
+          id: 'requirement_analyzer',
+          size: 20,
+          height: 1,
+          color: 'rgb(97, 205, 187)',
+          title: 'Requirement Analyzer',
+          description: 'AI-powered RFQ analysis'
+        }
+      ],
+      llm_clients: []
+    };
 
-    // Add RFQ-specific metadata
-    return {
-      ...baseUpdate,
+    // Add requirement-specific nodes
+    extractedInfo.requirements.forEach((value, key) => {
+      rfqNodes.company_resources.push({
+        id: `requirement_${key}`,
+        size: 16,
+        height: 0,
+        color: 'rgb(232, 193, 160)',
+        title: key.charAt(0).toUpperCase() + key.slice(1),
+        description: `RFQ ${key} requirements`,
+        parent: 'rfq_template'
+      });
+    });
+
+    const update: NetworkUpdate & { metadata?: { rfq_components?: { insights: RFQInsight[] } } } = {
+      ...rfqNodes,
       metadata: {
-        ...baseUpdate.metadata,
-        rfq_components: this.extractRequirementsAndInsights(text)
+        rfq_components: {
+          insights: extractedInfo.insights
+        }
       }
     };
+
+    return update;
   }
 }
