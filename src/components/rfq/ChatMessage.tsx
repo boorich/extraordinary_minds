@@ -1,5 +1,5 @@
 import React from 'react';
-import { Message } from '@/lib/store/rfqStore';
+import { Message } from '@/lib/rfq/types';
 
 interface ChatMessageProps {
   message: Message;

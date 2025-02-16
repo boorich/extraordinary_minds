@@ -19,6 +19,11 @@ export interface RFQResponse {
   confidence: number;
 }
 
+export interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface RFQState {
   currentSection: number;
   responses: Partial<Record<SectionId, RFQResponse>>;
