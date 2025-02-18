@@ -109,7 +109,7 @@ const VisionaryLanding = () => {
 
         <footer className="bg-slate-900/40 backdrop-blur-sm mt-8" role="contentinfo">
           <div className="max-w-6xl mx-auto px-4 py-8 text-center">
-            <p className="text-xl text-cyan-300 font-light">Transforming Enterprise AI</p>
+            <p className="text-xl text-cyan-300 font-light">Transforming Enterprise AI Integration</p>
           </div>
         </footer>
       </div>
